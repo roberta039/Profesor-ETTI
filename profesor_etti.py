@@ -2160,6 +2160,87 @@ _PROMPT_SUBJECTS: dict[str, str] = {
        - Uitarea verificării compatibilității (Kronecker-Capelli) înainte de a căuta soluția
     """,
 
+    "programarea calculatoarelor și limbaje de programare": r"""
+    1. PROGRAMAREA CALCULATOARELOR ȘI LIMBAJE DE PROGRAMARE — ANUL I ETTI/UPB (C/C++, sem. I+II):
+
+       CONVENȚII OBLIGATORII:
+       - Cod ÎNTOTDEAUNA în blocuri ```c sau ```cpp, niciodată text simplu inline pentru cod >1 linie
+       - Indentare consecventă (4 spații), acolade pe stil consistent — nu schimba stilul
+         de indentare între exemple
+       - Comentează codul acolo unde clarifică logica, dar NU comenta linii evidente
+       - Denumește variabilele sugestiv în exemple (nu a, b, c dacă poți folosi nume clare),
+         DAR respectă convenția dată în enunțul studentului dacă există una
+
+       STRUCTURA OBLIGATORIE pentru orice exercițiu de cod:
+       **1. Înțelegere cerință** — ce intrare, ce ieșire, ce constrângeri
+       **2. Algoritm în cuvinte / pseudocod** — ÎNAINTE de a scrie codul, dacă problema
+          are complexitate algoritmică (nu doar sintaxă simplă)
+       **3. Cod complet, compilabil** — nu fragmente care nu rulează izolat, dacă studentul
+          cere "cod care merge" (include #include, main, etc. când relevant)
+       **4. Explicație pas cu pas** — ce face fiecare bloc important
+       **5. Trasare pe exemplu concret** — dacă studentul pare confuz, rulează algoritmul
+          "cu mâna" pe un input mic
+
+       ══════════════════════════════════════════
+       FUNDAMENTE C (Semestrul I — Programare 1)
+       ══════════════════════════════════════════
+       - Tipuri de date: int, float, double, char, tipuri fără semn (unsigned) — precizează
+         dimensiunea tipică (int=4 octeți pe majoritatea sistemelor) DOAR dacă e relevant
+       - Operatori: aritmetici, relaționali, logici (&&, ||, !), pe biți (&, |, ^, ~, <<, >>)
+         — atenție la diferența dintre & (bitwise AND) și && (logic AND), cea mai frecventă
+         confuzie a începătorilor
+       - Structuri de control: if/else, switch (cu break — explică "fall-through" ca fiind
+         intenționat sau greșeală), while, do-while, for — și când se preferă fiecare
+       - Funcții: prototip vs. definiție, transmitere prin valoare (implicit în C) vs.
+         prin pointer (pentru a modifica argumentul din exterior)
+       - Tablouri (arrays): declarare, indexare de la 0 (CRITIC — cea mai frecventă sursă de
+         erori "off-by-one"), tablouri multidimensionale, relația tablou-pointer
+       - Șiruri de caractere (strings în C): tablou de char terminat cu '\0' — subliniază
+         mereu terminatorul nul, funcțiile din <string.h> (strlen, strcpy, strcmp — și
+         pericolul strcpy/gets fără verificare de dimensiune)
+       - Pointeri: declarare (int *p), operatori & (adresă) și * (dereferențiere), aritmetica
+         pointerilor (p+1 avansează cu sizeof(tip), nu cu 1 octet), pointer NULL
+       - Alocare dinamică: malloc/calloc/realloc/free — INSISTĂ pe verificarea returnului
+         (poate fi NULL) și pe eliberarea memoriei (evitarea memory leaks)
+       - Structuri (struct): definire, acces cu . (direct) vs. -> (prin pointer)
+
+       ══════════════════════════════════════════
+       C++ ȘI PROGRAMARE ORIENTATĂ-OBIECT (Semestrul II — Programare 2)
+       ══════════════════════════════════════════
+       - De la C la C++: std::cin/std::cout vs. printf/scanf, referințe (&) ca alternativă
+         mai sigură la pointeri pentru parametri, new/delete vs. malloc/free
+       - Clase și obiecte: membri de date (private/public/protected), metode, constructor,
+         destructor — explică EXPLICIT diferența între constructor implicit, cu parametri,
+         și de copiere
+       - Încapsulare: de ce private + getters/setters, nu acces direct la date
+       - Moștenire (inheritance): class Derivat : public Baza — moștenire publică vs.
+         privată/protejată; apelul constructorului bazei
+       - Polimorfism: funcții virtuale (virtual), redefinire (override) — CRITIC: fără
+         virtual, apelul metodei se rezolvă static (la compilare), nu dinamic (la rulare)
+       - Supraîncărcare (overloading): operatori și funcții cu aceeași denumire, semnături diferite
+       - Șabloane (templates) — introducere de bază, dacă cursul le acoperă în anul I
+       - STL de bază (dacă e în programă): std::vector, std::string — ca alternativă mai
+         sigură la tablourile brute din C
+
+       ALGORITMI FUNDAMENTALI (des ceruți indiferent de semestru):
+       - Căutare: liniară O(n), binară O(log n) — DOAR pe tablou sortat
+       - Sortare: bubble sort, selection sort, insertion sort (O(n²), didactice); menționează
+         că există și O(n log n) (merge/quick sort) dacă studentul întreabă de eficiență
+       - Recursivitate: caz de bază + caz recursiv — verifică ÎNTOTDEAUNA că recursivitatea
+         se termină (caz de bază atins); trasează stiva de apeluri pe un exemplu mic
+         (ex: factorial, Fibonacci) dacă studentul e confuz
+
+       CAPCANE FRECVENTE:
+       - Off-by-one la indexare tablouri (index valid: 0 până la n-1, NU 1 până la n)
+       - Confuzia = (atribuire) cu == (comparație) în condiții if
+       - Uitarea '\0' la manipularea manuală a șirurilor de caractere în C
+       - Memory leak (malloc/new fără free/delete corespunzător) sau dangling pointer
+         (folosirea unui pointer după ce memoria a fost eliberată)
+       - Trecerea unui tablou local (pe stivă) prin return dintr-o funcție — memoria
+         nu mai există după ce funcția se termină
+       - La C++: uitarea `virtual` când se dorește polimorfism real prin pointeri la clasa de bază
+    """,
+
     "matematică": r"""
     1. MATEMATICĂ — PROGRAMA OFICIALĂ 2026 (Liceu România):
        NOTAȚII OBLIGATORII (niciodată altele):
@@ -9074,6 +9155,20 @@ INTREBARI_POOL = {
         "Explică-mi conicele — elipsă, hiperbolă, parabolă",
         "Cum fac eliminarea Gauss pentru un sistem?",
         "Ce înseamnă că o matrice e diagonalizabilă?",
+    ],
+    "programarea calculatoarelor și limbaje de programare": [
+        "Care e diferența dintre pointeri și referințe?",
+        "Cum funcționează alocarea dinamică de memorie (malloc/free)?",
+        "Explică-mi diferența dintre struct în C și class în C++",
+        "Ce este polimorfismul și de ce am nevoie de virtual?",
+        "Cum trasez recursivitatea pe stivă pentru un exemplu concret?",
+        "De ce apare eroare 'segmentation fault' și cum o depanez?",
+        "Cum funcționează aritmetica pointerilor?",
+        "Explică-mi diferența între constructor implicit și de copiere",
+        "Care e diferența dintre & (bitwise) și && (logic)?",
+        "Cum implementez o sortare bubble/insertion sort?",
+        "Ce înseamnă moștenire publică vs. privată în C++?",
+        "Cum evit memory leaks în programele mele?",
     ],
     "matematică": [
         "Cum rezolv o ecuație de gradul 2?",
