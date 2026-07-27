@@ -1966,6 +1966,200 @@ _PROMPT_SUBJECTS: dict[str, str] = {
          (KVL/KCL în complex sunt valabile DOAR pentru mărimi de aceeași frecvență)
     """,
 
+    "analiză matematică": r"""
+    1. ANALIZĂ MATEMATICĂ — ANUL I ETTI/UPB (Semestrul I):
+
+       NOTAȚII OBLIGATORII (niciodată altele):
+       - Șir: (a_n)_{n≥0} sau (a_n)_{n∈ℕ}; limită: lim_{n→∞} a_n = L, sau a_n → L
+       - Derivată: f'(x), f''(x), f^(n)(x) — NU dy/dx (acceptă notația Leibniz doar dacă
+         studentul o cere explicit, dar preferă notația Lagrange)
+       - Diferențială: df(x) = f'(x)dx
+       - Integrală definită: ∫ₐᵇ f(x)dx; integrală nedefinită: ∫f(x)dx = F(x) + C
+       - Serie: Σ_{n=1}^∞ a_n sau Σ a_n; sumă parțială: S_n = a_1 + ... + a_n
+       - Limite laterale: lim_{x→a⁻} f(x), lim_{x→a⁺} f(x)
+       - Vecinătate: V(a); mulțimi: ℕ, ℤ, ℚ, ℝ; interval: [a,b], (a,b)
+       - Folosește LaTeX ($...$ sau $$...$$) pentru toate formulele — la nivel de facultate,
+         rigoarea notației contează la fel de mult ca rezultatul
+
+       STRUCTURA OBLIGATORIE pentru orice exercițiu:
+       **1. Ce se cere** — limită / derivată / studiu de convergență / integrală / etc.
+       **2. Condiții de aplicabilitate** — verifică ÎNTÂI dacă teorema/criteriul ales chiar
+          se aplică (ex: criteriul raportului cere termeni pozitivi; teorema lui Lagrange
+          cere continuitate pe [a,b] și derivabilitate pe (a,b))
+       **3. Rezolvare pas cu pas** — cu justificarea fiecărui pas (ce teoremă/regulă aplici)
+       **4. Verificare** — dacă e posibil (substituție, caz particular, estimare numerică)
+
+       ══════════════════════════════════════════
+       ȘIRURI DE NUMERE REALE
+       ══════════════════════════════════════════
+       - Șir mărginit, monoton; teorema Weierstrass: șir monoton și mărginit ⟹ convergent
+       - Criteriul cleștelui (majorare-minorare): dacă a_n ≤ b_n ≤ c_n și a_n, c_n → L, atunci b_n → L
+       - Șiruri recurente: x_{n+1} = f(x_n) — studiază monotonia (inducție) și mărginirea
+         ÎNAINTE de a calcula limita; limita L (dacă există) satisface L = f(L) (punct fix)
+       - Numărul e: lim (1 + 1/n)^n = e; forme generalizate lim (1 + a_n)^{1/a_n} = e când a_n → 0
+       - Criteriul Cauchy (șir fundamental): convergent ⟺ ∀ε>0 ∃N: |a_n − a_m| < ε ∀n,m>N
+         (util teoretic, rar cerut la calcul direct)
+
+       ══════════════════════════════════════════
+       SERII NUMERICE
+       ══════════════════════════════════════════
+       - Condiție necesară (NU suficientă!) de convergență: dacă Σa_n converge, atunci a_n → 0
+         (reciproca e falsă — vezi seria armonică Σ1/n, care diverge deși 1/n → 0)
+       - Serii cu termeni pozitivi — criterii de convergență (ALEGE criteriul potrivit formei lui a_n):
+         → Criteriul raportului (d'Alembert): L = lim a_{n+1}/a_n; L<1 converge, L>1 diverge, L=1 nedecis
+         → Criteriul radical (Cauchy): L = lim ⁿ√a_n; aceleași concluzii ca raportul
+         → Criteriul comparației: dacă 0≤a_n≤b_n și Σb_n converge ⟹ Σa_n converge
+         → Criteriul comparației la limită: lim a_n/b_n = L finit ≠0 ⟹ aceeași natură
+         → Seria armonică generalizată (Riemann): Σ1/n^α converge ⟺ α>1 — folosește-o des ca
+           serie de comparație
+       - Serii alternante — criteriul lui Leibniz: dacă (a_n) descrescător și a_n → 0,
+         Σ(-1)^n a_n converge (posibil doar semi-convergent, NU absolut convergent)
+       - Convergență absolută vs. semi-convergentă: Σ|a_n| converge ⟹ Σa_n converge (absolut);
+         dacă Σa_n converge dar Σ|a_n| diverge → semi-convergentă (ordinea termenilor contează!)
+
+       ══════════════════════════════════════════
+       LIMITE ȘI CONTINUITATE DE FUNCȚII
+       ══════════════════════════════════════════
+       - Limite fundamentale: lim_{x→0} sin(x)/x = 1; lim_{x→0} (1+x)^{1/x} = e;
+         lim_{x→0} ln(1+x)/x = 1; lim_{x→0} (e^x−1)/x = 1
+       - Nedeterminări: 0/0, ∞/∞, 0·∞, ∞−∞, 1^∞, 0⁰, ∞⁰ — la fiecare, precizează METODA
+         (regula lui l'Hôpital, factor comun forțat, amplificare cu conjugata, substituție)
+       - Regula lui l'Hôpital: se aplică DOAR pe forme 0/0 sau ∞/∞, și DOAR dacă limita
+         raportului derivatelor există — verifică ipotezele înainte de a o folosi
+       - Continuitate: f continuă în a ⟺ lim_{x→a} f(x) = f(a); discontinuitate de speța I
+         (limite laterale finite, diferite sau ≠ f(a)) vs. speța II (cel puțin o limită laterală
+         infinită sau inexistentă)
+
+       ══════════════════════════════════════════
+       CALCUL DIFERENȚIAL
+       ══════════════════════════════════════════
+       - Derivata ca limită: f'(a) = lim_{x→a} (f(x)−f(a))/(x−a) — interpretare geometrică:
+         panta tangentei
+       - Reguli de derivare: (u±v)'=u'±v'; (uv)'=u'v+uv'; (u/v)'=(u'v−uv')/v²;
+         derivata compusă (lanț): (f∘g)'(x) = f'(g(x))·g'(x)
+       - Teoreme fundamentale (ipoteze STRICT verificate înainte de aplicare):
+         → Fermat: extrem local + derivabilă în punct ⟹ derivata se anulează acolo
+         → Rolle: f continuă pe [a,b], derivabilă pe (a,b), f(a)=f(b) ⟹ ∃c∈(a,b): f'(c)=0
+         → Lagrange (creșterilor finite): f continuă pe [a,b], derivabilă pe (a,b) ⟹
+           ∃c∈(a,b): f'(c) = (f(b)−f(a))/(b−a)
+       - Studiul funcției (algoritm complet, în ORDINE):
+         1) Domeniu de definiție  2) Limite la capete/asimptote (verticale, orizontale, oblice)
+         3) f' → monotonie și puncte de extrem  4) f'' → convexitate/concavitate și inflexiuni
+         5) Tabel de variație  6) Trasare grafic (descrie-l text dacă nu se cere SVG)
+       - Formula lui Taylor: f(x) = Σ_{k=0}^n f^(k)(a)/k! · (x−a)^k + R_n(x) — util pentru
+         aproximări locale și calculul unor limite dificile
+
+       ══════════════════════════════════════════
+       CALCUL INTEGRAL
+       ══════════════════════════════════════════
+       - Integrale nedefinite uzuale: ∫xⁿdx = x^{n+1}/(n+1)+C (n≠−1); ∫1/x dx = ln|x|+C;
+         ∫eˣdx = eˣ+C; ∫sin x dx = −cos x+C; ∫cos x dx = sin x+C
+       - Metode de integrare — alege metoda în funcție de forma integrandului:
+         → Integrare prin părți: ∫u dv = uv − ∫v du (produs de funcții de tip diferit: polinom×exp,
+           polinom×trig, ln, arcsin/arctan)
+         → Schimbare de variabilă (substituție): identifică u=g(x) astfel încât du să apară
+         → Integrale din funcții raționale: descompunere în fracții simple
+       - Integrala definită și teorema fundamentală: ∫ₐᵇf(x)dx = F(b)−F(a), unde F'=f
+       - Integrale improprii — VERIFICĂ convergența înainte de a calcula:
+         → Speța I (interval infinit): ∫ₐ^∞f(x)dx = lim_{t→∞}∫ₐᵗf(x)dx
+         → Speța II (funcție nemărginită): tratează limita ca la speța I, dar în punctul singular
+         → Criteriu practic: ∫₁^∞ 1/x^α dx converge ⟺ α>1 (analog seriei Riemann)
+
+       CAPCANE FRECVENTE:
+       - Aplicarea l'Hôpital pe forme care NU sunt 0/0 sau ∞/∞ (trebuie adusă întâi la formă)
+       - Confuzia condiție necesară / suficientă la seria armonică (a_n→0 NU implică convergență)
+       - Uitarea verificării ipotezelor teoremelor Rolle/Lagrange înainte de a le aplica
+       - Semn greșit sau constantă de integrare omisă la integrale nedefinite
+       - Confuzia între derivata funcției compuse (regula lanțului) și derivata produsului
+    """,
+
+    "algebră liniară, geometrie analitică și diferențială": r"""
+    1. ALGEBRĂ LINIARĂ, GEOMETRIE ANALITICĂ ȘI DIFERENȚIALĂ — ANUL I ETTI/UPB (Semestrul I):
+
+       NOTAȚII OBLIGATORII (niciodată altele):
+       - Vector: v̄ sau v (bold/săgeată) — precizează clar dacă e vector din ℝⁿ sau vector geometric
+       - Matrice: A, B (majuscule); element: a_{ij} (linia i, coloana j); dimensiune: A ∈ M_{m×n}(ℝ)
+       - Transpusă: A^T; inversă: A⁻¹; determinant: det(A) sau |A|
+       - Produs scalar: ⟨u,v⟩ sau u·v; produs vectorial: u×v; normă: ‖v‖
+       - Rang: rang(A); nucleu (kernel): Ker(f); imagine: Im(f)
+       - Valoare proprie: λ; vector propriu: v (cu Av = λv); spectru: σ(A)
+       - Folosește LaTeX pentru toate matricile, sistemele și formulele
+
+       STRUCTURA OBLIGATORIE pentru orice exercițiu:
+       **1. Ce se cere** — rezolvare sistem / calcul determinant sau rang / diagonalizare / etc.
+       **2. Verifică dimensiunile** — înainte de orice operație cu matrici (înmulțire, sumă),
+          verifică EXPLICIT compatibilitatea dimensiunilor
+       **3. Rezolvare pas cu pas** — cu justificarea metodei alese
+       **4. Interpretare geometrică** — atunci când e relevant (ex: sistem compatibil = drepte/plane
+          concurente; valorile proprii = direcții invariante)
+
+       ══════════════════════════════════════════
+       ALGEBRĂ LINIARĂ — SPAȚII VECTORIALE ȘI MATRICI
+       ══════════════════════════════════════════
+       - Spațiu vectorial: mulțime cu operații de adunare și înmulțire cu scalar care respectă
+         cele 8 axiome (asociativitate, element neutru, element opus, distributivitate etc.)
+       - Combinație liniară, dependență/independență liniară: v₁,...,v_n independenți ⟺
+         singura combinație c₁v₁+...+c_nv_n = 0 are TOȚI coeficienții nuli
+       - Bază și dimensiune: bază = sistem de generatori liniar independent; dim(V) = nr. vectori din bază
+       - Rangul unei matrici = dimensiunea imaginii = nr. maxim de linii/coloane liniar independente
+         (rangul pe linii = rangul pe coloane, întotdeauna)
+       - Operații cu matrici: înmulțirea NU e comutativă (AB ≠ BA în general) — verifică
+         întotdeauna ordinea când studentul scrie o egalitate matricială
+       - Determinant: proprietăți esențiale — det(AB)=det(A)det(B); det(A^T)=det(A);
+         schimbarea a două linii schimbă semnul; o linie de zerouri ⟹ det=0
+       - Matrice inversabilă ⟺ det(A)≠0 ⟺ rang(A)=n (matrice pătratică n×n); A⁻¹ = adj(A)/det(A)
+
+       ══════════════════════════════════════════
+       SISTEME DE ECUAȚII LINIARE
+       ══════════════════════════════════════════
+       - Metoda eliminării Gauss (Gauss-Jordan): reducere la formă eșalon prin transformări
+         elementare de linii — metoda STANDARD, aplicabilă oricărui sistem
+       - Teorema Kronecker-Capelli (compatibilitate): sistemul e compatibil ⟺ rang(A) = rang(A|b)
+         (matricea extinsă); dacă rang = nr. necunoscute → soluție unică; dacă rang < nr. necunoscute
+         → infinitate de soluții (cu parametri liberi)
+       - Regula lui Cramer: DOAR pentru sisteme cu det(A)≠0 (soluție unică) —
+         x_i = det(A_i)/det(A), unde A_i = A cu coloana i înlocuită cu b
+       - Sisteme omogene (Ax=0): întotdeauna compatibile (x=0 e soluție banală); soluții
+         nebanale ⟺ det(A)=0
+
+       ══════════════════════════════════════════
+       VALORI ȘI VECTORI PROPRII. DIAGONALIZARE
+       ══════════════════════════════════════════
+       - Polinom caracteristic: P(λ) = det(A − λI); valorile proprii = rădăcinile lui P(λ)=0
+       - Pentru fiecare λ: vectorii proprii = soluțiile nebanale ale (A−λI)v=0
+       - Multiplicitate algebrică (ordinul rădăcinii în P(λ)) vs. geometrică
+         (dim subspațiului propriu) — geometrică ≤ algebrică întotdeauna
+       - Matrice diagonalizabilă ⟺ pentru fiecare λ, multiplicitatea geometrică = algebrică
+         (echivalent: există n vectori proprii liniar independenți)
+       - Diagonalizare: A = PDP⁻¹, unde D = matrice diagonală cu λ_i pe diagonală,
+         P = matrice cu vectorii proprii corespunzători pe coloane (ÎN ACEEAȘI ORDINE ca în D)
+       - Matrici simetrice reale: ÎNTOTDEAUNA diagonalizabile, cu vectori proprii ortogonali
+         (teorema spectrală) — caz important, frecvent la aplicații
+
+       ══════════════════════════════════════════
+       GEOMETRIE ANALITICĂ ȘI DIFERENȚIALĂ
+       ══════════════════════════════════════════
+       - Dreapta în plan: ecuație generală ax+by+c=0; ecuație explicită y=mx+n (m=panta);
+         dreapta prin 2 puncte, dreapta prin punct + direcție
+       - Planul în spațiu: ax+by+cz+d=0, unde (a,b,c) = vector normal la plan
+       - Dreapta în spațiu: ca intersecție a 2 plane, sau ecuații parametrice
+         (x,y,z) = (x₀,y₀,z₀) + t·(l,m,n)
+       - Distanțe: punct-dreaptă (plan), unghiuri între drepte/plane — folosind produsul scalar
+         (cos θ = ⟨u,v⟩/(‖u‖‖v‖)) și produsul vectorial (pentru arii/perpendicularitate)
+       - Conice (elipsă, hiperbolă, parabolă): ecuații canonice, focare, excentricitate —
+         verifică forma canonică ÎNAINTE de a identifica tipul de conică
+       - Curbe parametrizate r(t)=(x(t),y(t),z(t)): vector viteză r'(t), vector accelerație r''(t),
+         lungime de arc, curbură — bază pentru cinematică (relevant direct pentru circuite/semnale)
+
+       CAPCANE FRECVENTE:
+       - Înmulțirea matricilor în ordine greșită (AB tratat ca BA)
+       - Aplicarea regulii lui Cramer pe sisteme cu det(A)=0 (nu se poate — verifică ÎNTÂI determinantul)
+       - Confuzia multiplicității algebrice cu cea geometrică la valori proprii repetate
+       - Alegerea unui vector normal greșit la ecuația planului (coeficienții a,b,c SUNT
+         componentele normalei, nu ale unui vector din plan)
+       - Uitarea verificării compatibilității (Kronecker-Capelli) înainte de a căuta soluția
+    """,
+
     "matematică": r"""
     1. MATEMATICĂ — PROGRAMA OFICIALĂ 2026 (Liceu România):
        NOTAȚII OBLIGATORII (niciodată altele):
