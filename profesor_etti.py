@@ -1718,7 +1718,7 @@ MATERII = {
     "⚡ Fizică":                                  "fizică",
     "💻 Programarea Calculatoarelor și Limbaje de Programare": "programarea calculatoarelor și limbaje de programare",
     "🔌 Bazele Electrotehnicii (INF: Electrotehnică)": "bazele electrotehnicii",
-    "🧪 Chimie":                                  "chimie",
+    "🧪 Chimie":                                  "chimie facultate",
     "📐 Matematici Speciale":                     "matematici speciale",
     "📏 Măsurări în Electronică și Telecomunicații (INF: Măsurători Electronice, Senzori și Traductoare)": "măsurări în electronică și telecomunicații",
     "🧱 Materiale pentru Electronică (INF: Sisteme de Operare 1)": "materiale pentru electronică",
@@ -2340,6 +2340,83 @@ _PROMPT_SUBJECTS: dict[str, str] = {
        - Tratarea vitezei/accelerației ca scalari când problema e 2D — trebuie descompuse pe componente
        - La ciocniri: presupunerea că energia cinetică se conservă fără a verifica tipul ciocnirii
        - Semnul greșit la legea lui Faraday/Lenz (uitarea sensului opus efectului indus)
+    """,
+
+    "chimie facultate": r"""
+    1. CHIMIE — ANUL I ETTI/UPB (nivel facultate, orientat spre inginerie electronică):
+
+       NOTAȚII OBLIGATORII:
+       - Reacții chimice ÎNTOTDEAUNA echilibrate (balansate) — verifică conservarea atomilor
+         pe fiecare parte a ecuației înainte de a considera rezolvarea completă
+       - Stări de agregare: (s) solid, (l) lichid, (g) gaz, (aq) în soluție apoasă
+       - Numere de oxidare: cifre romane sau + / − explicit (ex: Fe²⁺, Fe³⁺, sau Fe(II)/Fe(III))
+       - Concentrații: molaritate M (mol/L), procent masic %, folosește notația standard —
+         precizează întotdeauna unitatea la un rezultat de concentrație
+
+       STRUCTURA OBLIGATORIE pentru probleme de calcul chimic:
+       **1. Scrie și echilibrează reacția** — dacă nu e dată deja echilibrată
+       **2. Identifică ce se cere** — masă, volum, concentrație, număr de moli
+       **3. Calcul cu moli** — convertește ÎNTOTDEAUNA la moli ca unitate intermediară
+          (n = m/M pentru masă, n = C·V pentru soluții)
+       **4. Verificare stoichiometrică** — raportul molar din ecuația echilibrată
+
+       ══════════════════════════════════════════
+       STRUCTURA ATOMULUI ȘI LEGĂTURI CHIMICE
+       ══════════════════════════════════════════
+       - Configurație electronică: regula lui Hund, principiul Pauli, ordinea de completare
+         a orbitalilor (1s, 2s, 2p, 3s, 3p, 4s, 3d...) — relevantă pentru semiconductori
+         (bandă de valență/conducție se leagă direct de configurația electronică)
+       - Legătura ionică: transfer de electroni, între metal și nemetal (diferență mare
+         de electronegativitate)
+       - Legătura covalentă: partajare de electroni; polară (electronegativități diferite)
+         vs. nepolară; legătură simplă/dublă/triplă
+       - Legătura metalică: model "mare de electroni" — explică conductivitatea electrică
+         și termică a metalelor (relevant DIRECT pentru materiale conductoare în electronică)
+       - Semiconductori: legătură covalentă în rețea cristalină (Si, Ge); dopare cu impurități
+         (tip n — donori de electroni, tip p — acceptori/goluri) — punte spre Materiale
+         pentru Electronică și Dispozitive Electronice
+
+       ══════════════════════════════════════════
+       STOICHIOMETRIE ȘI SOLUȚII
+       ══════════════════════════════════════════
+       - Mol, masă molară M (g/mol), numărul lui Avogadro N_A = 6.022×10²³
+       - Legea conservării masei — baza echilibrării reacțiilor
+       - Concentrația molară: C = n/V (mol/L); diluție: C₁V₁ = C₂V₂
+       - Randament de reacție: η = (cantitate obținută practic)/(cantitate teoretică) × 100%
+       - Reactiv limitativ: identifică-l comparând raportul molar disponibil cu cel din
+         ecuația echilibrată — reactivul care se epuizează primul limitează produsul
+
+       ══════════════════════════════════════════
+       ELECTROCHIMIE (relevanță directă pentru electronică — baterii, coroziune, PCB)
+       ══════════════════════════════════════════
+       - Oxidare (pierdere de electroni, la anod) vs. reducere (câștig de electroni, la catod) —
+         "OIL RIG": Oxidation Is Loss, Reduction Is Gain
+       - Reacții redox: identifică ce se oxidează și ce se reduce urmărind variația
+         numărului de oxidare
+       - Celule galvanice (baterii): energie chimică → electrică; anod (−), catod (+) în
+         convenția celulei galvanice
+       - Electroliza: energie electrică → reacție chimică forțată (nespontană) — relevantă
+         pentru placarea/gravarea PCB (ex: gravarea cu FeCl₃ sau HCl+H₂O₂ e o reacție redox:
+         cuprul metalic e oxidat de agentul oxidant și trece în soluție ca ion Cu²⁺)
+       - Seria potențialelor standard de reducere: indică ce metal se oxidează preferențial
+         (bază teoretică pentru coroziunea galvanică între metale diferite în contact)
+       - pH: pH = −log[H⁺]; acid (pH<7) vs. bazic (pH>7) — relevant pentru soluțiile de
+         gravare/curățare din procesele electronice
+
+       ══════════════════════════════════════════
+       TERMOCHIMIE (introducere)
+       ══════════════════════════════════════════
+       - Reacții exoterme (eliberează căldură, ΔH<0) vs. endoterme (absorb căldură, ΔH>0)
+       - Legea lui Hess: ΔH_reacție e independentă de calea urmată (sumă algebrică de ΔH
+         pentru pași intermediari)
+
+       CAPCANE FRECVENTE:
+       - Ecuație chimică neechilibrată — verifică ÎNTOTDEAUNA conservarea atomilor
+       - Confuzia moli ↔ grame (uitarea conversiei prin masa molară)
+       - Confuzia oxidare/reducere (cine cedează, cine primește electroni)
+       - La reactiv limitativ: comparare directă a maselor/volumelor în loc de moli
+         (raportul stoichiometric e ÎNTOTDEAUNA molar, nu masic)
+       - Semn greșit la ΔH (exotermă e negativă, nu pozitivă)
     """,
 
     "matematică": r"""
@@ -4270,255 +4347,101 @@ SYSTEM_PROMPT = get_system_prompt(
 
 # === DETECȚIE AUTOMATĂ MATERIE ===
 # Mapare cuvinte cheie → materie (pentru detecție rapidă fără apel API)
+# NOTĂ ETTI: doar disciplinele deja scrise în _PROMPT_SUBJECTS au intrare aici.
+# Se adaugă câte o intrare nouă de fiecare dată când se scrie un bloc nou de materie —
+# altfel modul "🤖 Automat" nu o poate detecta din cuvinte cheie.
 SUBJECT_KEYWORDS = {
-    "matematică": [
-        "ecuație", "ecuatia", "funcție", "functie", "derivată", "derivata", "integrală", "integrala",
-        "limită", "limita", "matrice", "determinant", "trigonometrie", "geometrie", "algebră", "algebra",
-        "logaritm", "radical", "inecuație", "inecuatia", "probabilitate", "combinatorică",
-        "vector", "plan", "dreapta", "paralelă", "perpendiculară", "triunghi", "cerc", "parabola",
-        "matematica", "mate", "math", "calcul", "număr", "numărul", "numere",
+    "bazele electrotehnicii": [
+        "circuit", "circuit electric", "circuit serie", "circuit paralel",
+        "kirchhoff", "kvl", "kcl", "rezistor", "rezistență", "rezistenta",
+        "curent electric", "tensiune electrică", "tensiune electrica",
+        "impedanță", "impedanta", "fazor", "reactanță", "reactanta",
+        "condensator", "bobină", "bobina", "inductor", "thévenin", "thevenin",
+        "norton", "superpoziție", "superpozitie", "putere activă", "putere reactivă",
+        "factor de putere", "cos phi", "regim sinusoidal", "regim permanent",
+        "ohm", "amper", "watt", "volt", "electrotehnica", "electrotehnică",
+        "nod", "ramură", "buclă", "divizor de tensiune", "divizor de curent",
     ],
-    "fizică_real": [
-        "forță", "forta", "viteză", "viteza", "accelerație", "acceleratie", "masă", "masa",
-        "energie", "putere", "curent electric", "tensiune electrică", "rezistență electrică",
-        "curent", "tensiune", "rezistenta", "rezistență", "circuit", "circuit electric",
-        "circuit serie", "circuit paralel", "serie", "paralel",
-        "câmp", "camp", "undă", "unda", "optică", "optica", "lentilă", "lentila",
-        "termodinamică", "termodinamica", "gaz", "presiune", "volum", "temperatură", "temperatura",
-        "fizica", "fizică", "mecanică", "mecanica", "electricitate", "baterie", "condensator",
-        "gravitație", "gravitatie", "frecare", "pendul", "oscilatie", "oscilație",
-        "rezistor", "ohm", "amper", "volt", "watt", "joule", "newton",
-        "nod", "ramură", "legea lui kirchhoff", "legea lui ohm",
+    "analiză matematică": [
+        "derivată", "derivata", "integrală", "integrala", "limită", "limita",
+        "șir", "sir", "serie numerică", "serie numerica", "converge", "convergență",
+        "convergenta", "criteriul raportului", "l'hopital", "l'hôpital",
+        "taylor", "asimptotă", "asimptota", "continuitate", "studiul funcției",
+        "primitivă", "primitiva", "integrare prin părți", "schimbare de variabilă",
+        "criteriul comparației", "monotonie", "extreme locale",
     ],
-    "fizică_tehnologic": [
-        "forță", "forta", "viteză", "viteza", "accelerație", "acceleratie", "masă", "masa",
-        "energie", "putere", "curent electric", "tensiune electrică", "rezistență electrică",
-        "curent", "tensiune", "rezistenta", "rezistență", "circuit", "circuit electric",
-        "circuit serie", "circuit paralel", "serie", "paralel",
-        "câmp", "camp", "undă", "unda", "optică", "optica", "lentilă", "lentila",
-        "termodinamică", "termodinamica", "gaz", "presiune", "volum", "temperatură", "temperatura",
-        "fizica", "fizică", "mecanică", "mecanica", "electricitate", "baterie", "condensator",
-        "gravitație", "gravitatie", "frecare", "pendul", "oscilatie", "oscilație",
-        "rezistor", "ohm", "amper", "volt", "watt", "joule", "newton",
-        "nod", "ramură", "legea lui kirchhoff", "legea lui ohm",
+    "algebră liniară, geometrie analitică și diferențială": [
+        "matrice", "determinant", "vector propriu", "valoare proprie",
+        "sistem liniar", "rangul unei matrici", "cramer", "gauss-jordan",
+        "diagonalizare", "spațiu vectorial", "spatiu vectorial", "bază", "baza",
+        "plan", "dreaptă în spațiu", "dreapta in spatiu", "conică", "conica",
+        "elipsă", "hiperbolă", "parabolă", "produs scalar", "produs vectorial",
+        "kronecker-capelli", "independență liniară",
     ],
-    "chimie": [
-        "atom", "moleculă", "molecula", "element chimic", "compus chimic",
-        "reacție chimică", "reactie chimica", "ecuație chimică",
-        "acid", "sare", "oxidare", "reducere", "electroliză", "electroliza",
-        "număr de moli", "masă molară", "stoechiometrie",
-        "organic", "alcan", "alchenă", "alchena", "alcool", "ester", "chimica", "chimie",
-        "ph", "soluție", "solutie", "concentratie", "concentrație",
-        "hidrogen", "oxigen", "carbon", "azot", "legătură chimică",
+    "programarea calculatoarelor și limbaje de programare": [
+        "pointer", "struct", "malloc", "clasă", "clasa c++", "moștenire",
+        "mostenire", "polimorfism", "virtual", "constructor", "destructor",
+        "recursivitate", "recursiv", "algoritm", "sortare", "bubble sort",
+        "#include", "cout", "cin", "c++", "cod c", "segmentation fault",
+        "alocare dinamică", "alocare dinamica", "vector<", "encapsulare",
     ],
-    "biologie": [
-        "celulă", "celula", "adn", "arn", "proteină", "proteina", "enzimă", "enzima",
-        "mitoză", "mitoza", "meioză", "meioza", "genetică", "genetica", "cromozom",
-        "fotosinteza", "fotosinteză", "respiratie", "respirație", "metabolism",
-        "ecosistem", "specie", "organ", "tesut", "țesut", "sistem nervos",
-        "biologie", "biologic", "planta", "plantă", "animal",
+    "fizică": [
+        "forță", "forta", "viteză", "viteza", "accelerație", "acceleratie",
+        "newton", "energie cinetică", "energie cinetica", "impuls", "ciocnire",
+        "coulomb", "câmp electric", "camp electric", "forța lorentz", "forta lorentz",
+        "legea lui faraday", "flux magnetic", "mișcare rectilinie", "miscare rectilinie",
+        "mișcare circulară", "miscare circulara", "frecare statică", "frecare cinetică",
+        "oscilator armonic", "pendul", "gauss (legea)", "inducție electromagnetică",
     ],
-    "informatică": [
-        # general
-        "algoritm", "cod", "program", "informatica", "informatică", "programare",
-        # Python keywords
-        "python", "def ", "list", "dict", "tuple", "set(", "append", "pandas", "numpy",
-        "matplotlib", "scikit", "sklearn", "dataframe", "tkinter", "sqlite", "flask",
-        # C++ keywords
-        "c++", "cout", "cin", "#include", "vector<", "struct ", "pointer", "new ",
-        # structuri de date
-        "functie", "funcție", "vector", "array", "stivă", "stiva", "coada", "coadă",
-        "lista inlantuita", "listă înlănțuită", "arbore", "graf", "heap",
-        # algoritmi
-        "backtracking", "greedy", "recursivitate", "recursiv", "sortare", "cautare",
-        "bubble sort", "merge sort", "quicksort", "dijkstra", "bfs", "dfs",
-        "programare dinamica", "programare dinamică", "rucsac", "backtrack",
-        "complexitate", "recursie",
-        # BD si SQL
-        "sql", "baza de date", "bază de date", "select ", "join", "create table",
-        "entitate", "normalizare", "sqlite", "mysql",
-        # ML
-        "machine learning", "invatare automata", "învățare automată", "knn",
-        "clustering", "kmeans", "regresie", "clasificare", "neural", "scikit",
-        # pseudocod
-        "pseudocod", "variabila", "variabilă", "ciclu", "for ", "while ", "if ",
-    ],
-    "geografie": [
-        "relief", "munte", "câmpie", "campie", "râu", "rau", "dunărea", "dunarea",
-        "climă", "clima", "vegetatie", "vegetație", "populație", "populatie",
-        "romania", "românia", "europa", "continent", "ocean", "geografie",
-        "carpati", "carpații", "câmpia", "campia", "delta", "lac",
-    ],
-    "istorie": [
-        "război", "razboi", "revoluție", "revolutie", "unire", "independenta", "independență",
-        "cuza", "eminescu", "mihai viteazul", "stefan cel mare", "ștefan cel mare",
-        "comunism", "comunist", "ceausescu", "ceaușescu", "bac 1918", "marea unire",
-        "medieval", "evul mediu", "modern", "contemporan", "istorie", "istoric",
-        "domnie", "domitor", "rege", "regat", "principat",
-    ],
-    "limba și literatura română": [
-        "roman", "roman", "poezie", "poem", "eminescu", "rebreanu", "sadoveanu",
-        "preda", "arghezi", "blaga", "bacovia", "caragiale", "creanga", "creangă",
-        "eseu", "comentariu", "caracterizare", "narator", "personaj", "tema",
-        "figuri de stil", "metafora", "metaforă", "epitet", "comparatie", "comparație",
-        "roman", "proza", "proză", "dramaturgie", "gramatica", "gramatică",
-        "romana", "română", "literatura", "literatură",
-    ],
-    "limba engleză": [
-        # Identificatori de limbă / materie
-        "english", "engleză", "engleza", "grammar", "essay", "vocabulary",
-        # Structuri gramaticale exclusiv engleze (fraze compuse — fără risc de false positive)
-        "present perfect", "past simple", "past tense", "future tense",
-        "present tense", "conditional tense", "passive voice", "reported speech",
-        "modal verb", "relative clause", "indirect speech",
-        # Teme din programa IX (L1 nouă)
-        "teens culture", "social media", "influencer", "personal growth",
-        "community life", "tourist gems", "greening life",
-        # Teme X–XII (4 domenii)
-        "cover letter", "job interview", "curriculum vitae",
-        "british culture", "american culture", "civilizație britanică",
-        # Tipuri de texte / sarcini frecvente
-        "formal letter", "informal email", "book review", "film review",
-        "argumentative essay", "opinion essay", "for and against",
-        # Vocabular gramatical în română, specific englezei
-        "gerunziu", "infinitiv", "vocea pasivă", "inversiune",
-        "propoziție relativă", "vorbire indirectă", "condiționala de tip",
-    ],
-    "limba franceză": [
-        # Identificatori de limbă / materie
-        "français", "franceză", "franceza",
-        # Timpuri verbale exclusiv franceze
-        "passé composé", "imparfait", "subjonctif", "futur simple",
-        "conditionnel", "participe passé", "plus-que-parfait",
-        # Verbe auxiliare (formă exclusiv franceză)
-        "être", "avoir",
-        # Articole și structuri exclusiv franceze
-        "article partitif", "article défini", "article indéfini",
-        "du ", "de la ", "des ",
-        # Teme din programă
-        "civilizație franceză", "francofonă", "francofonie", "espace francophone",
-        "pays francophones",
-        # Funcții de comunicare frecvente în lecții
-        "accord du participe", "accord adjectif", "auxiliaire être",
-        "auxiliaire avoir", "verbe pronominal", "verbe réfléchi",
-        # Vocabular gramatical în română, specific francezei
-        "participiu trecut", "acord participiu", "verb reflexiv",
-        "propoziție relativă franceză", "subjonctiv francez",
-    ],
-    "limba germană": [
-        # Identificatori de limbă / materie
-        "germană", "germana", "deutsch", "německy", "allemand",
-        # Terminologie exclusiv germană
-        "der ", "die ", "das ", "ein ", "eine ", "kein", "keine",
-        "umlaut", "eszett", "ß",
-        # Timpuri verbale exclusiv germane
-        "perfekt", "präteritum", "plusquamperfekt", "konjunktiv",
-        "konjunktiv ii", "futur i", "futur ii",
-        # Structuri gramaticale exclusiv germane
-        "separable verben", "trennbare verben", "reflexive verben",
-        "verb la sfârșitul", "verb la sfarsitul", "satzstellung",
-        "partizip ii", "partizip i",
-        # Cazuri germane
-        "nominativ", "acuzativ", "dativ", "genitiv",
-        # Verbe modale germane
-        "können", "müssen", "dürfen", "wollen", "sollen", "mögen",
-        # Vocabular gramatical în română specific germanei
-        "genul substantivului", "articol hotărât german", "declinare germană",
-        "propoziție subordonată germană", "prefix separabil",
-        # Teme culturale specifice
-        "spațiu germanofon", "germanofon", "hörverstehen", "leseverstehen",
-        "oktoberfest", "bundesrepublik",
+    "chimie facultate": [
+        "atom", "moleculă", "molecula", "reacție chimică", "reactie chimica",
+        "oxidare", "reducere", "mol de", "masă molară", "masa molara",
+        "ph", "legătură ionică", "legatura ionica", "legătură covalentă",
+        "legatura covalenta", "electroliza", "electroliză", "stoichiometrie",
+        "reactiv limitativ", "semiconductor", "configurație electronică",
+        "celulă galvanică", "baterie chimică",
     ],
 }
 
 
+
 # Cuvinte care sunt exclusive unei materii — boost mare dacă apar
+# NOTĂ ETTI: doar disciplinele deja scrise în _PROMPT_SUBJECTS au intrare aici.
 _STRONG_INDICATORS = {
     # IMPORTANT: folosiți doar cuvinte complete sau fraze — NU substring-uri scurte
-    # care pot apărea accidental în alte cuvinte (ex: "ion" e în "funcționează").
-    "informatică":  ["python", "c++", "def ", "cout", "#include", "algoritm", "recursiv",
-                     "backtracking", "pandas", "sklearn", "compilator", "pseudocod"],
-    "matematică":   ["ecuație", "inecuație", "derivată", "integrală", "matrice", "determinant",
-                     "funcție", "progresie", "logaritm", "trigonometrie"],
-    "fizică_real":       ["forță", "viteză", "accelerație", "curent electric", "tensiune electrică",
-                         "rezistență electrică", "câmp magnetic", "undă", "frecvență",
-                         "energie cinetică", "circuit electric", "circuit serie", "circuit paralel",
-                         "lege lui ohm", "legea lui ohm", "condensator", "inductor",
-                         "câmp electric", "sarcină electrică", "putere electrică"],
-    "fizică_tehnologic": ["forță", "viteză", "accelerație", "curent electric", "tensiune electrică",
-                         "rezistență electrică", "câmp magnetic", "undă", "frecvență",
-                         "energie cinetică", "circuit electric", "circuit serie", "circuit paralel",
-                         "lege lui ohm", "legea lui ohm", "condensator", "inductor",
-                         "câmp electric", "sarcină electrică", "putere electrică"],
-    "chimie":       ["reacție chimică", "ecuație chimică", "mol ", "moli ", "masă molară",
-                     "oxidare", "reducere", "electroliză", "hidroliza",
-                     "acid tare", "bază tare", "soluție tampon", "concentrație molară",
-                     "legătură covalentă", "legătură ionică", "orbital"],
-    "biologie":     ["celulă", "adn", "arn", "proteină", "metabolism", "fotosinteză",
-                     "ecosistem", "evoluție", "genetică", "cromozom", "mitoză"],
-    "istorie":      ["război mondial", "tratat de pace", "revoluție", "regat", "imperiu",
-                     "dinastie", "domnie", "bătălie"],
-    "geografie":    ["relief", "climă", "populație", "hidrografie", "câmpie", "munte",
-                     "râu", "bazin hidrografic"],
-    "limba și literatura română": ["figuri de stil", "narator", "personaj principal",
-                     "comentariu literar", "caracterizare", "metaforă", "epitet",
-                     "curent literar", "roman realist"],
-    # Indicatori puternici pentru limbi străine — fraze exclusiv din terminologia
-    # gramaticală a limbii respective, imposibil de confundat cu româna sau altă materie
-    "limba engleză": [
-        # Timpuri verbale în engleză (formă exclusiv engleză)
-        "present perfect", "past simple", "past tense", "future tense",
-        "present continuous", "past continuous", "past perfect",
-        # Structuri gramaticale exclusiv engleze
-        "passive voice", "reported speech", "modal verb", "relative clause",
-        "conditional sentence", "indirect speech", "gerund", "infinitive",
-        # Tipuri de texte / sarcini BAC engleză
-        "argumentative essay", "opinion essay", "formal letter", "book review",
-        "for and against essay",
-        # Teme specifice programei noi clasa IX
-        "teens culture", "greening life", "personal growth",
-    ],
-    "limba franceză": [
-        # Timpuri verbale în franceză (formă exclusiv franceză)
-        "passé composé", "imparfait", "subjonctif", "futur simple",
-        "conditionnel présent", "conditionnel passé", "plus-que-parfait",
-        # Structuri gramaticale exclusiv franceze
-        "participe passé", "être ou avoir", "accord du participe",
-        "article partitif", "verbe pronominal", "pronom relatif",
-        # Teme specifice programei franceze
-        "espace francophone", "pays francophones", "civilisation française",
-        # Conectori/structuri de eseu francez
-        "thèse antithèse", "plan dialectique",
-    ],
-    "limba germană": [
-        # Timpuri verbale exclusiv germane
-        "perfekt", "präteritum", "plusquamperfekt",
-        "konjunktiv ii", "konjunktiv i",
-        # Structuri gramaticale exclusiv germane — imposibil de confundat
-        "separable verben", "trennbare verben", "partizip ii",
-        "verb la sfârșitul propoziției", "satzstellung",
-        # Cazuri germane (formă exclusiv germană)
-        "der den dem des", "akkusativ", "nominativ kasus",
-        # Verbe auxiliare în contexte germane
-        "haben oder sein", "sein oder haben",
-        # Conectori cu verb la sfârșit (exclusiv germani)
-        "weil verb", "obwohl verb", "damit verb",
-        # Teme culturale specifice germanei
-        "spațiu germanofon", "germanofonă", "hörverstehen", "leseverstehen",
-        "bundesrepublik", "österreich deutsch",
-    ],
+    # care pot apărea accidental în alte cuvinte.
+    "bazele electrotehnicii": ["kirchhoff", "thévenin", "thevenin", "norton", "fazor",
+                     "impedanță", "impedanta", "regim sinusoidal", "putere reactivă",
+                     "putere activă", "factor de putere", "divizor de tensiune",
+                     "divizor de curent", "transfer maxim de putere"],
+    "analiză matematică": ["l'hopital", "l'hôpital", "criteriul raportului", "serie numerică",
+                     "serie numerica", "integrare prin părți", "criteriul comparației",
+                     "studiul funcției", "formula lui taylor"],
+    "algebră liniară, geometrie analitică și diferențială": [
+                     "vector propriu", "valoare proprie", "kronecker-capelli",
+                     "diagonalizare", "rangul unei matrici", "regula lui cramer",
+                     "gauss-jordan", "produs vectorial"],
+    "programarea calculatoarelor și limbaje de programare": [
+                     "python", "c++", "cout", "#include", "algoritm", "recursiv",
+                     "malloc", "pointer", "segmentation fault", "moștenire", "mostenire"],
+    "fizică": ["forța lorentz", "forta lorentz", "legea lui coulomb", "energie cinetică",
+                     "energie cinetica", "legea lui faraday", "mișcare circulară",
+                     "miscare circulara", "oscilator armonic"],
+    "chimie facultate": ["reacție chimică", "reactie chimica", "masă molară", "masa molara",
+                     "oxidare", "reducere", "electroliză", "electroliza",
+                     "legătură covalentă", "legatura covalenta", "legătură ionică",
+                     "legatura ionica", "configurație electronică"],
 }
 
 def detect_subject_from_text(text: str) -> str | None:
     """Detectează materia dintr-un text folosind cuvinte cheie cu sistem de ponderi.
     
     Folosește indicatori puternici (boost x3) + indicatori generali + penalizări încrucișate.
-    Evită false positive-uri de tip 'matrice' → matematică când e informatică.
+    Evită false positive-uri de tip 'vector' → algebră liniară când e de fapt programare.
 
     Returnează:
-      - str: materia detectată (ex: "matematică", "fizică_real")
-      - "_fizica_ambigua": dacă textul e clar fizică dar profilul e necunoscut
-      - None: dacă nu s-a putut detecta nimic
+      - str: materia detectată (ex: "analiză matematică", "bazele electrotehnicii")
+      - None: dacă nu s-a putut detecta nimic sau e ambiguu
     """
     text_lower = text.lower()
     scores = {}
@@ -4533,11 +4456,12 @@ def detect_subject_from_text(text: str) -> str | None:
         strong_hits = sum(1 for ind in indicators if ind in text_lower)
         scores[subject] = scores.get(subject, 0) + strong_hits * 3
 
-    # Penalizare încrucișată: dacă avem indicatori puternici de informatică,
-    # penalizăm matematica (ex: "matrice" în context cod → nu matematică)
-    info_strong = sum(1 for ind in _STRONG_INDICATORS["informatică"] if ind in text_lower)
+    # Penalizare încrucișată: dacă avem indicatori puternici de programare,
+    # penalizăm algebra liniară (ex: "vector"/"matrice" în context cod → nu algebră)
+    info_strong = sum(1 for ind in _STRONG_INDICATORS["programarea calculatoarelor și limbaje de programare"] if ind in text_lower)
     if info_strong >= 2:
-        scores["matematică"] = scores.get("matematică", 0) * 0.3
+        cheie_algebra = "algebră liniară, geometrie analitică și diferențială"
+        scores[cheie_algebra] = scores.get(cheie_algebra, 0) * 0.3
 
     # Elimină scoruri 0 și returnează maximul cu threshold minim
     scores = {s: v for s, v in scores.items() if v > 0}
@@ -4546,15 +4470,8 @@ def detect_subject_from_text(text: str) -> str | None:
     best = max(scores, key=scores.get)
     sorted_scores = sorted(scores.values(), reverse=True)
 
-    # Caz special: fizică_real și fizică_tehnologic au indicatori identici →
-    # vor avea mereu scor egal. Detectăm că e fizică și returnăm un cod special
-    # pentru a declanșa promptul de alegere profil în UI.
+    # Egalitate între două materii diferite → ambiguu, nu detectăm automat
     if len(sorted_scores) >= 2 and sorted_scores[0] == sorted_scores[1]:
-        # Verificăm dacă cele două cu scor maxim sunt ambele variante de fizică
-        top_subjects = [s for s, v in scores.items() if v == sorted_scores[0]]
-        if set(top_subjects) == {"fizică_real", "fizică_tehnologic"}:
-            return "_fizica_ambigua"
-        # Alt egal între materii diferite → nu detectăm
         return None
 
     return best
