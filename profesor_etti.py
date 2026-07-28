@@ -2241,6 +2241,107 @@ _PROMPT_SUBJECTS: dict[str, str] = {
        - La C++: uitarea `virtual` când se dorește polimorfism real prin pointeri la clasa de bază
     """,
 
+    "fizică": r"""
+    1. FIZICĂ — ANUL I ETTI/UPB (Fizică 1 sem. I: Mecanică; Fizică 2 sem. II: Electromagnetism/Oscilații/Unde):
+
+       NOTAȚII OBLIGATORII (niciodată altele):
+       - Vectori: v̄ sau v (bold); modul: |v| sau v; versor (vector unitar): v̂
+       - Derivată în timp: v = dr/dt, a = dv/dt (folosește notația Leibniz aici, e standard în fizică,
+         spre deosebire de Analiza Matematică unde preferi f'(x))
+       - Câmp electric: E̅ (V/m); câmp magnetic: B̅ (T); forță: F̅ (N)
+       - Sarcină electrică: q (C); permitivitate electrică a vidului: ε₀; permeabilitate
+         magnetică a vidului: μ₀
+       - Unități SI OBLIGATORII la fiecare rezultat numeric — fără unități, răspunsul e incomplet
+       - Folosește LaTeX pentru toate formulele; pentru vectori, arată explicit componentele
+         când e relevant (F̅ = F_x·x̂ + F_y·ŷ)
+
+       STRUCTURA OBLIGATORIE pentru orice problemă:
+       **1. Date cunoscute și necunoscute** — listează explicit, cu unități
+       **2. Model fizic / legea aplicabilă** — precizează ce lege/principiu folosești și DE CE
+          se aplică în acest caz (ex: conservarea energiei valabilă doar dacă nu sunt forțe
+          disipative, sau se contabilizează explicit lucrul mecanic al frecării)
+       **3. Rezolvare simbolică** — mai întâi cu litere, abia la final înlocuiești numerele
+          (reduce erorile și permite verificarea dimensională)
+       **4. Verificare dimensională** — unitățile rezultatului trebuie să corespundă mărimii cerute
+       **5. Interpretare fizică** — răspunsul are sens? (ordin de mărime rezonabil, semn corect)
+
+       ══════════════════════════════════════════
+       FIZICĂ 1 (Semestrul I) — MECANICĂ
+       ══════════════════════════════════════════
+
+       CINEMATICA:
+       - Poziție, viteză, accelerație — relații de derivare/integrare: v=dr/dt, a=dv/dt,
+         r(t)=r₀+∫v dt
+       - Mișcare rectilinie uniform variată: v=v₀+at; x=x₀+v₀t+½at²; v²=v₀²+2a(x−x₀)
+       - Mișcare circulară: viteză unghiulară ω, accelerație centripetă a_c=v²/r=ω²r,
+         accelerație tangențială a_t (dacă viteza unghiulară variază)
+       - Mișcare relativă: v̄_{A/C} = v̄_{A/B} + v̄_{B/C} (compunerea vitezelor)
+
+       DINAMICA:
+       - Legile lui Newton: I (inerție), II (F̄=ma̅ — LEGEA FUNDAMENTALĂ, aplicabilă pe
+         fiecare direcție independent), III (acțiune-reacțiune, forțe pe corpuri DIFERITE)
+       - Forțe uzuale: greutate (G=mg), normală (N), frecare (f=μN — μ_s statică vs μ_c cinetică,
+         μ_s ≥ μ_c întotdeauna), tensiune în fir, forță elastică (F=−kx, legea lui Hooke)
+       - Diagrama forțelor (corp liber): ÎNTOTDEAUNA primul pas la o problemă de dinamică —
+         desenează/descrie TOATE forțele care acționează pe fiecare corp, apoi scrie ΣF=ma
+         pe fiecare axă
+
+       LUCRU MECANIC, ENERGIE, PUTERE:
+       - Lucrul mecanic: L = ∫F̄·dr̄ (produs scalar — doar componenta forței pe direcția
+         deplasării contează)
+       - Energia cinetică: E_c = ½mv²; teorema variației energiei cinetice: L_total = ΔE_c
+       - Energia potențială: gravitațională E_p=mgh; elastică E_p=½kx²
+       - Conservarea energiei mecanice: E_c+E_p = const, VALABILĂ DOAR dacă nu există forțe
+         disipative (frecare) — altfel, L_frecare = ΔE_mecanică (energie disipată)
+       - Puterea: P = dL/dt = F̄·v̄ (instantanee) sau P=L/t (medie)
+
+       IMPULS ȘI CIOCNIRI:
+       - Impuls: p̄=mv̄; teorema impulsului: F̄·Δt = Δp̄
+       - Conservarea impulsului: valabilă pentru sistem izolat (fără forțe externe nete)
+       - Ciocniri: plastică (corpurile rămân lipite, energia cinetică NU se conservă) vs.
+         elastică (energia cinetică SE conservă) — precizează tipul înainte de a rezolva
+
+       OSCILAȚII ȘI UNDE MECANICE (dacă intră în programa Fizică 1):
+       - Oscilator armonic: x(t)=A·cos(ωt+φ); ω=√(k/m) (resort) sau ω=√(g/L) (pendul, unghi mic)
+       - Perioada T=2π/ω; frecvența f=1/T
+
+       ══════════════════════════════════════════
+       FIZICĂ 2 (Semestrul II) — ELECTRICITATE, MAGNETISM ȘI UNDE
+       ══════════════════════════════════════════
+       (NOTĂ: complementar cu Bazele Electrotehnicii — aici accentul e pe câmpuri și legi
+       fundamentale, nu pe analiza circuitelor cu componente discrete)
+
+       ELECTROSTATICĂ:
+       - Legea lui Coulomb: F = k·|q₁q₂|/r² (k=1/(4πε₀)); câmp electric produs de sarcină
+         punctuală: E = k|q|/r²
+       - Principiul suprapunerii: câmpul total = suma vectorială a câmpurilor individuale
+       - Potențial electric: V; relația câmp-potențial: E̅=−∇V (sau, în 1D, E=−dV/dx)
+       - Legea lui Gauss: fluxul câmpului electric printr-o suprafață închisă = q_interior/ε₀ —
+         utilă pentru simetrii (sferică, cilindrică, planară)
+
+       MAGNETOSTATICĂ ȘI INDUCȚIE:
+       - Forța Lorentz: F̄ = qv̄×B̄ (pe sarcină în mișcare) + qE̅ (dacă există și câmp electric)
+       - Forța asupra unui conductor parcurs de curent: F̄=Il̄×B̄
+       - Legea lui Faraday (inducție electromagnetică): e.m.f. indusă ε = −dΦ/dt (Φ = flux magnetic)
+         — semnul minus (legea lui Lenz) arată că efectul se opune cauzei
+       - Legea lui Ampère (formă simplificată): ∮B̄·dl̄ = μ₀I_interior
+
+       UNDE (dacă intră în programă):
+       - Ecuația undei, viteză de propagare, relația v=λf
+       - Unde electromagnetice — legătura cu ecuațiile lui Maxwell (nivel introductiv)
+
+       CAPCANE FRECVENTE:
+       - Omiterea unităților sau amestecarea unităților (cm cu m, g cu kg) — CONVERTEȘTE
+         la SI ÎNAINTE de calcul, nu la final
+       - Aplicarea conservării energiei mecanice când există frecare (fără a contabiliza
+         lucrul mecanic al frecării)
+       - Confuzia între μ_s (frecare statică, previne pornirea mișcării) și μ_c (frecare
+         cinetică, în timpul mișcării)
+       - Tratarea vitezei/accelerației ca scalari când problema e 2D — trebuie descompuse pe componente
+       - La ciocniri: presupunerea că energia cinetică se conservă fără a verifica tipul ciocnirii
+       - Semnul greșit la legea lui Faraday/Lenz (uitarea sensului opus efectului indus)
+    """,
+
     "matematică": r"""
     1. MATEMATICĂ — PROGRAMA OFICIALĂ 2026 (Liceu România):
        NOTAȚII OBLIGATORII (niciodată altele):
@@ -9169,6 +9270,20 @@ INTREBARI_POOL = {
         "Cum implementez o sortare bubble/insertion sort?",
         "Ce înseamnă moștenire publică vs. privată în C++?",
         "Cum evit memory leaks în programele mele?",
+    ],
+    "fizică": [
+        "Cum fac diagrama forțelor pentru o problemă de dinamică?",
+        "Explică-mi legea a doua a lui Newton cu un exemplu",
+        "Când se conservă energia mecanică și când nu?",
+        "Care e diferența dintre frecarea statică și cea cinetică?",
+        "Cum rezolv o problemă de ciocnire (plastică vs elastică)?",
+        "Ce este legea lui Coulomb și cum calculez câmpul electric?",
+        "Explică-mi legea lui Faraday și sensul minus (Lenz)",
+        "Cum calculez forța Lorentz pe o sarcină în mișcare?",
+        "Ce este mișcarea circulară și cum calculez accelerația centripetă?",
+        "Cum aplic legea lui Gauss pentru o simetrie sferică?",
+        "Explică-mi oscilatorul armonic — resort și pendul",
+        "Care e legătura dintre câmpul electric și potențial?",
     ],
     "matematică": [
         "Cum rezolv o ecuație de gradul 2?",
