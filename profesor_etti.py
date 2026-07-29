@@ -2601,6 +2601,124 @@ _PROMPT_SUBJECTS: dict[str, str] = {
        - Neconectarea la masă/referință corectă la osciloscop, ducând la citiri eronate
     """,
 
+    "materiale pentru electronică": r"""
+    1. MATERIALE PENTRU ELECTRONICĂ — ANUL I ETTI/UPB (Semestrul II):
+       (INF: în locul acestei discipline au "Sisteme de Operare 1" — conținut diferit,
+       nu confunda dacă un student INF întreabă)
+
+       NOTAȚII OBLIGATORII:
+       - Rezistivitate: ρ (Ω·m); conductivitate: σ = 1/ρ (S/m)
+       - Bandă interzisă (gap energetic): E_g (eV)
+       - Permitivitate electrică: ε = ε_r·ε₀ (ε_r = permitivitate relativă, adimensională)
+       - Permeabilitate magnetică: μ = μ_r·μ₀
+       - Coeficient de temperatură al rezistivității: α (1/K sau 1/°C)
+       - Folosește unități SI; eV pentru energii la scară atomică (1 eV = 1.602×10⁻¹⁹ J)
+
+       STRUCTURA OBLIGATORIE pentru orice explicație:
+       **1. Clasificare** — în ce categorie de material se încadrează (conductor/semiconductor/
+          izolator/dielectric/magnetic) și DE CE (bandă energetică, structură)
+       **2. Mecanism fizic** — ce se întâmplă la nivel de electroni/rețea cristalină
+       **3. Proprietăți relevante pentru aplicație** — leagă de utilizarea practică în
+          electronică (ex: de ce cuprul pentru conductoare, de ce siliciul pentru tranzistoare)
+       **4. Comportament la variații** (temperatură, câmp) — dacă e relevant pentru întrebare
+
+       ══════════════════════════════════════════
+       TEORIA BENZILOR ENERGETICE — CLASIFICAREA MATERIALELOR
+       ══════════════════════════════════════════
+       - Bandă de valență (ocupată de electroni de legătură) vs. bandă de conducție
+         (electroni liberi, pot conduce curent)
+       - Conductor (metal): bandă de valență și de conducție se suprapun (sau banda de
+         conducție e parțial ocupată) — electroni liberi din abundență, chiar la 0K
+       - Izolator: gap energetic mare (E_g > ~5 eV) — electronii nu pot trece practic
+         niciodată în banda de conducție la temperaturi normale
+       - Semiconductor: gap energetic mic (E_g ~ 0.5-3 eV; Si: 1.12 eV, Ge: 0.67 eV) —
+         la temperatura camerei, unii electroni au energie termică suficientă să treacă
+         în banda de conducție
+
+       ══════════════════════════════════════════
+       MATERIALE CONDUCTOARE
+       ══════════════════════════════════════════
+       - Model electronilor liberi: conducția electrică = mișcarea electronilor de
+         valență, slab legați de nucleu, sub acțiunea câmpului electric
+       - Rezistivitatea CREȘTE cu temperatura la metale (mai multă agitație termică a
+         rețelei cristaline → mai multe ciocniri ale electronilor → mobilitate redusă):
+         ρ(T) ≈ ρ₀[1 + α(T−T₀)]
+       - Cupru: conductor de referință în electronică (conductivitate mare, cost rezonabil,
+         maleabil) — folosit pentru trasee PCB, conductoare, bobinaje
+       - Aur: rezistență la coroziune (contacte, placare conectori), dar conductivitate
+         ușor mai mică decât cuprul și cost mult mai mare
+       - Aluminiu: mai ușor și mai ieftin decât cuprul, dar conductivitate mai mică și
+         formează oxid izolator la suprafață (probleme la contacte/lipire)
+
+       ══════════════════════════════════════════
+       MATERIALE SEMICONDUCTOARE
+       ══════════════════════════════════════════
+       - Semiconductor intrinsec (pur): siliciu (Si), germaniu (Ge) — la 0K se comportă
+         ca izolator; la temperatura camerei, mici concentrații de electroni liberi și
+         goluri (perechi electron-gol generate termic)
+       - Dopare (semiconductor extrinsec): introducerea controlată de impurități pentru
+         a modifica drastic conductivitatea:
+         → Tip n (donor): impurități pentavalente (P, As) — electron în plus, slab legat,
+           devine purtător majoritar (electroni liberi)
+         → Tip p (acceptor): impurități trivalente (B, Ga) — lipsă un electron de legătură,
+           creează gol, purtător majoritar (goluri)
+       - Mobilitatea purtătorilor de sarcină: electronii au mobilitate mai mare decât
+         golurile (relevant pentru performanța dispozitivelor)
+       - Joncțiunea p-n (bază pentru diode/tranzistoare — se studiază detaliat la
+         Dispozitive Electronice, anul II, dar principiul de bază: la interfața p-n se
+         formează o regiune de sarcină spațială care permite conducția într-un singur sens)
+
+       ══════════════════════════════════════════
+       MATERIALE DIELECTRICE (IZOLATOARE)
+       ══════════════════════════════════════════
+       - Rigiditate dielectrică: câmpul electric maxim suportat înainte de străpungere
+         (V/m sau kV/mm) — depășirea ei duce la conducție bruscă/distrugere
+       - Permitivitate relativă ε_r: cu cât mai mare, cu atât materialul "concentrează"
+         mai mult câmpul electric — relevant direct pentru capacitatea condensatoarelor
+         (C = ε_r·ε₀·A/d) și pentru substratul PCB (afectează impedanța traseelor)
+       - Factor de pierderi (tangenta unghiului de pierderi, tan δ): cât din energia
+         câmpului electric alternativ se disipă ca căldură în dielectric — critic la
+         frecvențe înalte (RF, semnal rapid)
+       - Materiale uzuale în electronică: FR-4 (fibră de sticlă + rășină epoxidică —
+         substratul standard pentru PCB, ε_r≈4.5), ceramică (condensatoare, substraturi
+         de putere), poliester/polipropilenă (condensatoare film), aer/vid (ε_r=1, referință)
+
+       ══════════════════════════════════════════
+       MATERIALE MAGNETICE
+       ══════════════════════════════════════════
+       - Materiale feromagnetice: permeabilitate relativă μ_r foarte mare (sute-mii) —
+         folosite pentru miezuri de bobine/transformatoare (concentrează fluxul magnetic)
+       - Materiale magnetice moi (permeabilitate mare, coercitivitate mică): ușor de
+         magnetizat/demagnetizat — pentru miezuri de transformatoare (pierderi mici la
+         schimbarea sensului câmpului)
+       - Materiale magnetice dure (coercitivitate mare): păstrează magnetizarea —
+         pentru magneți permanenți
+       - Ciclul de histerezis: aria buclei = energie disipată pe ciclu (pierderi prin
+         histerezis) — relevant pentru eficiența transformatoarelor la frecvența rețelei
+
+       ══════════════════════════════════════════
+       MATERIALE PENTRU PCB ȘI ASAMBLARE (relevanță practică directă)
+       ══════════════════════════════════════════
+       - Substrat FR-4: rigid, izolator bun, cost redus — standardul industriei pentru
+         plăci cu 1-multi straturi
+       - Placare cu cupru: grosimea se exprimă în oz/ft² (uncii de cupru pe picior pătrat) —
+         determină capacitatea de curent a traseelor
+       - Rezistență de lipit (solder mask): strat protector care previne oxidarea și
+         scurtcircuitele accidentale între trasee adiacente
+       - Aliaje de lipit: tradițional Sn-Pb (63/37, eutectic — punct de topire minim),
+         actual fără plumb (Sn-Ag-Cu, RoHS) — temperatură de topire mai mare
+
+       CAPCANE FRECVENTE:
+       - Confuzia dintre creșterea rezistivității cu temperatura la METALE (crește) și
+         SCĂDEREA la SEMICONDUCTOARE (scade, mai mulți purtători generați termic)
+       - Confuzia purtător majoritar/minoritar în semiconductori dopați (tip n → electroni
+         majoritari, NU goluri)
+       - Tratarea permitivității relative ca fiind aceeași pentru toate frecvențele
+         (de fapt ε_r și tan δ variază cu frecvența la multe materiale)
+       - Confuzia materiale magnetice moi (miezuri, pierderi mici) cu cele dure
+         (magneți permanenți, coercitivitate mare)
+    """,
+
 }
 
 
@@ -2875,6 +2993,14 @@ SUBJECT_KEYWORDS = {
         "incertitudine de măsurare", "incertitudine de masurare", "eroare relativă",
         "eroare relativa", "calibrare", "generator de semnal", "propagarea erorilor",
     ],
+    "materiale pentru electronică": [
+        "bandă interzisă", "banda interzisa", "semiconductor intrinsec", "dopare",
+        "impuritate donor", "impuritate acceptor", "material dielectric",
+        "rigiditate dielectrică", "rigiditate dielectrica", "material feromagnetic",
+        "ciclu de histerezis", "permitivitate relativă", "permitivitate relativa",
+        "permeabilitate magnetică", "permeabilitate magnetica", "substrat fr-4",
+        "purtător majoritar", "purtator majoritar", "rezistivitate", "gap energetic",
+    ],
 }
 
 
@@ -2913,6 +3039,11 @@ _STRONG_INDICATORS = {
                      "eroare sistematică", "eroare sistematica", "eroare aleatoare",
                      "incertitudine de măsurare", "incertitudine de masurare",
                      "propagarea erorilor", "eroare de măsurare", "eroare de masurare"],
+    "materiale pentru electronică": ["bandă interzisă", "banda interzisa",
+                     "semiconductor intrinsec", "material feromagnetic", "ciclu de histerezis",
+                     "rigiditate dielectrică", "rigiditate dielectrica", "substrat fr-4",
+                     "purtător majoritar", "purtator majoritar", "impuritate donor",
+                     "impuritate acceptor"],
 }
 
 def detect_subject_from_text(text: str) -> str | None:
@@ -4971,6 +5102,20 @@ INTREBARI_POOL = {
         "De ce voltmetrul trebuie să aibă rezistență internă mare?",
         "Cum măsor frecvența unui semnal cu osciloscopul?",
         "Ce diferență e între eroare absolută și eroare relativă?",
+    ],
+    "materiale pentru electronică": [
+        "De ce cuprul e materialul standard pentru trasee PCB?",
+        "Cum funcționează doparea unui semiconductor (tip n vs tip p)?",
+        "Ce este banda interzisă și de ce contează pentru semiconductori?",
+        "Care e diferența dintre un material magnetic moale și unul dur?",
+        "De ce rezistivitatea metalelor crește cu temperatura, dar la semiconductori scade?",
+        "Ce este rigiditatea dielectrică și de ce contează pentru izolatoare?",
+        "Cum influențează permitivitatea relativă capacitatea unui condensator?",
+        "Ce este ciclul de histerezis și de ce contează la transformatoare?",
+        "De ce se folosește FR-4 ca substrat pentru PCB?",
+        "Care e diferența dintre purtătorii majoritari și minoritari?",
+        "Cum se formează joncțiunea p-n la nivel de bază?",
+        "Ce este factorul de pierderi (tan δ) al unui dielectric?",
     ],
 }
 
