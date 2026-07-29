@@ -2719,6 +2719,92 @@ _PROMPT_SUBJECTS: dict[str, str] = {
          (magneți permanenți, coercitivitate mare)
     """,
 
+    "informatică aplicată": r"""
+    1. INFORMATICĂ APLICATĂ — ANUL I ETTI/UPB (Semestrul II, curs-proiect):
+       Extinde Programarea Calculatoarelor spre metode numerice și aplicații inginerești —
+       accent pe REZOLVAREA UNEI PROBLEME REALE prin cod, nu doar sintaxă.
+
+       CONVENȚII OBLIGATORII:
+       - Cod ÎNTOTDEAUNA în blocuri ```c, ```cpp, ```python sau ```matlab — identifică
+         limbajul din context sau întreabă dacă nu e clar
+       - Pentru metode numerice: precizează ÎNTOTDEAUNA condițiile de convergență/aplicabilitate
+         înainte de a da codul
+       - Comentează pașii cheie ai algoritmului, nu fiecare linie
+
+       STRUCTURA OBLIGATORIE pentru un exercițiu de informatică aplicată:
+       **1. Formularea matematică a problemei** — ce ecuație/sistem/integrală se rezolvă
+       **2. Alegerea metodei numerice** — justifică (viteză de convergență, stabilitate,
+          aplicabilitate la tipul de problemă)
+       **3. Algoritm/pseudocod** — pașii metodei, ÎNAINTE de implementare
+       **4. Implementare** — cod complet, funcțional
+       **5. Verificare** — compară cu un caz cunoscut sau verifică criteriul de oprire
+
+       ══════════════════════════════════════════
+       METODE NUMERICE PENTRU ECUAȚII (rezolvarea f(x)=0)
+       ══════════════════════════════════════════
+       - Metoda bisecției: necesită f(a)·f(b)<0 (schimbare de semn pe [a,b]); înjumătățește
+         intervalul la fiecare pas — LENTĂ dar ÎNTOTDEAUNA convergentă dacă ipoteza e satisfăcută
+       - Metoda lui Newton-Raphson: x_{n+1} = x_n − f(x_n)/f'(x_n) — RAPIDĂ (convergență
+         pătratică) dar poate diverge dacă punctul de start e prost ales sau f'(x_n)≈0
+       - Metoda secantei: ca Newton, dar aproximează derivata din 2 puncte anterioare —
+         util când derivata e greu de calculat analitic
+       - Criteriu de oprire: |x_{n+1}−x_n| < ε (toleranță) SAU |f(x_n)| < ε SAU număr
+         maxim de iterații atins (evită bucla infinită dacă nu converge)
+
+       ══════════════════════════════════════════
+       INTEGRARE ȘI DERIVARE NUMERICĂ
+       ══════════════════════════════════════════
+       - Metoda trapezelor: aproximează aria sub curbă cu trapeze — eroare O(h²)
+         (h = pasul de discretizare)
+       - Metoda Simpson: aproximează cu parabole pe fiecare pereche de subintervale —
+         mai precisă, eroare O(h⁴), dar necesită număr PAR de subintervale
+       - Derivare numerică: diferențe finite — progresivă f'(x)≈(f(x+h)−f(x))/h, regresivă,
+         sau centrată f'(x)≈(f(x+h)−f(x−h))/(2h) (cea mai precisă, eroare O(h²))
+       - Compromis pas h: prea mare → eroare de trunchiere mare; prea mic → erori de
+         rotunjire numerică dominante (aritmetică în virgulă mobilă)
+
+       ══════════════════════════════════════════
+       REZOLVAREA NUMERICĂ A SISTEMELOR LINIARE
+       ══════════════════════════════════════════
+       - Eliminare Gaussiană cu pivotare — implementare practică a metodei studiate la
+         Algebră Liniară, cu atenție la stabilitate numerică (pivotare parțială: alege
+         ca pivot elementul de modul maxim din coloană, pentru a reduce erorile de rotunjire)
+       - Metode iterative (Jacobi, Gauss-Seidel) — pentru sisteme mari, rare; converg
+         doar în condiții specifice (ex: matrice diagonal dominantă)
+
+       ══════════════════════════════════════════
+       INTERPOLARE ȘI REGRESIE (fitting de date)
+       ══════════════════════════════════════════
+       - Interpolare Lagrange: polinom unic de grad n-1 care trece EXACT prin n puncte date
+       - Interpolare liniară pe porțiuni: simplă, evită oscilațiile polinoamelor de grad mare
+         (fenomenul Runge la interpolare polinomială de grad înalt pe noduri echidistante)
+       - Regresie liniară (metoda celor mai mici pătrate): găsește dreapta y=ax+b care
+         minimizează suma pătratelor reziduurilor — util pentru date experimentale cu
+         zgomot (spre deosebire de interpolare, NU trece exact prin puncte)
+       - Coeficient de determinare R²: cât de bine explică modelul variația datelor
+         (R²→1 = ajustare foarte bună)
+
+       ══════════════════════════════════════════
+       LUCRUL CU DATE ȘI STRUCTURI ÎN COD (aplicații practice)
+       ══════════════════════════════════════════
+       - Tablouri/matrici pentru date experimentale: citire din fișier (CSV, text),
+         procesare, salvare rezultate
+       - Reprezentare grafică a rezultatelor: descrie ce ar trebui să arate un grafic
+         (axe, scală, legendă) chiar dacă nu poți genera direct imaginea în cod C/C++
+       - Structurarea unui mic proiect: separarea în funcții cu responsabilitate unică
+         (citire date / procesare / afișare rezultate), NU totul într-un singur bloc main()
+
+       CAPCANE FRECVENTE:
+       - Aplicarea metodei bisecției fără verificarea f(a)·f(b)<0
+       - Alegerea unui punct de start prost pentru Newton-Raphson (poate diverge sau
+         converge la altă rădăcină decât cea dorită)
+       - Metoda Simpson cu număr impar de subintervale (necesită PAR)
+       - Confuzia interpolare (trece exact prin puncte) cu regresie (minimizează eroarea,
+         nu trece neapărat prin puncte) — alegerea greșită în funcție de context (date
+         exacte vs. date cu zgomot experimental)
+       - Pas de discretizare (h) ales fără a analiza compromisul trunchiere/rotunjire
+    """,
+
 }
 
 
@@ -3001,6 +3087,14 @@ SUBJECT_KEYWORDS = {
         "permeabilitate magnetică", "permeabilitate magnetica", "substrat fr-4",
         "purtător majoritar", "purtator majoritar", "rezistivitate", "gap energetic",
     ],
+    "informatică aplicată": [
+        "metodă numerică", "metoda numerica", "metoda bisecției", "metoda bisectiei",
+        "newton-raphson", "metoda secantei", "metoda trapezelor", "metoda simpson",
+        "interpolare", "regresie liniară", "regresie liniara", "cele mai mici pătrate",
+        "cele mai mici patrate", "eliminare gaussiană", "eliminare gaussiana",
+        "derivare numerică", "derivare numerica", "integrare numerică", "integrare numerica",
+        "criteriu de oprire", "pas de discretizare",
+    ],
 }
 
 
@@ -3044,6 +3138,10 @@ _STRONG_INDICATORS = {
                      "rigiditate dielectrică", "rigiditate dielectrica", "substrat fr-4",
                      "purtător majoritar", "purtator majoritar", "impuritate donor",
                      "impuritate acceptor"],
+    "informatică aplicată": ["newton-raphson", "metoda bisecției", "metoda bisectiei",
+                     "metoda secantei", "metoda simpson", "metoda trapezelor",
+                     "eliminare gaussiană", "eliminare gaussiana", "cele mai mici pătrate",
+                     "cele mai mici patrate", "interpolare lagrange"],
 }
 
 def detect_subject_from_text(text: str) -> str | None:
@@ -5116,6 +5214,20 @@ INTREBARI_POOL = {
         "Care e diferența dintre purtătorii majoritari și minoritari?",
         "Cum se formează joncțiunea p-n la nivel de bază?",
         "Ce este factorul de pierderi (tan δ) al unui dielectric?",
+    ],
+    "informatică aplicată": [
+        "Cum implementez metoda bisecției pentru găsirea unei rădăcini?",
+        "Explică-mi metoda Newton-Raphson cu un exemplu",
+        "Care e diferența dintre interpolare și regresie liniară?",
+        "Cum implementez metoda trapezelor pentru integrare numerică?",
+        "De ce metoda Simpson are nevoie de un număr par de subintervale?",
+        "Cum aleg pasul de discretizare potrivit pentru derivare numerică?",
+        "Ce este pivotarea parțială la eliminarea Gaussiană?",
+        "Cum implementez metoda celor mai mici pătrate?",
+        "Care e diferența dintre eroare de trunchiere și eroare de rotunjire?",
+        "Cum aleg criteriul de oprire pentru un algoritm iterativ?",
+        "Ce e fenomenul Runge la interpolarea polinomială?",
+        "Cum structurez un mic proiect de cod pe funcții?",
     ],
 }
 
