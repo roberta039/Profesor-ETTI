@@ -2416,6 +2416,101 @@ _PROMPT_SUBJECTS: dict[str, str] = {
        - Semn greșit la ΔH (exotermă e negativă, nu pozitivă)
     """,
 
+    "matematici speciale": r"""
+    1. MATEMATICI SPECIALE — ANUL I ETTI/UPB (Semestrul II):
+
+       NOTAȚII OBLIGATORII (niciodată altele):
+       - Ecuație diferențială: y', y'', y^(n) (derivate în raport cu variabila independentă,
+         de obicei t sau x); ecuație de ordin n
+       - Transformata Laplace: L{f(t)} = F(s) = ∫₀^∞ f(t)e^(-st)dt; transformata inversă: L⁻¹{F(s)}
+       - Serie Fourier: f(t) = a₀/2 + Σ(aₙcos(nωt) + bₙsin(nωt)); coeficienți: aₙ, bₙ
+       - Număr complex: z = x + jy (folosește j, NU i — convenție de inginerie electrică,
+         consecventă cu Bazele Electrotehnicii); modul |z|, argument arg(z)
+       - Funcție complexă: f(z); derivată complexă (olomorfă): f'(z)
+       - Folosește LaTeX pentru toate formulele
+
+       STRUCTURA OBLIGATORIE pentru orice exercițiu:
+       **1. Identifică tipul** — EDO liniară/neliniară, ordinul, omogenă/neomogenă;
+          sau: transformare Laplace directă/inversă; sau: dezvoltare în serie Fourier
+       **2. Alege metoda potrivită** — justifică de ce se aplică (verifică forma ecuației,
+          condițiile de existență)
+       **3. Rezolvare pas cu pas**
+       **4. Verificare** — prin substituție în ecuația originală (la EDO) sau prin
+          proprietăți cunoscute (liniaritate, la Laplace/Fourier)
+
+       ══════════════════════════════════════════
+       ECUAȚII DIFERENȚIALE ORDINARE (EDO)
+       ══════════════════════════════════════════
+       - EDO de ordinul I cu variabile separabile: y' = f(x)g(y) → separă și integrează
+         ambele părți: ∫dy/g(y) = ∫f(x)dx
+       - EDO liniară de ordinul I: y' + P(x)y = Q(x) → factor integrant μ(x) = e^(∫P(x)dx),
+         soluție: y = (1/μ)[∫μ(x)Q(x)dx + C]
+       - EDO omogenă de ordinul I: y' = f(y/x) → substituție v=y/x reduce la variabile separabile
+       - EDO liniară de ordinul II cu coeficienți constanți: ay''+by'+cy=0 (omogenă) —
+         ecuația caracteristică ar²+br+c=0:
+         → rădăcini reale distincte r₁,r₂: y = C₁e^(r₁x) + C₂e^(r₂x)
+         → rădăcină dublă r: y = (C₁+C₂x)e^(rx)
+         → rădăcini complexe α±jβ: y = e^(αx)(C₁cos(βx)+C₂sin(βx))
+       - EDO liniară neomogenă de ordinul II: soluție generală = soluție omogenă + soluție
+         particulară; soluția particulară se caută prin metoda coeficienților nedeterminați
+         (când termenul liber e polinom, exponențială, sin/cos) sau variația constantelor
+         (metodă generală, mai laborioasă)
+       - Sisteme de EDO liniare: se pot reduce la o EDO de ordin superior, sau se rezolvă
+         cu valori/vectori proprii ale matricii sistemului (legătură directă cu Algebra Liniară)
+
+       ══════════════════════════════════════════
+       TRANSFORMATA LAPLACE
+       ══════════════════════════════════════════
+       - Transformate uzuale (de reținut): L{1}=1/s; L{t}=1/s²; L{e^(at)}=1/(s-a);
+         L{sin(ωt)}=ω/(s²+ω²); L{cos(ωt)}=s/(s²+ω²)
+       - Proprietăți fundamentale:
+         → Liniaritate: L{af(t)+bg(t)} = aF(s)+bG(s)
+         → Derivare: L{f'(t)} = sF(s) − f(0); L{f''(t)} = s²F(s) − sf(0) − f'(0)
+           (CRITIC pentru rezolvarea EDO — transformă derivate în operații algebrice)
+         → Deplasare în s: L{e^(at)f(t)} = F(s−a)
+         → Deplasare în t: L{f(t−a)u(t−a)} = e^(-as)F(s) (u = funcția treaptă Heaviside)
+       - Rezolvarea EDO cu Laplace (algoritm): 1) aplică L pe toată ecuația (folosind condițiile
+         inițiale) 2) rezolvă algebric pentru Y(s) 3) aplică L⁻¹ pentru a obține y(t) —
+         transformă o EDO într-o ecuație algebrică, apoi înapoi
+       - Transformata inversă: de obicei prin descompunere în fracții simple, apoi identificare
+         cu transformate uzuale din tabel
+
+       ══════════════════════════════════════════
+       SERII FOURIER
+       ══════════════════════════════════════════
+       - Coeficienți Fourier (pentru f cu perioadă T=2π/ω):
+         a₀ = (1/π)∫f(t)dt; aₙ = (1/π)∫f(t)cos(nωt)dt; bₙ = (1/π)∫f(t)sin(nωt)dt
+         (integralele pe un interval de lungime T)
+       - Simetrii utile (economisesc calcul): funcție pară → toți bₙ=0 (doar cosinusuri);
+         funcție impară → a₀=0 și toți aₙ=0 (doar sinusuri)
+       - Interpretare inginerească: descompune un semnal periodic în suma de componente
+         sinusoidale (armonici) — bază directă pentru analiza semnalelor și circuitelor cu
+         semnal nesinusoidal (legătură cu Bazele Electrotehnicii, regim permanent)
+       - Convergență: în punctele de discontinuitate, seria converge la media limitelor laterale
+
+       ══════════════════════════════════════════
+       ELEMENTE DE FUNCȚII COMPLEXE (introducere)
+       ══════════════════════════════════════════
+       - Forma algebrică z=x+jy, trigonometrică z=r(cosθ+jsinθ), exponențială z=re^(jθ)
+         (formula lui Euler: e^(jθ)=cosθ+jsinθ)
+       - Operații: adunare/scădere pe formă algebrică; înmulțire/împărțire mai ușor pe
+         formă exponențială (se înmulțesc modulele, se adună argumentele)
+       - Funcție olomorfă (derivabilă complex) — condițiile Cauchy-Riemann (dacă intră
+         în programă la acest nivel introductiv)
+
+       CAPCANE FRECVENTE:
+       - Uitarea condițiilor inițiale la aplicarea transformatei Laplace pe derivate
+       - Confuzia între soluția generală a EDO omogene și soluția particulară a EDO neomogene —
+         răspunsul final e ÎNTOTDEAUNA suma lor
+         (soluție generală completă = omogenă + particulară)
+       - Rădăcini complexe ale ecuației caracteristice tratate ca reale (uitarea formei
+         e^(αx)(C₁cos(βx)+C₂sin(βx)))
+       - La serii Fourier: neexploatarea simetriei (pară/impară) când există, ceea ce
+         dublează inutil volumul de calcul
+       - Semn greșit la deplasarea în s vs. deplasarea în t (proprietăți diferite, nu se
+         aplică interschimbabil)
+    """,
+
 }
 
 
@@ -2675,6 +2770,14 @@ SUBJECT_KEYWORDS = {
         "reactiv limitativ", "semiconductor", "configurație electronică",
         "celulă galvanică", "baterie chimică",
     ],
+    "matematici speciale": [
+        "ecuație diferențială", "ecuatie diferentiala", "edo", "transformata laplace",
+        "serie fourier", "coeficienți fourier", "coeficienti fourier",
+        "ecuație caracteristică", "ecuatie caracteristica", "soluție omogenă",
+        "solutie omogena", "soluție particulară", "solutie particulara",
+        "număr complex", "numar complex", "formula lui euler", "funcție olomorfă",
+        "functie olomorfa", "variabile separabile", "factor integrant",
+    ],
 }
 
 
@@ -2705,6 +2808,10 @@ _STRONG_INDICATORS = {
                      "oxidare", "reducere", "electroliză", "electroliza",
                      "legătură covalentă", "legatura covalenta", "legătură ionică",
                      "legatura ionica", "configurație electronică"],
+    "matematici speciale": ["transformata laplace", "serie fourier", "ecuație diferențială",
+                     "ecuatie diferentiala", "ecuația caracteristică", "ecuatia caracteristica",
+                     "coeficienți fourier", "coeficienti fourier", "formula lui euler",
+                     "condiții cauchy-riemann", "functie olomorfa"],
 }
 
 def detect_subject_from_text(text: str) -> str | None:
@@ -4735,6 +4842,20 @@ INTREBARI_POOL = {
         "Explică legea lui Hess pentru calculul ΔH",
         "Ce este randamentul de reacție și cum îl calculez?",
         "Cum echilibrez o ecuație chimică pas cu pas?",
+    ],
+    "matematici speciale": [
+        "Cum rezolv o ecuație diferențială liniară de ordinul I?",
+        "Explică-mi ecuația caracteristică pentru EDO de ordinul II",
+        "Cum aplic transformata Laplace pentru a rezolva o EDO?",
+        "Care sunt transformatele Laplace uzuale pe care trebuie să le știu?",
+        "Cum calculez coeficienții unei serii Fourier?",
+        "Ce înseamnă că o funcție e pară/impară în context Fourier?",
+        "Cum descompun o fracție pentru transformata Laplace inversă?",
+        "Explică-mi diferența dintre soluția omogenă și cea particulară",
+        "Cum trec un număr complex din formă algebrică în exponențială?",
+        "Ce este formula lui Euler și cum o folosesc?",
+        "Cum rezolv o EDO cu variabile separabile?",
+        "Care e legătura dintre seria Fourier și analiza semnalelor?",
     ],
 }
 
