@@ -2511,6 +2511,96 @@ _PROMPT_SUBJECTS: dict[str, str] = {
          aplică interschimbabil)
     """,
 
+    "măsurări în electronică și telecomunicații": r"""
+    1. MĂSURĂRI ÎN ELECTRONICĂ ȘI TELECOMUNICAȚII — ANUL I ETTI/UPB (Semestrul II):
+       (INF: echivalent parțial cu "Măsurători Electronice, Senzori și Traductoare")
+
+       NOTAȚII OBLIGATORII:
+       - Valoare măsurată: x_m; valoare adevărată (necunoscută, teoretică): x_a
+       - Eroare absolută: Δx = x_m − x_a; eroare relativă: ε = Δx/x_a (adesea în %)
+       - Incertitudine de măsurare: u(x) — precizează întotdeauna tipul (tip A statistic
+         sau tip B din specificații instrument)
+       - Clasa de precizie a instrumentului: c (%) — eroarea maximă admisă e c%·(valoare
+         de scară maximă), NU c%·(valoarea citită) — greșeală frecventă
+       - Folosește unități SI și precizează întotdeauna incertitudinea alături de rezultat
+         (x = x_m ± Δx)
+
+       STRUCTURA OBLIGATORIE pentru probleme de măsurare:
+       **1. Ce mărime se măsoară** — și cu ce instrument/metodă
+       **2. Principiul de măsurare** — cum instrumentul convertește mărimea fizică în
+          indicație (deviație ac/digital)
+       **3. Surse de eroare** — identifică erorile sistematice (instrument, metodă) și
+          aleatoare (fluctuații, citire)
+       **4. Calculul erorii/incertitudinii** — cu formula potrivită
+       **5. Rezultat final** — cu incertitudine și unitate
+
+       ══════════════════════════════════════════
+       TEORIA ERORILOR DE MĂSURARE
+       ══════════════════════════════════════════
+       - Erori sistematice: constante sau predictibile (decalaj instrument, metodă greșită) —
+         se pot corecta prin calibrare
+       - Erori aleatoare (întâmplătoare): variază impredictibil la măsurări repetate —
+         se reduc prin măsurări multiple și medie statistică
+       - Erori grosolane: greșeli de citire/manipulare — se elimină prin atenție, nu se
+         includ în calculul statistic
+       - Propagarea erorilor: dacă z = f(x,y), eroarea în z se calculează prin derivate
+         parțiale: Δz ≈ |∂f/∂x|Δx + |∂f/∂y|Δy (majorare) sau prin sumă pătratică pentru
+         erori independente statistic: u(z) = √[(∂f/∂x·u(x))² + (∂f/∂y·u(y))²]
+       - Exemplu tipic: la calculul puterii P=U·I din măsurări de U și I, eroarea relativă
+         a lui P e aproximativ suma erorilor relative ale lui U și I (pentru erori mici)
+
+       ══════════════════════════════════════════
+       INSTRUMENTE DE MĂSURARE ANALOGICE ȘI DIGITALE
+       ══════════════════════════════════════════
+       - Voltmetrul: se conectează ÎN PARALEL cu elementul măsurat; rezistență internă
+         cât mai MARE (idealizat infinită) ca să nu perturbe circuitul
+       - Ampermetrul: se conectează ÎN SERIE pe ramura măsurată; rezistență internă cât
+         mai MICĂ (idealizat zero) ca să nu introducă cădere de tensiune suplimentară
+       - Ohmmetrul: măsoară rezistența cu circuitul DECONECTAT de la orice sursă externă
+         (altfel citirea e falsificată sau instrumentul se poate defecta)
+       - Multimetrul: combină volt/amper/ohmmetru — atenție la selecția corectă a
+         modului ȘI a intervalului de măsură ÎNAINTE de a conecta la circuit
+       - Osciloscopul: vizualizează forma de undă în timp — parametri esențiali: bază de
+         timp (s/div), sensibilitate verticală (V/div), cuplaj AC/DC, declanșare (trigger)
+       - Generatorul de semnal: produce forme de undă cunoscute (sinusoidal, dreptunghiular,
+         triunghiular) pentru testarea circuitelor — parametri: amplitudine, frecvență, offset DC
+
+       ══════════════════════════════════════════
+       METODE DE MĂSURARE A COMPONENTELOR
+       ══════════════════════════════════════════
+       - Metoda voltmetru-ampermetru pentru determinarea unei rezistențe necunoscute —
+         DOUĂ montaje posibile (amonte/aval), fiecare cu eroare sistematică diferită
+         datorată rezistenței interne a instrumentelor — alege montajul potrivit funcție
+         de ordinul de mărime al rezistenței măsurate (mare → montaj amonte, mică → aval)
+       - Puntea Wheatstone: metodă de zero pentru determinarea precisă a unei rezistențe
+         necunoscute — echilibru când R_x/R₃ = R₁/R₂ (produsul brațelor opuse egale)
+       - Măsurarea capacității/inductanței: prin punți AC (analog Wheatstone, dar cu
+         impedanțe complexe) sau prin metode de rezonanță
+       - Măsurarea frecvenței/perioadei: cu osciloscopul (citire directă pe ecran) sau
+         cu frecvențmetru digital (numărare cicluri într-un interval de timp cunoscut)
+
+       ══════════════════════════════════════════
+       SENZORI ȘI TRADUCTOARE (introducere)
+       ══════════════════════════════════════════
+       - Traductor = element care convertește o mărime fizică neelectrică (temperatură,
+         presiune, deplasare) într-un semnal electric măsurabil
+       - Caracteristici esențiale: sensibilitate (raport semnal ieșire/mărime intrare),
+         liniaritate, timp de răspuns, domeniu de măsură
+       - Exemple uzuale: termocuplu/termorezistență (temperatură), potențiometru
+         (deplasare/unghi), fotorezistor/fotodiodă (lumină)
+
+       CAPCANE FRECVENTE:
+       - Conectarea voltmetrului în serie sau ampermetrului în paralel (greșeală gravă —
+         poate defecta instrumentul sau falsifica măsurarea)
+       - Confuzia clasei de precizie (% din scara maximă) cu eroarea relativă a citirii
+         (% din valoarea citită) — sunt lucruri diferite
+       - Ignorarea rezistenței interne a voltmetrului/ampermetrului la măsurări de precizie
+         (perturbă circuitul, mai ales la rezistențe comparabile ca ordin de mărime)
+       - Confuzia eroare sistematică (se corectează prin calibrare) cu eroare aleatoare
+         (se reduce prin măsurări repetate)
+       - Neconectarea la masă/referință corectă la osciloscop, ducând la citiri eronate
+    """,
+
 }
 
 
@@ -2778,6 +2868,13 @@ SUBJECT_KEYWORDS = {
         "număr complex", "numar complex", "formula lui euler", "funcție olomorfă",
         "functie olomorfa", "variabile separabile", "factor integrant",
     ],
+    "măsurări în electronică și telecomunicații": [
+        "eroare de măsurare", "eroare de masurare", "eroare sistematică", "eroare sistematica",
+        "eroare aleatoare", "clasa de precizie", "voltmetru", "ampermetru", "ohmmetru",
+        "multimetru", "osciloscop", "punte wheatstone", "traductor", "senzor",
+        "incertitudine de măsurare", "incertitudine de masurare", "eroare relativă",
+        "eroare relativa", "calibrare", "generator de semnal", "propagarea erorilor",
+    ],
 }
 
 
@@ -2812,6 +2909,10 @@ _STRONG_INDICATORS = {
                      "ecuatie diferentiala", "ecuația caracteristică", "ecuatia caracteristica",
                      "coeficienți fourier", "coeficienti fourier", "formula lui euler",
                      "condiții cauchy-riemann", "functie olomorfa"],
+    "măsurări în electronică și telecomunicații": ["punte wheatstone", "clasa de precizie",
+                     "eroare sistematică", "eroare sistematica", "eroare aleatoare",
+                     "incertitudine de măsurare", "incertitudine de masurare",
+                     "propagarea erorilor", "eroare de măsurare", "eroare de masurare"],
 }
 
 def detect_subject_from_text(text: str) -> str | None:
@@ -4856,6 +4957,20 @@ INTREBARI_POOL = {
         "Ce este formula lui Euler și cum o folosesc?",
         "Cum rezolv o EDO cu variabile separabile?",
         "Care e legătura dintre seria Fourier și analiza semnalelor?",
+    ],
+    "măsurări în electronică și telecomunicații": [
+        "Cum conectez corect un voltmetru și un ampermetru?",
+        "Care e diferența dintre eroare sistematică și eroare aleatoare?",
+        "Cum funcționează puntea Wheatstone?",
+        "Ce înseamnă clasa de precizie a unui instrument?",
+        "Cum calculez propagarea erorilor pentru o mărime calculată?",
+        "Care sunt parametrii esențiali ai unui osciloscop?",
+        "Cum aleg montajul potrivit (amonte/aval) pentru măsurarea unei rezistențe?",
+        "Ce este un traductor și cum funcționează?",
+        "Cum calculez incertitudinea de măsurare?",
+        "De ce voltmetrul trebuie să aibă rezistență internă mare?",
+        "Cum măsor frecvența unui semnal cu osciloscopul?",
+        "Ce diferență e între eroare absolută și eroare relativă?",
     ],
 }
 
