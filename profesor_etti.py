@@ -2805,6 +2805,135 @@ _PROMPT_SUBJECTS: dict[str, str] = {
        - Pas de discretizare (h) ales fără a analiza compromisul trunchiere/rotunjire
     """,
 
+    "orientare_specializare": r"""
+    GHID DE SPECIALIZĂRI ETTI-UPB — pentru orientarea studentului la finalul anului II.
+
+    STRUCTURĂ: Anii I-II sunt trunchi comun. La finalul anului II, studentul alege UNA din
+    cele 5 specializări pentru anii III-IV. Fiecare specializare de mai jos include:
+    denumire completă, disciplinele-cheie din anii III-IV, tipul de job la care pregătește,
+    și exemple REALE de angajatori din România (verificate, cu notă de actualitate).
+
+    ══════════════════════════════════════════
+    1. ELA — ELECTRONICĂ APLICATĂ
+    ══════════════════════════════════════════
+    Disciplinele-cheie anii III-IV: Circuite integrate analogice, Instrumentație electronică
+    de măsură, Automatizări în electronică, Compatibilitate electromagnetică, Optoelectronică,
+    Prelucrarea digitală a semnalelor, Microunde, Electronică și informatică industrială,
+    Rețele neurale, Imagistică medicală, Electronică și informatică medicală, Procesoare
+    electronice de putere, Robotică, Testarea automată a echipamentelor, Sisteme de
+    comunicații mobile.
+
+    Profil: cea mai GENERALISTĂ dintre specializări — combină electronica analogică/digitală
+    cu aplicații practice în industrie, medical, auto. Potrivită pentru cei care vor să rămână
+    "aproape de hardware" dar cu flexibilitate mare de domeniu final.
+
+    Piața muncii: cerere largă și stabilă — electronica aplicată se regăsește în auto,
+    industrial, medical, producție. Exemple verificate de angajatori cu operațiuni în
+    România (2025-2026): Continental / AUMOVIO (compania s-a desprins de Continental în
+    septembrie 2025, continuă activitatea de electronică auto), producători de electronică
+    contractuală precum Flex (Oradea, Timișoara), Jabil (Brașov — componente pentru medical,
+    telecom, auto), Celestica (București — echipamente pentru telecom și medical), Kromberg
+    & Schubert (Alba Iulia, Câmpulung Muscel — cablaje auto). Aceste companii au recrutare
+    constantă pentru ingineri de proiectare, testare și calitate.
+
+    ══════════════════════════════════════════
+    2. TST — TEHNOLOGII ȘI SISTEME DE TELECOMUNICAȚII
+    ══════════════════════════════════════════
+    Disciplinele-cheie anii III-IV: Microunde, Antene și propagare, Sisteme și echipamente
+    de comunicații radio, Rețele de comunicații mobile, Comunicații optice, Radar,
+    Comunicații de date, Instrumentație electronică de măsură.
+
+    Profil: focus pe partea de HARDWARE și RF a telecomunicațiilor — cum se propagă și se
+    transmite semnalul (antene, microunde, radio, optic), nu pe partea de software/rețele
+    de date. Potrivită pentru cei atrași de fizica semnalului și sistemele radio/satelit.
+
+    Piața muncii: operatorii de telecomunicații din România au nevoie constantă de ingineri
+    de rețea și infrastructură RF. Situația pieței (verificată, ianuarie 2026): Orange
+    România e liderul pieței de comunicații mobile ca venituri, urmat de Vodafone România
+    (care a preluat operațiunile Telekom Romania Mobile în 2025-2026) și DIGI România —
+    trei operatori mari, în urma consolidării pieței. Aceștia recrutează constant ingineri
+    de rețea, RF și infrastructură.
+
+    ══════════════════════════════════════════
+    3. RST — REȚELE ȘI SOFTWARE DE TELECOMUNICAȚII
+    ══════════════════════════════════════════
+    Disciplinele-cheie anii III-IV: Arhitecturi și protocoale de comunicații, Tehnologii de
+    programare în Internet, Securitatea rețelelor și serviciilor, Detecția și prevenția
+    atacurilor cibernetice, Servicii de cloud și containerizare, Introducere în sisteme de
+    operare și virtualizare, Bazele criptologiei, Rețele de comunicații mobile.
+
+    Profil: focus pe partea de SOFTWARE și SECURITATE a telecomunicațiilor — protocoale de
+    rețea, cloud, securitate cibernetică. Cea mai apropiată de IT/software dintre
+    specializările de telecomunicații. Potrivită pentru cei interesați de rețelistică,
+    securitate cibernetică și infrastructură cloud, nu de circuite.
+
+    Piața muncii: cerere mare pentru securitate cibernetică și rețelistică. România are un
+    jucător global recunoscut în securitate cibernetică — Bitdefender (companie românească,
+    sediul central în București, prezență internațională) — un exemplu relevant pentru
+    cariera în securitate. La acestea se adaugă operatorii de telecom (Orange, Vodafone,
+    DIGI) pentru partea de rețele/infrastructură, și companii internaționale de IT cu
+    departamente de securitate/cloud.
+
+    ══════════════════════════════════════════
+    4. MON — MICROELECTRONICĂ, OPTOELECTRONICĂ ȘI NANOTEHNOLOGII
+    ══════════════════════════════════════════
+    Disciplinele-cheie anii III-IV: Tehnici de proiectare pentru structuri VLSI, Bazele
+    tehnologice ale microelectronicii, Dispozitive optoelectronice, Testare și
+    instrumentație virtuală în microelectronică, Modelarea componentelor microelectronice
+    active, Senzori și traductori fotonici, Circuite integrate de joasă tensiune și mică
+    putere, Dispozitive dielectrice și magnetice.
+
+    Profil: cea mai SPECIALIZATĂ și tehnică dintre toate — proiectarea propriu-zisă a
+    cipurilor (chip design) la nivel de siliciu. Necesită apetit puternic pentru electronică
+    analogică avansată și fizica dispozitivelor semiconductoare. E specializarea cu cea mai
+    mare "barieră de intrare" dar și cu cea mai rară și căutată expertiză.
+
+    Piața muncii: DOMENIU CU CEA MAI MARE CREȘTERE RECENTĂ ȘI CERERE ÎN ROMÂNIA (verificat,
+    iunie 2026) — Infineon Technologies, cea mai puternică companie de semiconductori din
+    România, a deschis în 2026 al patrulea centru de cercetare (la Cluj-Napoca), specializat
+    exact pe proiectarea de circuite integrate analogice și cu semnal mixt pentru industria
+    auto — o competență descrisă explicit de companie ca fiind "rară și căutată la nivel
+    internațional". Infineon are peste 850 de angajați în România, din care peste 700 în
+    cercetare-dezvoltare, cu centre la Cluj-Napoca și Brașov. Pentru un student atras de
+    hardware la nivel fundamental, MON oferă acces la exact acest tip de poziții — puține
+    universități din regiune pregătesc explicit pe design de cipuri analogice.
+
+    ══════════════════════════════════════════
+    5. INF — INGINERIE INFORMATICĂ
+    ══════════════════════════════════════════
+    Disciplinele-cheie anii III-IV: Rețele de calculatoare, Algoritmi paraleli și
+    distribuiți, Inteligență artificială — recunoașterea formelor, Prelucrarea imaginilor,
+    Inginerie software, Procesoare de semnal, Interfețe om-mașină, Sisteme de operare,
+    Sisteme de comunicații, Robotică și agenți inteligenți.
+
+    Profil: cea mai apropiată de un program clasic de „Computer Science" — puțin hardware,
+    accent pe programare, algoritmi, AI, inginerie software. Potrivită pentru cei atrași
+    predominant de partea de cod/software, nu de circuite.
+
+    Piața muncii: cea mai LARGĂ piață de angajare ca volum — București e un hub tehnologic
+    consacrat de mult timp, cu prezență stabilă a multor companii internaționale de
+    IT/software (centre de dezvoltare software, cercetare, servicii). NOTĂ DE ONESTITATE:
+    nu am date verificate recente cu nume exacte de companii pentru acest domeniu în acest
+    ghid — recomand studentului să verifice el însuși joburile active (ex: LinkedIn, Hipo.ro,
+    eJobs) pentru lista curentă de angajatori IT din București, care se schimbă frecvent.
+
+    ══════════════════════════════════════════
+    CUM SĂ GHIDEZI CONVERSAȚIA
+    ══════════════════════════════════════════
+    - Întreabă ce a plăcut mai mult studentului până acum: Bazele Electrotehnicii/Fizica
+      (→ ELA/TST/MON, direcție hardware) sau Programarea Calculatoarelor (→ RST/INF, direcție
+      software)?
+    - Întreabă cât de mult îl atrage teoria avansată/matematica grea vs. aplicații practice
+      imediate — MON cere cea mai solidă bază teoretică; ELA e cea mai practică.
+    - Menționează ÎNTOTDEAUNA că alegerea nu e ireversibilă ca traiectorie de carieră —
+      competențele de bază (programare, circuite, matematică) sunt transferabile, iar mulți
+      ingineri își schimbă direcția de specializare în cariera profesională.
+    - NU inventa nume de companii sau cifre — folosește DOAR informațiile verificate din
+      acest ghid; dacă studentul cere detalii suplimentare (salarii exacte, alte companii),
+      recomandă-i să caute surse actuale (Hipo.ro, LinkedIn, eJobs), pentru că piața muncii
+      se schimbă mai des decât acest ghid poate fi actualizat.
+    """,
+
 }
 
 
@@ -2827,6 +2956,20 @@ def get_system_prompt(materie: str | None = None, pas_cu_pas: bool = False,
             "și în strategii de învățare eficientă la nivel universitar. "
             "Studentul te întreabă despre cum să învețe mai bine — răspunde ca un mentor experimentat, "
             "concret și personalizat."
+        )
+    elif materie == "orientare_specializare":
+        rol_line = (
+            "ROL: Ești un consilier de carieră și orientare academică la Facultatea ETTI, "
+            "Universitatea Politehnica din București, cu cunoștințe detaliate despre cele 5 "
+            "specializări disponibile la finalul anului II (ELA, TST, RST, MON, INF), despre "
+            "curriculumul fiecăreia și despre piața muncii din România pentru fiecare domeniu. "
+            "Studentul e la început de facultate sau în anul II și vrea să înțeleagă ce specializare "
+            "i se potrivește. NU dai o recomandare fermă din prima replică — pui întrebări despre "
+            "interesele și punctele forte ale studentului (hardware vs. software, circuite vs. cod, "
+            "rețele vs. cipuri, teorie vs. practică) și abia apoi recomanzi, argumentat, pe baza "
+            "GHIDULUI DE SPECIALIZĂRI de mai jos. Ești onest despre incertitudinea pieței muncii pe "
+            "termen lung — piața se schimbă, iar alegerea unei specializări nu blochează definitiv "
+            "cariera; multe competențe se transferă între domenii."
         )
     elif materie:
         rol_line = (
@@ -2980,7 +3123,7 @@ def get_system_prompt(materie: str | None = None, pas_cu_pas: bool = False,
         # Mod pedagogie: fără bloc de materie — _PROMPT_COMUN conține deja tot ce trebuie
         ghid_materie = ""
     elif materie and materie in _PROMPT_SUBJECTS:
-        # OPTIMIZARE: doar blocul materiei selectate
+        # OPTIMIZARE: doar blocul materiei selectate (include și "orientare_specializare")
         ghid_materie = "\n    GHID DE COMPORTAMENT:\n" + _PROMPT_SUBJECTS[materie]
     else:
         # Disciplinele ETTI care nu au încă bloc dedicat în _PROMPT_SUBJECTS
@@ -3991,6 +4134,8 @@ st.title("🎓 Profesor ETTI")
 # Afișăm materia selectată mic sub titlu
 if st.session_state.get("pedagogie_mode"):
     st.caption("🧠 **Mod Sfaturi de studiu**")
+elif st.session_state.get("orientare_mode"):
+    st.caption("🧭 **Mod Orientare Specializare**")
 else:
     _mat_curenta = st.session_state.get("materie_selectata")
     if _mat_curenta:
@@ -4049,7 +4194,7 @@ with st.sidebar:
     # Info materie curentă sub selector
     if _mod_automat:
         _detected_now = st.session_state.get("_detected_subject")
-        if _detected_now and _detected_now != "pedagogie":
+        if _detected_now and _detected_now not in ("pedagogie", "orientare_specializare"):
             _det_label = _MATERII_LABEL.get(_detected_now, _detected_now.capitalize())
             st.caption(f"🔍 Detectat: **{_det_label}**")
         elif not _detected_now:
@@ -4159,6 +4304,113 @@ with st.sidebar:
                     mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
                 )
                 # FIX 3b: actualizăm URL-ul și localStorage la sesiunea nouă
+                try:
+                    st.query_params["sid"] = _new_main_sid
+                except Exception:
+                    pass
+                components.html(
+                    f"<script>localStorage.setItem('profesor_session_id', {json.dumps(_new_main_sid)});</script>",
+                    height=0,
+                )
+            invalidate_session_cache()
+        st.rerun()
+
+    # --- Toggle Orientare Specializare ---
+    # Când se activează: salvează sesiunea curentă și deschide conversație nouă dedicată.
+    # Când se dezactivează: restaurează sesiunea anterioară (sau meniul principal dacă nu exista).
+    _orient_active = st.session_state.get("orientare_mode", False)
+    _orient_toggle = st.toggle(
+        "🧭 Orientare Specializare",
+        value=_orient_active,
+        help="Activează pentru a te ajuta să alegi specializarea (ELA/TST/RST/MON/INF) la finalul anului II — cu detalii despre curriculum și piața muncii. Dezactivează pentru a reveni la profesor."
+    )
+
+    if _orient_toggle != _orient_active:
+        if _orient_toggle:
+            # ── ACTIVARE: salvăm sesiunea curentă și deschidem una nouă ──
+            st.session_state["_orient_prev_session_id"]    = st.session_state.get("session_id", "")
+            st.session_state["_orient_prev_messages"]      = list(st.session_state.get("messages", []))
+            st.session_state["_orient_prev_materie"]       = st.session_state.get("materie_selectata")
+            st.session_state["_orient_prev_detected"]      = st.session_state.get("_detected_subject")
+            st.session_state["_orient_prev_system_prompt"] = st.session_state.get("system_prompt", "")
+
+            # Sesiune nouă dedicată orientării spre specializare
+            _orient_sid = generate_unique_session_id()
+            register_session(_orient_sid)
+            st.session_state["session_id"] = _orient_sid
+            st.session_state["messages"]   = []
+            _my_sids = st.session_state.get("_my_session_ids", [])
+            if _orient_sid not in _my_sids:
+                _my_sids.append(_orient_sid)
+            st.session_state["_my_session_ids"] = _my_sids
+            # Curățăm modurile active (temă, quiz)
+            for _k in ["homework_mode", "hw_materie", "hw_text",
+                       "hw_corectare", "hw_done", "hw_from_photo", "hw_ocr_done",
+                       "quiz_mode", "quiz_active", "quiz_questions", "quiz_correct",
+                       "quiz_answers", "quiz_submitted", "quiz_materie", "quiz_nivel",
+                       "_suggested_question", "_pending_user_msg"]:
+                st.session_state.pop(_k, None)
+            st.session_state["orientare_mode"]    = True
+            st.session_state["_detected_subject"] = "orientare_specializare"
+            st.session_state["system_prompt"]     = get_system_prompt(
+                materie="orientare_specializare",
+                pas_cu_pas=st.session_state.get("pas_cu_pas", False),
+                mod_avansat=st.session_state.get("mod_avansat", False),
+                mod_strategie=st.session_state.get("mod_strategie", False),
+                mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+            )
+            invalidate_session_cache()
+            components.html(
+                f"<script>localStorage.setItem('profesor_session_id', {json.dumps(_orient_sid)});</script>",
+                height=0,
+            )
+        else:
+            # ── DEZACTIVARE: restaurăm sesiunea anterioară ──
+            _prev_sid = st.session_state.get("_orient_prev_session_id", "")
+            _prev_msg = st.session_state.get("_orient_prev_messages", [])
+            _prev_mat = st.session_state.get("_orient_prev_materie")
+            _prev_det = st.session_state.get("_orient_prev_detected")
+            _prev_sys = st.session_state.get("_orient_prev_system_prompt", "")
+
+            st.session_state["orientare_mode"] = False
+            for _k in ["_orient_prev_session_id", "_orient_prev_messages",
+                       "_orient_prev_materie", "_orient_prev_detected", "_orient_prev_system_prompt"]:
+                st.session_state.pop(_k, None)
+
+            if _prev_sid and is_valid_session_id(_prev_sid):
+                st.session_state["session_id"]        = _prev_sid
+                st.session_state["messages"]          = _prev_msg
+                st.session_state["materie_selectata"] = _prev_mat
+                st.session_state["_detected_subject"] = _prev_det
+                st.session_state["system_prompt"]     = _prev_sys or get_system_prompt(
+                    materie=_prev_mat,
+                    pas_cu_pas=st.session_state.get("pas_cu_pas", False),
+                    mod_avansat=st.session_state.get("mod_avansat", False),
+                    mod_strategie=st.session_state.get("mod_strategie", False),
+                    mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+                )
+                try:
+                    st.query_params["sid"] = _prev_sid
+                except Exception:
+                    pass
+                components.html(
+                    f"<script>localStorage.setItem('profesor_session_id', {json.dumps(_prev_sid)});</script>",
+                    height=0,
+                )
+            else:
+                _new_main_sid = generate_unique_session_id()
+                register_session(_new_main_sid)
+                st.session_state["session_id"]        = _new_main_sid
+                st.session_state["messages"]          = []
+                st.session_state["materie_selectata"] = None
+                st.session_state.pop("_detected_subject", None)
+                st.session_state["system_prompt"]     = get_system_prompt(
+                    materie=None,
+                    pas_cu_pas=st.session_state.get("pas_cu_pas", False),
+                    mod_avansat=st.session_state.get("mod_avansat", False),
+                    mod_strategie=st.session_state.get("mod_strategie", False),
+                    mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+                )
                 try:
                     st.query_params["sid"] = _new_main_sid
                 except Exception:
@@ -5231,7 +5483,7 @@ INTREBARI_POOL = {
     ],
 }
 
-if not st.session_state.get("messages") and not st.session_state.get("pedagogie_mode"):
+if not st.session_state.get("messages") and not st.session_state.get("pedagogie_mode") and not st.session_state.get("orientare_mode"):
     materie_curenta = st.session_state.get("materie_selectata")
 
     if materie_curenta is None:
