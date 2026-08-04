@@ -3157,6 +3157,109 @@ _PROMPT_SUBJECTS: dict[str, str] = {
          V_T=26mV din ecuația diodei (același simbol, concept complet diferit — clarifică din context)
     """,
 
+    "componente și circuite pasive": r"""
+    1. COMPONENTE ȘI CIRCUITE PASIVE — ANUL II ETTI/UPB (Semestrul I):
+       Extinde Bazele Electrotehnicii (R, L, C ideale) spre COMPONENTE REALE, cu neidealități,
+       toleranțe, comportament în frecvență — cunoștințe direct aplicabile la proiectare PCB.
+
+       NOTAȚII OBLIGATORII:
+       - Toleranță: ±x% (variație admisă față de valoarea nominală)
+       - Coeficient de temperatură: ppm/°C (părți per milion pe grad) — cât variază valoarea
+         componentei cu temperatura
+       - Factor de calitate: Q (adimensional) — pentru bobine și condensatoare reale
+       - ESR (Equivalent Series Resistance) — rezistența serie echivalentă parazită
+       - Frecvență de auto-rezonanță: f_SRF — frecvența la care componenta reală încetează
+         să se comporte ca elementul ideal
+       - Folosește LaTeX pentru formule; specifică unități (Ω, F, H) și prefixele SI corect
+         (pF, nF, µF pentru capacități; nH, µH, mH pentru inductanțe)
+
+       STRUCTURA OBLIGATORIE pentru analiza unei componente reale:
+       **1. Model ideal** — comportamentul teoretic de bază (R constant, X_C=1/ωC, X_L=ωL)
+       **2. Neidealități** — ce elemente parazite/limitări introduce fabricația reală
+       **3. Domeniul de valabilitate** — la ce frecvențe/condiții modelul ideal e suficient
+          de precis vs. când trebuie considerat modelul complet
+       **4. Alegerea componentei potrivite** — pentru aplicația dată (dacă se cere)
+
+       ══════════════════════════════════════════
+       REZISTOARE
+       ══════════════════════════════════════════
+       - Tipuri constructive: peliculă de carbon (ieftine, toleranță mai mare), peliculă
+         metalică (precizie mai bună, zgomot mai mic), bobinate (putere mare, dar inductanță
+         parazită semnificativă — evită la frecvențe înalte), SMD (chip) vs. THT (traversante)
+       - Toleranță tipică: 5% (banda aurie), 1% (maro, precizie), până la 0.1% pentru aplicații
+         de precizie
+       - Coeficient de temperatură: rezistoarele cu film metalic au coeficient mult mai mic
+         decât cele cu carbon — relevant pentru circuite de precizie/referință
+       - Putere disipată: P=I²R — trebuie ca puterea REALĂ din circuit să fie sub puterea
+         nominală a rezistorului (de obicei cu marjă de siguranță 2x), altfel supraîncălzire/ardere
+       - Cod de culori (rezistoare THT): benzi care codifică valoarea și toleranța — utile
+         de reamintit studentului dacă întreabă, dar nu e obligatoriu de memorat perfect
+
+       ══════════════════════════════════════════
+       CONDENSATOARE
+       ══════════════════════════════════════════
+       - Tipuri constructive și proprietăți:
+         → Ceramice (multistrat, MLCC): mici, ieftine, dar capacitatea poate varia cu
+           tensiunea aplicată (mai ales clasele X7R/Y5V) — atenție la alegerea clasei dielectrice
+         → Electrolitice (Al, tantal): capacități mari, POLARIZATE (au + și −, distrugere
+           dacă se conectează invers!), ESR mai mare, îmbătrânire în timp (capacitatea scade)
+         → Film (poliester, polipropilenă): nepolarizate, stabile, folosite unde precizia
+           și stabilitatea contează (filtre, circuite de temporizare)
+       - Model real (nu ideal): capacitate C în serie cu ESR (rezistență parazită) și ESL
+         (inductanță parazită) — la frecvențe mari, ESL domină și condensatorul "real" începe
+         să se comporte ca o bobină (auto-rezonanță f_SRF = 1/(2π√(LC)))
+       - Tensiune de lucru: NICIODATĂ depășită — condensatoarele electrolitice mai ales pot
+         exploda/ieși lichid dacă sunt supuse la tensiune peste valoarea nominală
+       - Aplicație practică: decuplare/filtrare pe alimentare (condensator ceramic mic pentru
+         frecvențe înalte + electrolitic mare pentru frecvențe joase, în paralel — combinație
+         standard pe orice PCB modern)
+
+       ══════════════════════════════════════════
+       BOBINE (INDUCTOARE)
+       ══════════════════════════════════════════
+       - Tipuri de miez: aer (fără miez, inductanță mică, dar fără pierderi de miez), ferită
+         (inductanță mare, pierderi la frecvențe înalte prin histerezis/curenți turbionari),
+         miez de fier laminat (aplicații de joasă frecvență/putere)
+       - Factor de calitate Q = ωL/R_serie — cu cât mai mare, cu atât bobina se apropie mai
+         mult de comportamentul ideal (pierderi mai mici relative la reactanță)
+       - Capacitate parazită între spire: la frecvențe înalte, bobina reală are și o
+         componentă capacitivă parazită — analog cu ESL la condensatoare, duce la o
+         frecvență de auto-rezonanță proprie
+       - Saturația miezului: peste un anumit curent, miezul feromagnetic se saturează,
+         inductanța scade brusc — limitare importantă la bobine de putere (surse în comutație)
+
+       ══════════════════════════════════════════
+       CIRCUITE RC/RL DE ORDINUL I (filtre simple)
+       ══════════════════════════════════════════
+       - Constanta de timp: τ=RC (circuit RC) sau τ=L/R (circuit RL) — timpul caracteristic
+         de încărcare/descărcare (la 63% din valoarea finală după un τ, la >99% după 5τ)
+       - Filtru RC trece-jos: ieșirea pe condensator — atenuează frecvențele înalte,
+         frecvența de tăiere f_c = 1/(2πRC)
+       - Filtru RC trece-sus: ieșirea pe rezistor — atenuează frecvențele joase, aceeași f_c
+       - La f_c: atenuare de -3dB (amplitudine scade la 1/√2 din valoarea maximă) — reper
+         standard pentru caracterizarea filtrelor
+
+       ══════════════════════════════════════════
+       REZONANȚA ÎN CIRCUITE RLC CU COMPONENTE REALE
+       ══════════════════════════════════════════
+       - Completează teoria de la Bazele Electrotehnicii cu efectul componentelor reale:
+         ESR-ul condensatorului și rezistența serie a bobinei limitează factorul de calitate
+         Q al circuitului rezonant complet (Q_total mai mic decât cel calculat cu componente ideale)
+       - Lățimea benzii de trecere a unui circuit rezonant: BW = f₀/Q — cu cât Q mai mare,
+         cu atât rezonanța e mai "ascuțită" (selectivitate mai bună)
+
+       CAPCANE FRECVENTE:
+       - Conectarea inversă a unui condensator electrolitic sau tantal (polarizat!) — poate
+         duce la distrugerea componentei
+       - Ignorarea ESR/ESL la aplicații de frecvență înaltă, tratând condensatorul/bobina
+         ca ideale peste tot domeniul de frecvență
+       - Alegerea unei clase dielectrice ceramice nepotrivite (X7R/Y5V) pentru aplicații
+         unde stabilitatea capacității cu tensiunea/temperatura contează
+       - Depășirea puterii nominale a unui rezistor fără marjă de siguranță
+       - Confuzia dintre toleranța componentei (variație de fabricație) și coeficientul de
+         temperatură (variație cu temperatura de funcționare) — sunt specificații diferite
+    """,
+
 }
 
 
@@ -3475,6 +3578,13 @@ SUBJECT_KEYWORDS = {
         "polarizarea tranzistorului", "diodă zener", "dioda zener", "punte redresoare",
         "tensiune de prag", "canal n", "canal p", "gate source drain",
     ],
+    "componente și circuite pasive": [
+        "condensator electrolitic", "condensator ceramic", "condensator film",
+        "esr", "esl", "factor de calitate q", "toleranță componentă", "toleranta componenta",
+        "coeficient de temperatură", "coeficient de temperatura", "constanta de timp",
+        "frecvență de tăiere", "frecventa de taiere", "auto-rezonanță", "auto-rezonanta",
+        "filtru rc", "saturația miezului", "saturatia miezului", "clasa dielectrică x7r",
+    ],
 }
 
 
@@ -3529,6 +3639,9 @@ _STRONG_INDICATORS = {
     "dispozitive electronice": ["joncțiune p-n", "jonctiune p-n", "tranzistor bipolar",
                      "diodă zener", "dioda zener", "regiune de saturație", "regiune de saturatie",
                      "tensiune de prag", "punte redresoare", "polarizarea tranzistorului"],
+    "componente și circuite pasive": ["esr", "esl", "factor de calitate q",
+                     "auto-rezonanță", "auto-rezonanta", "condensator electrolitic",
+                     "saturația miezului", "saturatia miezului", "clasa dielectrică x7r"],
 }
 
 def detect_subject_from_text(text: str) -> str | None:
@@ -5752,6 +5865,20 @@ INTREBARI_POOL = {
         "Cum se formează joncțiunea p-n și bariera de potențial?",
         "De ce MOSFET are impedanță de intrare mai mare decât BJT?",
         "Cum aleg modelul potrivit pentru o diodă într-un circuit?",
+    ],
+    "componente și circuite pasive": [
+        "De ce nu pot conecta invers un condensator electrolitic?",
+        "Ce este ESR și de ce contează la un condensator?",
+        "Cum aleg între condensator ceramic, electrolitic și film?",
+        "Ce este frecvența de auto-rezonanță a unei componente reale?",
+        "Cum calculez constanta de timp a unui circuit RC?",
+        "Care e diferența dintre clasele dielectrice X7R și Y5V?",
+        "Ce este factorul de calitate Q al unei bobine?",
+        "Cum funcționează un filtru RC trece-jos?",
+        "De ce se saturează miezul unei bobine și ce înseamnă asta?",
+        "Care e diferența dintre toleranță și coeficient de temperatură?",
+        "De ce se pun două condensatoare (mic + mare) pe alimentare?",
+        "Cum calculez lățimea de bandă a unui circuit rezonant real?",
     ],
 }
 
