@@ -3359,6 +3359,101 @@ _PROMPT_SUBJECTS: dict[str, str] = {
          modelul ideal nu mai e suficient de precis
     """,
 
+    "circuite integrate digitale": r"""
+    1. CIRCUITE INTEGRATE DIGITALE — ANUL II ETTI/UPB (Semestrul II):
+       (NU există separat la INF — conținutul e integrat în "Electronică Digitală")
+       Extinde MOSFET-ul ca și comutator (din Dispozitive Electronice) spre logica digitală
+       completă: porți logice, algebră booleană, circuite combinaționale și secvențiale.
+
+       NOTAȚII OBLIGATORII:
+       - Nivele logice: '0' (fals/LOW) și '1' (adevărat/HIGH)
+       - Operatori booleeni: AND (·), OR (+), NOT (¯ deasupra sau '), XOR (⊕)
+       - Porți logice: simbol + tabel de adevăr — la cerere, prezintă AMBELE
+       - Bistabil/flip-flop: Q (ieșire), Q̄ (ieșire complementară), CLK (ceas), D/J/K/T/S/R
+         (intrări specifice tipului)
+       - Folosește tabele de adevăr formatate clar (markdown table) pentru orice funcție logică
+
+       STRUCTURA OBLIGATORIE pentru un exercițiu de logică digitală:
+       **1. Identifică tipul circuitului** — combinațional (ieșire depinde DOAR de intrările
+          curente) sau secvențial (ieșire depinde și de starea anterioară — are memorie)
+       **2. Pentru combinațional**: tabel de adevăr → expresie booleană → simplificare (dacă
+          se cere) → schemă cu porți
+       **3. Pentru secvențial**: diagramă de stări/tabel de tranziții → ecuațiile de excitație
+          → schema cu bistabile
+       **4. Verificare** — testează cu câteva combinații de intrare
+
+       ══════════════════════════════════════════
+       ALGEBRA BOOLEANĂ ȘI LOGICA COMBINAȚIONALĂ
+       ══════════════════════════════════════════
+       - Porți logice de bază: AND (ieșire 1 doar dacă TOATE intrările sunt 1), OR (ieșire 1
+         dacă CEL PUȚIN O intrare e 1), NOT (inversor), NAND/NOR (AND/OR + inversare — NAND
+         și NOR sunt "complete funcțional": orice funcție booleană se poate construi DOAR
+         din NAND, sau DOAR din NOR), XOR (ieșire 1 dacă intrările sunt DIFERITE)
+       - Legile algebrei booleene: comutativitate, asociativitate, distributivitate,
+         legile lui De Morgan (ESENȚIALE): NOT(A·B) = NOT(A)+NOT(B); NOT(A+B) = NOT(A)·NOT(B)
+         — permit conversia între forme AND-OR și NAND-NOR
+       - Forme canonice: SOP (Sum of Products, sumă de produse — din liniile cu ieșire 1 în
+         tabelul de adevăr) și POS (Product of Sums) — puncte de plecare standard pentru
+         orice implementare
+       - Simplificare cu hărți Karnaugh: gruparea de 1-uri adiacente (grupuri de 2^n celule)
+         pentru a obține expresia minimă — reduce numărul de porți necesare; identifică
+         ÎNTOTDEAUNA cea mai mare grupare posibilă pentru fiecare 1 necombinat
+       - Circuite combinaționale uzuale:
+         → Semi-sumator (half adder): adună 2 biți, produce sumă+transport, FĂRĂ transport
+           de intrare
+         → Sumator complet (full adder): adună 2 biți + transport de intrare — bloc de bază
+           pentru sumatoare pe mai mulți biți (conectate în cascadă)
+         → Multiplexor (MUX): selectează UNA din mai multe intrări către ieșire, pe baza
+           unor biți de selecție
+         → Decodor: activează UNA din 2ⁿ ieșiri, pe baza unei intrări de n biți
+
+       ══════════════════════════════════════════
+       TEHNOLOGIA CMOS — IMPLEMENTAREA FIZICĂ A PORȚILOR
+       ══════════════════════════════════════════
+       - Poartă CMOS = pereche complementară MOSFET canal-n (PMOS conduce la '0' pe gate,
+         NMOS conduce la '1' pe gate) — construiește direct pe teoria MOSFET din Dispozitive
+         Electronice
+       - Inversor CMOS: PMOS spre alimentare + NMOS spre masă, ambele comandate de aceeași
+         intrare — DOAR unul din cele două conduce la un moment dat (regim static) → consum
+         static aproape nul, avantaj major CMOS față de tehnologiile mai vechi
+       - Consumul de putere: predominant DINAMIC (la comutare, încărcare/descărcare a
+         capacităților parazite) — proporțional cu frecvența de comutare, tensiunea de
+         alimentare la pătrat: P ≈ C·V²·f
+       - Nivele de tensiune și zgomot: fiecare familie logică are praguri de tensiune
+         definite pentru '0' și '1' — marja de zgomot = diferența dintre nivelul garantat
+         și pragul de recunoaștere
+
+       ══════════════════════════════════════════
+       LOGICA SECVENȚIALĂ — BISTABILE ȘI CIRCUITE CU MEMORIE
+       ══════════════════════════════════════════
+       - Latch SR (Set-Reset): cel mai simplu element de memorie — stare interzisă când
+         S=R=1 (ambele active simultan) — evitată în proiectare
+       - Bistabil D (tip D): Q_next = D la fiecare front de ceas — cel mai folosit în
+         practică, elimină ambiguitatea SR
+       - Bistabil JK: extensie a SR fără stare interzisă — J=K=1 face Q să comute (toggle)
+       - Bistabil T (Toggle): Q comută la fiecare impuls de ceas dacă T=1 — bază pentru numărătoare
+       - Declanșare pe front (edge-triggered) vs. pe nivel (level-triggered, latch) —
+         circuitele sincrone moderne folosesc aproape exclusiv declanșare pe front, pentru
+         a evita comportamente imprevizibile
+       - Registre: grup de bistabile D care memorează un cuvânt de date, actualizat sincron
+         pe frontul de ceas
+       - Numărătoare: lanț de bistabile T sau JK conectate pentru a număra impulsuri de
+         ceas — asincron (fiecare bistabil declanșat de ieșirea celui anterior, simplu dar
+         lent) vs. sincron (toate bistabilele pe același semnal de ceas, mai rapid, standard
+         în proiectare modernă)
+
+       CAPCANE FRECVENTE:
+       - Confuzia AND cu OR la citirea unei expresii booleene (verifică ÎNTOTDEAUNA operatorul
+         exact, mai ales în expresii complexe cu paranteze)
+       - Aplicarea greșită a legilor lui De Morgan (semnul de negație trebuie distribuit
+         corect pe FIECARE termen, nu doar pe primul)
+       - Confuzia circuit combinațional (fără memorie, ieșire = f(intrări curente)) cu
+         secvențial (cu memorie, ieșire depinde și de starea anterioară)
+       - Lăsarea stării S=R=1 la un latch SR (stare interzisă/nedefinită)
+       - Confuzia declanșare pe front cu declanșare pe nivel — comportament radical diferit
+         la circuite cu semnale care variază în timpul unei perioade de ceas
+    """,
+
 }
 
 
@@ -3691,6 +3786,14 @@ SUBJECT_KEYWORDS = {
         "transconductanță", "transconductanta", "model de semnal mic", "slew rate",
         "regulile de aur", "clasa a de amplificare", "amplificator integrator",
     ],
+    "circuite integrate digitale": [
+        "poartă logică", "poarta logica", "tabel de adevăr", "tabel de adevar",
+        "algebra booleană", "algebra booleana", "hartă karnaugh", "harta karnaugh",
+        "legile lui de morgan", "circuit combinațional", "circuit combinational",
+        "circuit secvențial", "circuit secvential", "bistabil", "flip-flop",
+        "sumator complet", "semi-sumator", "multiplexor", "decodor", "cmos",
+        "numărător sincron", "numarator sincron", "registru de deplasare",
+    ],
 }
 
 
@@ -3751,6 +3854,10 @@ _STRONG_INDICATORS = {
     "circuite electronice fundamentale": ["amplificator operațional", "amplificator operational",
                      "regulile de aur", "emitor comun", "colector comun", "bază comună",
                      "baza comuna", "slew rate", "transconductanță", "transconductanta"],
+    "circuite integrate digitale": ["hartă karnaugh", "harta karnaugh",
+                     "legile lui de morgan", "sumator complet", "semi-sumator",
+                     "circuit combinațional", "circuit combinational", "circuit secvențial",
+                     "circuit secvential", "flip-flop", "poartă logică nand"],
 }
 
 def detect_subject_from_text(text: str) -> str | None:
@@ -6002,6 +6109,20 @@ INTREBARI_POOL = {
         "Ce este slew rate-ul unui AO și când contează?",
         "Cum funcționează un repetor pe emitor (colector comun)?",
         "De ce AO ideal presupune curent zero pe intrări?",
+    ],
+    "circuite integrate digitale": [
+        "Cum simplific o funcție booleană cu hărți Karnaugh?",
+        "Care sunt legile lui De Morgan și cum le aplic?",
+        "Cum funcționează un sumator complet (full adder)?",
+        "Care e diferența dintre circuit combinațional și secvențial?",
+        "Cum funcționează un bistabil de tip D?",
+        "De ce NAND și NOR sunt porți complete funcțional?",
+        "Cum implementez o poartă logică în tehnologie CMOS?",
+        "Care e diferența dintre bistabil JK și bistabil T?",
+        "Cum funcționează un multiplexor?",
+        "De ce consumul CMOS static e aproape nul?",
+        "Care e diferența dintre declanșare pe front și pe nivel?",
+        "Cum construiesc un numărător sincron din bistabile?",
     ],
 }
 
