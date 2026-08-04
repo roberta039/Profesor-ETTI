@@ -1704,22 +1704,35 @@ st.session_state["_api_keys_list"] = keys
 
 # === MATERII ===
 MATERII = {
-    # ANUL I ETTI (UPB) — trunchi comun, generația 2024-2028.
+    # ETTI (UPB) — trunchi comun, generația 2024-2028.
     # Sursă: planuri de învățământ oficiale ETTI, extrase direct din PDF-urile
     # ELA-24-28 / TST-24-28 / RST-24-28 / MON-24-28 / INF-24-28.
-    # Anul I e identic pentru ELA/TST/RST/MON; la INF (Ingineria Informației)
-    # 3 discipline au denumiri diferite — marcate mai jos cu „(INF: ...)”.
+    # Anii I-II sunt identici pentru ELA/TST/RST/MON; la INF (Ingineria Informației)
+    # unele discipline au denumiri diferite — marcate mai jos cu „(INF: ...)”.
     "🤖 Automat":                                 None,  # detectează disciplina din mesaj, întreabă dacă nu poate
-    "📐 Analiză Matematică":                      "analiză matematică",
-    "📐 Algebră Liniară, Geometrie Analitică și Diferențială": "algebră liniară, geometrie analitică și diferențială",
-    "⚡ Fizică":                                  "fizică",
-    "💻 Programarea Calculatoarelor și Limbaje de Programare": "programarea calculatoarelor și limbaje de programare",
-    "🔌 Bazele Electrotehnicii (INF: Electrotehnică)": "bazele electrotehnicii",
-    "🧪 Chimie":                                  "chimie facultate",
-    "📐 Matematici Speciale":                     "matematici speciale",
-    "📏 Măsurări în Electronică și Telecomunicații (INF: Măsurători Electronice, Senzori și Traductoare)": "măsurări în electronică și telecomunicații",
-    "🧱 Materiale pentru Electronică (INF: Sisteme de Operare 1)": "materiale pentru electronică",
-    "🖥️ Informatică Aplicată (Proiect)":          "informatică aplicată",
+
+    # --- ANUL I ---
+    "📐 Analiză Matematică (An I)":                      "analiză matematică",
+    "📐 Algebră Liniară, Geometrie Analitică și Diferențială (An I)": "algebră liniară, geometrie analitică și diferențială",
+    "⚡ Fizică (An I)":                                  "fizică",
+    "💻 Programarea Calculatoarelor și Limbaje de Programare (An I)": "programarea calculatoarelor și limbaje de programare",
+    "🔌 Bazele Electrotehnicii (An I) (INF: Electrotehnică)": "bazele electrotehnicii",
+    "🧪 Chimie (An I)":                                  "chimie facultate",
+    "📐 Matematici Speciale (An I)":                     "matematici speciale",
+    "📏 Măsurări în Electronică și Telecomunicații (An I) (INF: Măsurători Electronice, Senzori și Traductoare)": "măsurări în electronică și telecomunicații",
+    "🧱 Materiale pentru Electronică (An I) (INF: Sisteme de Operare 1)": "materiale pentru electronică",
+    "🖥️ Informatică Aplicată (An I, Proiect)":          "informatică aplicată",
+
+    # --- ANUL II ---
+    "📶 Semnale și Sisteme (An II)":                     "semnale și sisteme",
+    "🔋 Dispozitive Electronice (An II) (INF: Dispozitive Electronice și Electronică Analogică 1)": "dispozitive electronice",
+    "🧮 Arhitectura Microprocesoarelor (An II)":         "arhitectura microprocesoarelor",
+    "🔩 Componente și Circuite Pasive (An II)":          "componente și circuite pasive",
+    "🧮 Structuri de Date și Algoritmi (An II)":         "structuri de date și algoritmi",
+    "🔌 Circuite Electronice Fundamentale (An II) (INF: parte din Electronică Digitală)": "circuite electronice fundamentale",
+    "💾 Circuite Integrate Digitale (An II) (nu la INF — vezi Electronică Digitală)": "circuite integrate digitale",
+    "🎲 Teoria Probabilităților și Statistică Matematică (An II)": "teoria probabilităților și statistică matematică",
+    "🗄️ Baze de Date (An II)":                          "baze de date",
 }
 # NOTĂ: la finalul anului II, disciplinele se ramifică pe specializare (ELA/TST/RST/MON/INF).
 # Se adaugă blocurile aferente în MATERII + _PROMPT_SUBJECTS pe măsură ce studentul avansează.
@@ -2934,6 +2947,110 @@ _PROMPT_SUBJECTS: dict[str, str] = {
       se schimbă mai des decât acest ghid poate fi actualizat.
     """,
 
+    "semnale și sisteme": r"""
+    1. SEMNALE ȘI SISTEME — ANUL II ETTI/UPB (SS1 sem. I + SS2 sem. II):
+
+       NOTAȚII OBLIGATORII (niciodată altele):
+       - Semnal continuu: x(t) (variabilă independentă t continuă); semnal discret: x[n]
+         (variabilă independentă n întreagă) — paranteze rotunde vs. drepte, diferență esențială
+       - Impuls unitate discret: δ[n]; impuls Dirac continuu: δ(t)
+       - Treaptă unitate: u(t) sau u[n]
+       - Convoluție: y(t) = x(t)*h(t) = ∫x(τ)h(t−τ)dτ (continuu); y[n]=Σx[k]h[n−k] (discret)
+       - Răspuns la impuls: h(t) sau h[n]; funcție de transfer: H(s) (Laplace) sau H(jω) (Fourier)
+       - Folosește LaTeX pentru toate formulele
+
+       STRUCTURA OBLIGATORIE pentru orice exercițiu:
+       **1. Clasifică semnalul/sistemul** — continuu/discret, periodic/aperiodic, etc.
+       **2. Verifică proprietățile relevante** — liniaritate, invarianță în timp, cauzalitate,
+          stabilitate (ÎNAINTE de a aplica metode care presupun aceste proprietăți)
+       **3. Alege metoda** — convoluție directă, transformată (Laplace/Fourier), funcție de transfer
+       **4. Rezolvare pas cu pas**
+       **5. Verificare** — printr-un caz particular sau proprietate cunoscută
+
+       ══════════════════════════════════════════
+       SS1 (Semestrul I) — CLASIFICAREA SEMNALELOR ȘI SISTEMELOR, CONVOLUȚIE
+       ══════════════════════════════════════════
+
+       CLASIFICAREA SEMNALELOR:
+       - Continuu în timp vs. discret în timp: x(t) definit pentru orice t real, vs. x[n]
+         definit doar pentru n întreg
+       - Periodic vs. aperiodic: x(t)=x(t+T) pentru orice t (T=perioada) vs. fără această proprietate
+       - Semnal de energie (energie finită, putere medie=0, ex: impuls izolat) vs. semnal de
+         putere (putere medie finită și nenulă, ex: semnal periodic, sinusoidă) — categorii
+         MUTUAL EXCLUSIVE (un semnal e ori de energie, ori de putere, rar niciuna)
+       - Semnale elementare: impuls Dirac δ(t) (proprietate de eșantionare: ∫f(t)δ(t−a)dt=f(a)),
+         treaptă unitate u(t), exponențială e^(at), sinusoidală A·cos(ωt+φ)
+
+       OPERAȚII CU SEMNALE:
+       - Translatare în timp: x(t−t₀) (întârziere dacă t₀>0)
+       - Scalare în timp: x(at) (comprimare dacă |a|>1, expandare dacă |a|<1)
+       - Răsturnare: x(−t)
+       - ATENȚIE la ordinea operațiilor compuse (ex: x(2t−1) — se aplică translatarea DUPĂ
+         scalare pe variabila deja scalată, o sursă frecventă de erori)
+
+       PROPRIETĂȚILE SISTEMELOR (verifică-le ÎNTOTDEAUNA în această ordine):
+       - Liniaritate: sistemul respectă superpoziția — T{ax₁+bx₂} = aT{x₁}+bT{x₂}
+       - Invarianță în timp: o întârziere la intrare produce aceeași întârziere la ieșire,
+         fără altă modificare — T{x(t−t₀)} = y(t−t₀)
+       - Cauzalitate: ieșirea la momentul t depinde DOAR de valori ale intrării la t'≤t
+         (nu poate "anticipa" viitorul) — obligatoriu pentru sisteme fizice realizabile în timp real
+       - Stabilitate BIBO (bounded-input bounded-output): intrare mărginită → ieșire mărginită
+       - Sistem LTI (Liniar și Invariant în Timp): categoria cea mai importantă — complet
+         caracterizat de răspunsul la impuls h(t)
+
+       CONVOLUȚIA (operația centrală pentru sisteme LTI):
+       - y(t) = x(t)*h(t) — ieșirea unui sistem LTI = convoluția intrării cu răspunsul la impuls
+       - Proprietăți: comutativitate (x*h=h*x), asociativitate, distributivitate față de adunare
+       - Calcul practic (discret): "răstoarnă și alunecă" — răstoarnă h[n], deplasează, înmulțește
+         termen cu termen cu x[n], însumează — repetă pentru fiecare n
+       - Sisteme LTI în cascadă: răspunsul total la impuls = convoluția răspunsurilor individuale;
+         în paralel: se adună
+
+       ══════════════════════════════════════════
+       SS2 (Semestrul II) — ANALIZA ÎN FRECVENȚĂ, FUNCȚII DE TRANSFER, EȘANTIONARE
+       ══════════════════════════════════════════
+
+       ANALIZA ÎN FRECVENȚĂ (legătură directă cu Matematici Speciale):
+       - Serii Fourier pentru semnale periodice — vezi detalii complete la Matematici Speciale;
+         aici accentul e pe INTERPRETARE: descompunerea unui semnal periodic în armonici
+       - Transformata Fourier pentru semnale aperiodice: X(jω) = ∫x(t)e^(-jωt)dt — extensia
+         seriei Fourier la semnale neperiodice (T→∞)
+       - Spectrul semnalului: |X(jω)| (modul, conținutul de amplitudine pe frecvențe) și
+         arg(X(jω)) (fază) — interpretare inginerească: ce frecvențe "conțin" cea mai multă energie
+
+       FUNCȚIA DE TRANSFER ȘI RĂSPUNSUL ÎN FRECVENȚĂ:
+       - Funcția de transfer H(s) = Y(s)/X(s) (raportul transformatelor Laplace ieșire/intrare,
+         cu condiții inițiale nule) — caracterizează complet un sistem LTI
+       - Legătura cu răspunsul la impuls: H(s) = L{h(t)} (transformata Laplace a răspunsului
+         la impuls)
+       - Răspunsul în frecvență: H(jω) — se obține din H(s) prin substituția s=jω (DOAR dacă
+         sistemul e stabil); modulul |H(jω)| = amplificarea pe fiecare frecvență, arg(H(jω)) =
+         defazajul introdus
+       - Poli și zerouri ale lui H(s): polii determină stabilitatea (sistem stabil ⟺ toți
+         polii au partea reală negativă, adică sunt în semiplanul stâng)
+       - Filtre ideale (trece-jos, trece-sus, trece-bandă): caracterizate prin forma |H(jω)| —
+         bază pentru proiectarea de filtre analogice/digitale (aprofundat la anii III-IV)
+
+       EȘANTIONAREA (trecerea de la semnal continuu la discret):
+       - Teorema Nyquist-Shannon: un semnal cu bandă limitată la f_max se poate reconstrui
+         EXACT din eșantioane dacă frecvența de eșantionare f_s > 2·f_max (frecvența Nyquist)
+       - Aliere (aliasing): dacă f_s < 2·f_max, componentele de frecvență înaltă se "pliază"
+         greșit peste cele joase în semnalul eșantionat — distorsiune ireversibilă, se previne
+         prin filtrare anti-aliasing ÎNAINTE de eșantionare
+       - Relevanță practică directă: bază pentru orice conversie analog-digitală (ADC) din
+         sistemele digitale de achiziție și procesare a semnalului
+
+       CAPCANE FRECVENTE:
+       - Confuzia semnal de energie cu semnal de putere (verifică ÎNTOTDEAUNA limita/integrala
+         corespunzătoare, nu presupune)
+       - Ordinea greșită la operații compuse de translatare+scalare (x(at−b) ≠ x(a(t−b)) în general)
+       - Aplicarea proprietăților sistemelor LTI (convoluție, funcție de transfer) pe sisteme
+         care NU sunt liniare sau NU sunt invariante în timp
+       - Confuzia H(s) (funcție de transfer, valabilă în planul s) cu H(jω) (răspuns în
+         frecvență, valabil doar pe axa imaginară, doar pentru sisteme stabile)
+       - Ignorarea condiției Nyquist la eșantionare, ducând la aliere nedetectată
+    """,
+
 }
 
 
@@ -3238,6 +3355,13 @@ SUBJECT_KEYWORDS = {
         "derivare numerică", "derivare numerica", "integrare numerică", "integrare numerica",
         "criteriu de oprire", "pas de discretizare",
     ],
+    "semnale și sisteme": [
+        "semnal continuu", "semnal discret", "convoluție", "convolutie",
+        "răspuns la impuls", "raspuns la impuls", "sistem liniar invariant",
+        "sistem lti", "funcție de transfer", "functie de transfer", "cauzalitate",
+        "stabilitate bibo", "eșantionare", "esantionare", "aliere", "aliasing",
+        "nyquist", "spectrul semnalului", "poli și zerouri", "poli si zerouri",
+    ],
 }
 
 
@@ -3285,6 +3409,10 @@ _STRONG_INDICATORS = {
                      "metoda secantei", "metoda simpson", "metoda trapezelor",
                      "eliminare gaussiană", "eliminare gaussiana", "cele mai mici pătrate",
                      "cele mai mici patrate", "interpolare lagrange"],
+    "semnale și sisteme": ["sistem lti", "răspuns la impuls", "raspuns la impuls",
+                     "funcție de transfer", "functie de transfer", "stabilitate bibo",
+                     "teorema nyquist", "nyquist-shannon", "aliere", "aliasing",
+                     "poli și zerouri", "poli si zerouri"],
 }
 
 def detect_subject_from_text(text: str) -> str | None:
@@ -5480,6 +5608,20 @@ INTREBARI_POOL = {
         "Cum aleg criteriul de oprire pentru un algoritm iterativ?",
         "Ce e fenomenul Runge la interpolarea polinomială?",
         "Cum structurez un mic proiect de cod pe funcții?",
+    ],
+    "semnale și sisteme": [
+        "Cum verific dacă un sistem e liniar și invariant în timp?",
+        "Explică-mi convoluția cu un exemplu pas cu pas",
+        "Care e diferența dintre semnal de energie și semnal de putere?",
+        "Cum determin stabilitatea unui sistem din poziția polilor?",
+        "Ce este teorema Nyquist-Shannon și de ce contează?",
+        "Care e diferența dintre H(s) și H(jω)?",
+        "Cum calculez răspunsul unui sistem LTI la o intrare dată?",
+        "Ce este alierea (aliasing) și cum o previn?",
+        "Cum interpretez spectrul unui semnal?",
+        "De ce cauzalitatea e obligatorie pentru sisteme fizice?",
+        "Cum aplic operațiile de translatare și scalare pe un semnal?",
+        "Ce sunt polii și zerourile unei funcții de transfer?",
     ],
 }
 
