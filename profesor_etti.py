@@ -3260,6 +3260,105 @@ _PROMPT_SUBJECTS: dict[str, str] = {
          temperatură (variație cu temperatura de funcționare) — sunt specificații diferite
     """,
 
+    "circuite electronice fundamentale": r"""
+    1. CIRCUITE ELECTRONICE FUNDAMENTALE — ANUL II ETTI/UPB (Semestrul II):
+       (INF: parte din "Electronică Digitală" — la INF conținutul analogic e mai restrâns)
+       Extinde Dispozitive Electronice (BJT, MOSFET individuale) spre CIRCUITE cu tranzistoare:
+       amplificatoare, reacție, amplificatorul operațional.
+
+       NOTAȚII OBLIGATORII:
+       - Semnal mic vs. mare: literele mici (v_be, i_c) pentru variații de semnal mic în jurul
+         punctului static; literele mari (V_BE, I_C) pentru valori totale/statice
+       - Transconductanță: g_m (S sau A/V) — parametrul central al modelului de semnal mic
+       - Câștig în tensiune: A_v = v_ieșire/v_intrare (adimensional sau în dB: 20·log₁₀|A_v|)
+       - Amplificator operațional: intrare neinversoare (+), inversoare (−), ieșire V_out
+       - Folosește LaTeX pentru toate formulele
+
+       STRUCTURA OBLIGATORIE pentru analiza unui amplificator:
+       **1. Analiza DC (punctul static de funcționare)** — verifică regiunea de funcționare
+          a tranzistorului (vezi Dispozitive Electronice)
+       **2. Trecerea la model de semnal mic** — scurtcircuitează sursele DC, înlocuiește
+          tranzistorul cu modelul liniar echivalent (pentru BJT sau MOSFET)
+       **3. Analiza AC (semnal mic)** — calculează câștig, rezistență de intrare/ieșire
+       **4. Verificare** — câștigul are ordinul de mărime așteptat pentru topologia aleasă?
+
+       ══════════════════════════════════════════
+       AMPLIFICATOARE CU UN SINGUR TRANZISTOR
+       ══════════════════════════════════════════
+       - Model de semnal mic al BJT (regim activ normal): rezistență de intrare bază-emitor
+         r_π = β/g_m; transconductanță g_m = I_C/V_T (V_T≈26mV) — leagă parametrul de curentul
+         static de polarizare (I_C mai mare → g_m mai mare → câștig potențial mai mare)
+       - Topologii BJT (numite după terminalul comun la masă în semnal):
+         → Emitor comun (EC): câștig în tensiune mare, defazaj 180°, cea mai folosită
+           topologie de amplificare de tensiune
+         → Colector comun (CC, repetor pe emitor): câștig ≈1, dar impedanță de ieșire mică
+           și impedanță de intrare mare — util ca "buffer" (etaj tampon)
+         → Bază comună (BC): câștig în tensiune mare, fără defazaj, impedanță de intrare
+           foarte mică — util la frecvențe înalte
+       - Analog pentru MOSFET: sursă comună (SC, echivalent EC), drenă comună (DC, echivalent
+         CC — "source follower"), poartă comună (PC, echivalent BC)
+       - Model de semnal mic MOSFET: g_m = 2√(k·I_D) (aproximativ, din relația pătratică) —
+         fără curent de gate (impedanță de intrare practic infinită la DC)
+
+       ══════════════════════════════════════════
+       REACȚIA (FEEDBACK)
+       ══════════════════════════════════════════
+       - Reacție negativă: o fracțiune din semnalul de ieșire se scade din semnalul de
+         intrare — REDUCE câștigul, dar ÎMBUNĂTĂȚEȘTE: stabilitatea câștigului, liniaritatea
+         (reduce distorsiunile), lățimea de bandă, și modifică impedanțele de intrare/ieșire
+         în direcția dorită
+       - Reacție pozitivă: mărește semnalul — folosită pentru oscilatoare (nu pentru
+         amplificatoare liniare, unde poate duce la instabilitate/saturație)
+       - Formula generală: A_f = A/(1+A·β) (A=câștig fără reacție, β=factor de reacție,
+         A_f=câștig cu reacție) — pentru A·β≫1, A_f≈1/β (câștigul devine independent de A,
+         deci foarte stabil și predictibil — motivul principal pentru care se folosește reacția)
+       - Cele 4 topologii de reacție (serie/paralel la intrare × serie/paralel la ieșire)
+         modifică impedanțele de intrare/ieșire în direcții diferite — dacă întrebarea
+         cere o topologie specifică, identifică-o din cerință
+
+       ══════════════════════════════════════════
+       AMPLIFICATORUL OPERAȚIONAL (AO) — INTRODUCERE
+       ══════════════════════════════════════════
+       - Model IDEAL (aproximare foarte utilă pentru calcule rapide): câștig în buclă
+         deschisă infinit, impedanță de intrare infinită (curent de intrare=0 pe ambele
+         intrări), impedanță de ieșire zero
+       - "Regulile de aur" ale AO ideal cu reacție negativă: V+ = V− (virtual short) ȘI
+         I+ = I− = 0 (niciun curent intră pe intrări) — se aplică ÎMPREUNĂ pentru a rezolva
+         orice circuit cu AO în reacție negativă
+       - Configurații de bază:
+         → Amplificator inversor: A_v = −R_f/R_in (intrarea + la masă)
+         → Amplificator neinversor: A_v = 1+R_f/R_in (semnalul aplicat direct pe intrarea +)
+         → Repetor (buffer, câștig unitar): ieșirea conectată direct la intrarea inversoare
+         → Sumator inversor: ieșire = combinație liniară a mai multor intrări, ponderată
+           de rezistențele respective
+         → Integrator: rezistor la intrare + condensator în reacție — ieșirea proporțională
+           cu integrala intrării în timp
+         → Derivator: condensator la intrare + rezistor în reacție — ieșirea proporțională
+           cu derivata intrării (sensibil la zgomot, folosit rar în practică fără filtrare)
+       - Limitări ale AO real (relevante când modelul ideal nu mai e suficient): câștig finit,
+         curent de polarizare (bias) nenul pe intrări, viteză de creștere limitată (slew rate),
+         bandă de câștig unitar (GBW) finită — la frecvențe mari, câștigul real scade
+
+       CLASE DE AMPLIFICARE (introducere, relevant pentru etaje de putere):
+       - Clasa A: tranzistorul conduce pe TOT ciclul semnalului — cea mai bună liniaritate,
+         dar eficiență energetică scăzută (mult curent static, disipare mare)
+       - Clasa B: fiecare tranzistor conduce doar jumătate din ciclu (push-pull) — eficiență
+         mult mai bună, dar apare distorsiune de trecere prin zero ("crossover distortion")
+       - Clasa AB: compromis — reduce distorsiunea de trecere prin zero, cu eficiență
+         intermediară între A și B
+
+       CAPCANE FRECVENTE:
+       - Confuzia model de semnal MIC (pentru analiza AC, liniarizat în jurul punctului static)
+         cu analiza DC completă (neliniară) — se folosesc în etape SEPARATE, nu amestecate
+       - Aplicarea "regulilor de aur" ale AO pe circuite FĂRĂ reacție negativă (nu sunt valabile
+         acolo — AO fără reacție negativă funcționează ca comparator, saturat la ±V_alimentare)
+       - Uitarea semnului la amplificatorul inversor (câștigul e NEGATIV, defazaj 180°)
+       - Confuzia între reacție negativă (stabilizează, folosită în amplificatoare) și
+         pozitivă (instabilizează, folosită în oscilatoare/comparatoare cu histerezis)
+       - Ignorarea limitărilor AO real (slew rate, GBW) la frecvențe/amplitudini mari, unde
+         modelul ideal nu mai e suficient de precis
+    """,
+
 }
 
 
@@ -3585,6 +3684,13 @@ SUBJECT_KEYWORDS = {
         "frecvență de tăiere", "frecventa de taiere", "auto-rezonanță", "auto-rezonanta",
         "filtru rc", "saturația miezului", "saturatia miezului", "clasa dielectrică x7r",
     ],
+    "circuite electronice fundamentale": [
+        "amplificator operațional", "amplificator operational", "reacție negativă",
+        "reactie negativa", "emitor comun", "colector comun", "bază comună", "baza comuna",
+        "sursă comună", "sursa comuna", "amplificator inversor", "amplificator neinversor",
+        "transconductanță", "transconductanta", "model de semnal mic", "slew rate",
+        "regulile de aur", "clasa a de amplificare", "amplificator integrator",
+    ],
 }
 
 
@@ -3642,6 +3748,9 @@ _STRONG_INDICATORS = {
     "componente și circuite pasive": ["esr", "esl", "factor de calitate q",
                      "auto-rezonanță", "auto-rezonanta", "condensator electrolitic",
                      "saturația miezului", "saturatia miezului", "clasa dielectrică x7r"],
+    "circuite electronice fundamentale": ["amplificator operațional", "amplificator operational",
+                     "regulile de aur", "emitor comun", "colector comun", "bază comună",
+                     "baza comuna", "slew rate", "transconductanță", "transconductanta"],
 }
 
 def detect_subject_from_text(text: str) -> str | None:
@@ -5879,6 +5988,20 @@ INTREBARI_POOL = {
         "Care e diferența dintre toleranță și coeficient de temperatură?",
         "De ce se pun două condensatoare (mic + mare) pe alimentare?",
         "Cum calculez lățimea de bandă a unui circuit rezonant real?",
+    ],
+    "circuite electronice fundamentale": [
+        "Cum calculez câștigul unui amplificator emitor comun?",
+        "Care sunt \"regulile de aur\" ale amplificatorului operațional?",
+        "De ce reacția negativă îmbunătățește un amplificator?",
+        "Cum funcționează un amplificator inversor cu AO?",
+        "Care e diferența dintre emitor comun și colector comun?",
+        "Ce este transconductanța g_m și cum o calculez?",
+        "Cum trec de la analiza DC la modelul de semnal mic?",
+        "Ce este un integrator realizat cu amplificator operațional?",
+        "Care e diferența dintre clasa A, B și AB de amplificare?",
+        "Ce este slew rate-ul unui AO și când contează?",
+        "Cum funcționează un repetor pe emitor (colector comun)?",
+        "De ce AO ideal presupune curent zero pe intrări?",
     ],
 }
 
