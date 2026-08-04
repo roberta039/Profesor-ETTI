@@ -3051,6 +3051,112 @@ _PROMPT_SUBJECTS: dict[str, str] = {
        - Ignorarea condiției Nyquist la eșantionare, ducând la aliere nedetectată
     """,
 
+    "dispozitive electronice": r"""
+    1. DISPOZITIVE ELECTRONICE — ANUL II ETTI/UPB (Semestrul I):
+       (INF: echivalent cu "Dispozitive Electronice și Electronică Analogică 1")
+       Extinde direct Materiale pentru Electronică (semiconductori, dopare) spre dispozitive
+       reale: diode, tranzistoare bipolare (BJT), tranzistoare cu efect de câmp (MOSFET).
+
+       NOTAȚII OBLIGATORII:
+       - Diodă: curent I_D, tensiune V_D (convenția: săgeata diodei = sensul convențional
+         de conducție); tensiune de deschidere V_γ (≈0.7V Si, ≈0.3V Ge)
+       - BJT: terminale Bază(B)/Colector(C)/Emitor(E); curenți I_B, I_C, I_E (I_E=I_B+I_C);
+         factor de amplificare în curent β (sau h_FE) = I_C/I_B; α = I_C/I_E
+       - MOSFET: terminale Gate(G)/Drain(D)/Source(S); tensiune de prag V_T (sau V_TH);
+         curent de drenă I_D; tensiune gate-source V_GS, drain-source V_DS
+       - Folosește LaTeX pentru toate formulele; specifică ÎNTOTDEAUNA regiunea de funcționare
+         înainte de a aplica o ecuație (fiecare regiune are model matematic diferit)
+
+       STRUCTURA OBLIGATORIE pentru analiza unui circuit cu dispozitive:
+       **1. Identifică dispozitivul și tipul** (diodă normală/Zener, BJT npn/pnp, MOSFET
+          canal n/p, tip îmbogățire/sărăcire)
+       **2. Determină regiunea de funcționare** — verifică ipotezele (presupune o regiune,
+          calculează, verifică dacă rezultatul e consistent cu ipoteza — dacă nu, încearcă
+          altă regiune)
+       **3. Aplică modelul matematic corespunzător regiunii**
+       **4. Calculează punctul static de funcționare** (dacă se cere polarizare)
+       **5. Verifică rezultatul** — valorile au sens fizic (curenți pozitivi unde trebuie,
+          tensiuni în limite rezonabile)?
+
+       ══════════════════════════════════════════
+       JONCȚIUNEA P-N ȘI DIODA SEMICONDUCTOARE
+       ══════════════════════════════════════════
+       - La contactul p-n: difuzie de purtători majoritari → se formează o regiune de sarcină
+         spațială (zonă golită de purtători liberi) → barieră de potențial internă
+       - Polarizare directă (+ pe p, − pe n): reduce bariera de potențial → curent mare posibil
+       - Polarizare inversă (+ pe n, − pe p): mărește bariera → curent foarte mic (curent de
+         saturație invers, practic neglijabil, până la străpungere)
+       - Caracteristica curent-tensiune (ecuația diodei): I_D = I_S(e^(V_D/(n·V_T)) − 1)
+         (I_S=curent de saturație, V_T≈26mV la temperatura camerei, n=factor de idealitate)
+       - Modele practice de aproximare (de la simplu la precis):
+         → Model ideal: diodă = comutator perfect (conduce fără cădere de tensiune)
+         → Model cu tensiune de deschidere: diodă conduce doar peste V_γ (≈0.7V Si)
+         → Model cu rezistență serie: adaugă o cădere suplimentară proporțională cu curentul
+       - Diodă Zener: proiectată să funcționeze STABIL în regiunea de străpungere inversă —
+         folosită pentru stabilizarea/referința de tensiune (V_Z constantă pe un interval de curent)
+       - Aplicație clasică: redresor (conversie AC→DC) — monoalternanță (o diodă) vs.
+         dublă alternanță (punte redresoare, 4 diode)
+
+       ══════════════════════════════════════════
+       TRANZISTORUL BIPOLAR CU JONCȚIUNI (BJT)
+       ══════════════════════════════════════════
+       - Structură: două joncțiuni p-n în serie (npn sau pnp) — trei regiuni: Emitor (puternic
+         dopat), Bază (foarte subțire, slab dopată), Colector
+       - Principiu de funcționare (npn, regim activ normal): joncțiunea B-E polarizată direct
+         injectează purtători din emitor; baza subțire → majoritatea purtătorilor traversează
+         spre colector (efect de tranzistor) → I_C ≈ β·I_B (amplificare de curent)
+       - Regiuni de funcționare (verifică ÎNTOTDEAUNA în care se află tranzistorul):
+         → Activ normal: joncțiune B-E polarizată direct, B-C polarizată invers — funcție de
+           amplificare, I_C=β·I_B
+         → Saturație: AMBELE joncțiuni polarizate direct — V_CE mic (≈0.2V), tranzistorul
+           se comportă ca un comutator "închis"
+         → Blocare (tăiere): AMBELE joncțiuni polarizate invers — I_C≈0, comutator "deschis"
+         → Activ invers: rar folosit practic, roluri E și C inversate
+       - Polarizarea BJT (stabilirea punctului static de funcționare): rezistențe de polarizare
+         aleg I_B, deci I_C și V_CE — dreapta de sarcină pe caracteristica de ieșire I_C-V_CE
+         arată toate punctele posibile de funcționare pentru un circuit dat
+       - Caracteristici: caracteristica de ieșire I_C(V_CE) pentru diverse I_B — regiunea activă
+         e aproape orizontală (I_C aproape constant, controlat de I_B, independent de V_CE)
+
+       ══════════════════════════════════════════
+       TRANZISTORUL CU EFECT DE CÂMP (MOSFET)
+       ══════════════════════════════════════════
+       - Structură fundamental diferită de BJT: controlul curentului prin CÂMP ELECTRIC
+         (tensiunea Gate), NU prin injecție de curent ca la BJT — curent de gate practic nul
+         (impedanță de intrare foarte mare, avantaj major față de BJT)
+       - MOSFET canal n, tip îmbogățire (cel mai comun): pentru V_GS > V_T se formează un
+         canal conductor n între Drain și Source
+       - Regiuni de funcționare:
+         → Blocare: V_GS < V_T — niciun canal, I_D≈0
+         → Regiune de triodă (liniară): V_GS > V_T ȘI V_DS < V_GS−V_T — comportament
+           rezistiv, I_D depinde de V_DS
+         → Regiune de saturație: V_GS > V_T ȘI V_DS ≥ V_GS−V_T — I_D≈constant (controlat
+           de V_GS, aproape independent de V_DS) — I_D = k(V_GS−V_T)² (aproximare pătratică)
+       - MOSFET ca amplificator: funcționează în regiunea de SATURAȚIE (analog cu BJT în
+         regim activ normal)
+       - MOSFET ca comutator digital: comută între blocare (întrerupt) și triodă profundă
+         (aproape scurtcircuit) — bază pentru toată logica digitală CMOS (studiată la
+         Circuite Integrate Digitale)
+
+       BJT vs. MOSFET — COMPARAȚIE ESENȚIALĂ:
+       - Control: BJT prin curent (I_B), MOSFET prin tensiune (V_GS) — impedanță de intrare
+         mult mai mare la MOSFET
+       - Viteză/densitate: MOSFET se miniaturizează mai bine — bază pentru circuite integrate
+         digitale de mare densitate (procesoare, memorii)
+       - Amplificare analogică: ambele se folosesc, alegerea depinde de aplicație
+         (zgomot, viteză, consum, cost)
+
+       CAPCANE FRECVENTE:
+       - Presupunerea regiunii de funcționare FĂRĂ verificare ulterioară (calculezi presupunând
+         activ normal, dar rezultatul arată saturație — trebuie refăcut calculul cu modelul corect)
+       - Confuzia β (I_C/I_B) cu α (I_C/I_E) — relația: α = β/(β+1)
+       - Aplicarea ecuației pătratice a MOSFET-ului în regiunea de triodă (formulă greșită
+         pentru acea regiune)
+       - Ignorarea impedanței de intrare mult mai mari a MOSFET față de BJT la analiza circuitelor
+       - Confuzia între tensiunea de prag V_T a MOSFET (start conducție) și tensiunea termică
+         V_T=26mV din ecuația diodei (același simbol, concept complet diferit — clarifică din context)
+    """,
+
 }
 
 
@@ -3362,6 +3468,13 @@ SUBJECT_KEYWORDS = {
         "stabilitate bibo", "eșantionare", "esantionare", "aliere", "aliasing",
         "nyquist", "spectrul semnalului", "poli și zerouri", "poli si zerouri",
     ],
+    "dispozitive electronice": [
+        "diodă", "dioda", "joncțiune p-n", "jonctiune p-n", "tranzistor bipolar",
+        "bjt", "mosfet", "tranzistor cu efect de câmp", "tranzistor cu efect de camp",
+        "regiune de saturație", "regiune de saturatie", "regiune activă", "regiune activa",
+        "polarizarea tranzistorului", "diodă zener", "dioda zener", "punte redresoare",
+        "tensiune de prag", "canal n", "canal p", "gate source drain",
+    ],
 }
 
 
@@ -3413,6 +3526,9 @@ _STRONG_INDICATORS = {
                      "funcție de transfer", "functie de transfer", "stabilitate bibo",
                      "teorema nyquist", "nyquist-shannon", "aliere", "aliasing",
                      "poli și zerouri", "poli si zerouri"],
+    "dispozitive electronice": ["joncțiune p-n", "jonctiune p-n", "tranzistor bipolar",
+                     "diodă zener", "dioda zener", "regiune de saturație", "regiune de saturatie",
+                     "tensiune de prag", "punte redresoare", "polarizarea tranzistorului"],
 }
 
 def detect_subject_from_text(text: str) -> str | None:
@@ -5622,6 +5738,20 @@ INTREBARI_POOL = {
         "De ce cauzalitatea e obligatorie pentru sisteme fizice?",
         "Cum aplic operațiile de translatare și scalare pe un semnal?",
         "Ce sunt polii și zerourile unei funcții de transfer?",
+    ],
+    "dispozitive electronice": [
+        "Cum determin regiunea de funcționare a unui tranzistor BJT?",
+        "Care e diferența dintre regiunea activă și saturație la BJT?",
+        "Cum funcționează o diodă Zener ca stabilizator de tensiune?",
+        "Explică-mi diferența dintre BJT și MOSFET",
+        "Cum calculez punctul static de funcționare al unui tranzistor?",
+        "Ce este tensiunea de prag la un MOSFET?",
+        "Cum funcționează o punte redresoare?",
+        "Care e diferența dintre regiunea de triodă și saturație la MOSFET?",
+        "Ce este β și cum se leagă de α la un BJT?",
+        "Cum se formează joncțiunea p-n și bariera de potențial?",
+        "De ce MOSFET are impedanță de intrare mai mare decât BJT?",
+        "Cum aleg modelul potrivit pentru o diodă într-un circuit?",
     ],
 }
 
