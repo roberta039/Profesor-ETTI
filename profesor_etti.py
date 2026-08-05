@@ -3454,6 +3454,117 @@ _PROMPT_SUBJECTS: dict[str, str] = {
          la circuite cu semnale care variază în timpul unei perioade de ceas
     """,
 
+    "arhitectura microprocesoarelor": r"""
+    1. ARHITECTURA MICROPROCESOARELOR — ANUL II ETTI/UPB (Arhitectura 1 sem. I + Arhitectura 2/Microcontrolere sem. II):
+       Construiește pe Circuite Integrate Digitale (bistabile, registre) spre structura
+       completă a unui procesor și, în partea a doua, spre microcontrolere aplicate.
+
+       NOTAȚII OBLIGATORII:
+       - Registre: notate cu nume scurte (AX, PC, SP, IR — depinde de arhitectura discutată)
+       - PC = Program Counter (contor de program, adresa următoarei instrucțiuni)
+       - SP = Stack Pointer (vârful stivei)
+       - IR = Instruction Register (instrucțiunea curentă)
+       - Magistrale (bus): de date, de adrese, de control — precizează ÎNTOTDEAUNA despre
+         care e vorba, au roluri complet diferite
+       - Folosește formatare de tip tabel pentru moduri de adresare sau seturi de instrucțiuni,
+         cod pentru exemple de limbaj de asamblare
+
+       STRUCTURA OBLIGATORIE pentru explicarea unui concept de arhitectură:
+       **1. Localizează în structura CPU** — ce componentă e implicată (ALU, unitate de
+          control, registre, memorie)
+       **2. Explică fluxul de date/control** — cum "circulă" informația prin sistem
+       **3. Exemplu concret** — o instrucțiune sau o secvență simplă, urmărită pas cu pas
+       **4. Relevanță practică** — de ce contează pentru programarea de nivel jos/embedded
+
+       ══════════════════════════════════════════
+       PARTEA I — STRUCTURA FUNDAMENTALĂ A MICROPROCESORULUI
+       ══════════════════════════════════════════
+
+       ARHITECTURA VON NEUMANN vs. HARVARD:
+       - Von Neumann: memorie UNICĂ pentru date și instrucțiuni (partajată pe aceeași
+         magistrală) — simplu, dar limitează viteza (nu poți citi instrucțiune și date simultan)
+       - Harvard: memorii SEPARATE pentru date și instrucțiuni — permite acces simultan,
+         folosită frecvent la microcontrolere pentru performanță mai bună
+
+       STRUCTURA INTERNĂ A CPU:
+       - ALU (Arithmetic Logic Unit): execută operații aritmetice și logice pe operanzi
+       - Unitatea de control: generează semnalele de control care coordonează toate
+         celelalte componente, pe baza instrucțiunii curente decodificate
+       - Registre: memorie ultra-rapidă internă CPU — registre generale (date temporare),
+         PC (adresa următoarei instrucțiuni), SP (vârful stivei pentru apeluri de funcții/
+         întreruperi), IR (instrucțiunea curent decodificată)
+       - Cele 3 magistrale: de date (transportă valorile), de adrese (specifică LOCAȚIA de
+         memorie/perifericul accesat), de control (semnale de sincronizare: read/write, clock)
+
+       CICLUL INSTRUCȚIUNE (FETCH-DECODE-EXECUTE):
+       - Fetch: CPU citește instrucțiunea de la adresa din PC, o pune în IR, incrementează PC
+       - Decode: unitatea de control interpretează opcode-ul din IR, determină ce operație
+         și ce operanzi sunt implicați
+       - Execute: ALU/alte componente execută operația efectivă
+       - (Uneori se adaugă și faza Write-back: scrierea rezultatului înapoi în registru/memorie)
+       - Acest ciclu se repetă continuu, la fiecare tact de ceas (sau mai multe tacte per
+         instrucțiune, în funcție de complexitatea arhitecturii)
+
+       MODURI DE ADRESARE (cum se specifică operanzii unei instrucțiuni):
+       - Imediată: operandul e o valoare constantă, inclusă direct în instrucțiune
+       - Directă: instrucțiunea conține adresa de memorie a operandului
+       - Indirectă: instrucțiunea conține adresa unui registru/locație care CONȚINE adresa
+         reală a operandului (un nivel de indirecție suplimentar)
+       - Indexată/cu registru de bază: adresa = conținutul unui registru + un offset —
+         esențială pentru accesul la tablouri/structuri de date
+
+       ══════════════════════════════════════════
+       PARTEA II — MICROCONTROLERE ȘI PERIFERICE
+       ══════════════════════════════════════════
+
+       MICROCONTROLER vs. MICROPROCESOR:
+       - Microprocesor: doar CPU — necesită componente externe (memorie, periferice) pe o
+         placă separată pentru a funcționa
+       - Microcontroler: CPU + memorie (RAM/Flash) + periferice, TOATE integrate pe un
+         singur cip — soluție compactă și ieftină pentru aplicații embedded (control,
+         automatizări, IoT)
+
+       PERIFERICE UZUALE ALE UNUI MICROCONTROLER:
+       - GPIO (General Purpose Input/Output): pini configurabili ca intrare sau ieșire
+         digitală — interfața de bază cu lumea exterioară (LED-uri, butoane, senzori simpli)
+       - Timere/numărătoare: generare de întârzieri precise, PWM (Pulse Width Modulation —
+         pentru control de motoare, dimming LED), măsurare de intervale de timp
+       - ADC (Analog-to-Digital Converter): convertește un semnal analog (de la un senzor)
+         într-o valoare digitală procesabilă — legătură directă cu Măsurări/Traductoare
+       - Interfețe de comunicație serială: UART (asincron, simplu, punct-la-punct), SPI
+         (sincron, rapid, master-slave, mai multe fire), I2C (sincron, 2 fire, adresare de
+         dispozitive multiple pe același bus) — alegerea depinde de viteză, distanță,
+         numărul de dispozitive conectate
+
+       ÎNTRERUPERI (INTERRUPTS):
+       - Mecanism prin care un eveniment extern (sau intern) "întrerupe" execuția normală a
+         programului, sare la o rutină specială (ISR — Interrupt Service Routine), apoi
+         revine exact de unde a plecat
+       - Avantaj față de polling (interogare continuă în buclă): CPU nu "pierde timp"
+         verificând constant o condiție — reacționează doar când e nevoie, eficient energetic
+         și pentru timp de răspuns
+       - Vector de întreruperi: tabel care asociază fiecărui tip de întrerupere adresa
+         rutinei de tratare corespunzătoare
+
+       IERARHIA DE MEMORIE (introducere):
+       - Registre (cele mai rapide, capacitate minimă) → Cache (rapid, capacitate mică-medie,
+         dacă există) → RAM (memorie volatilă, viteza medie, capacitate mare) → Flash/ROM
+         (nevolatilă, păstrează programul la oprirea alimentării)
+       - Compromisul fundamental: viteză vs. capacitate vs. cost — de aceea sistemele
+         moderne folosesc o IERARHIE, nu un singur tip de memorie
+
+       CAPCANE FRECVENTE:
+       - Confuzia magistrala de date cu cea de adrese (roluri complet diferite — una
+         transportă VALORI, cealaltă LOCAȚII)
+       - Confuzia PC (adresa următoarei instrucțiuni) cu SP (vârful stivei) — ambele sunt
+         "adrese", dar cu roluri total diferite
+       - Tratarea polling-ului și întreruperilor ca echivalente — diferă fundamental în
+         eficiență și complexitate de implementare
+       - Confuzia UART (asincron) cu SPI/I2C (sincrone, necesită semnal de ceas comun)
+       - Ignorarea diferenței microprocesor/microcontroler când se discută o aplicație
+         embedded practică
+    """,
+
 }
 
 
@@ -3794,6 +3905,13 @@ SUBJECT_KEYWORDS = {
         "sumator complet", "semi-sumator", "multiplexor", "decodor", "cmos",
         "numărător sincron", "numarator sincron", "registru de deplasare",
     ],
+    "arhitectura microprocesoarelor": [
+        "microprocesor", "microcontroler", "ciclul instrucțiune", "ciclul instructiune",
+        "fetch decode execute", "program counter", "stack pointer", "mod de adresare",
+        "arhitectura von neumann", "arhitectura harvard", "întreruperi", "intreruperi",
+        "interrupt", "gpio", "uart", "spi", "i2c", "adc convertor", "pwm",
+        "vector de întreruperi", "vector de intreruperi", "polling",
+    ],
 }
 
 
@@ -3858,6 +3976,10 @@ _STRONG_INDICATORS = {
                      "legile lui de morgan", "sumator complet", "semi-sumator",
                      "circuit combinațional", "circuit combinational", "circuit secvențial",
                      "circuit secvential", "flip-flop", "poartă logică nand"],
+    "arhitectura microprocesoarelor": ["fetch decode execute", "program counter",
+                     "stack pointer", "arhitectura von neumann", "arhitectura harvard",
+                     "vector de întreruperi", "vector de intreruperi", "mod de adresare",
+                     "ciclul instrucțiune", "ciclul instructiune"],
 }
 
 def detect_subject_from_text(text: str) -> str | None:
@@ -6123,6 +6245,20 @@ INTREBARI_POOL = {
         "De ce consumul CMOS static e aproape nul?",
         "Care e diferența dintre declanșare pe front și pe nivel?",
         "Cum construiesc un numărător sincron din bistabile?",
+    ],
+    "arhitectura microprocesoarelor": [
+        "Ce se întâmplă în fiecare fază a ciclului fetch-decode-execute?",
+        "Care e diferența dintre arhitectura Von Neumann și Harvard?",
+        "Ce este Program Counter-ul și cum funcționează?",
+        "Care e diferența dintre PC și Stack Pointer?",
+        "Ce sunt modurile de adresare și când folosesc fiecare?",
+        "Care e diferența dintre microprocesor și microcontroler?",
+        "Cum funcționează întreruperile față de polling?",
+        "Care e diferența dintre UART, SPI și I2C?",
+        "Ce este PWM și la ce se folosește?",
+        "Cum funcționează un ADC (convertor analog-digital)?",
+        "Ce este vectorul de întreruperi?",
+        "Care e diferența dintre magistrala de date și cea de adrese?",
     ],
 }
 
