@@ -313,6 +313,10 @@ def switch_session(new_session_id: str):
     st.session_state.pop("_detected_subject", None)
     st.session_state.pop("_pending_user_msg", None)
     st.session_state.pop("system_prompt", None)  # va fi regenerat cu materia corectă
+    # FIX: resetăm și materia selectată manual din dropdown — altfel rămâne agățată
+    # de vechea sesiune (ex: la "Conversație nouă", ecranul de selecție a materiei
+    # nu mai apărea dacă exista deja o materie selectată manual înainte).
+    st.session_state.pop("materie_selectata", None)
     # Curățăm toate cheile _mismatch_warned_* (una per sesiune anterioară)
     for _k in [k for k in st.session_state.keys() if k.startswith("_mismatch_warned_")]:
         del st.session_state[_k]
