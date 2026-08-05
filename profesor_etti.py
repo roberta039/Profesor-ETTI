@@ -3675,6 +3675,102 @@ _PROMPT_SUBJECTS: dict[str, str] = {
        - Aplicarea algoritmului lui Dijkstra pe grafuri cu ponderi negative (nu funcționează corect)
     """,
 
+    "teoria probabilităților și statistică matematică": r"""
+    1. TEORIA PROBABILITĂȚILOR ȘI STATISTICĂ MATEMATICĂ — ANUL II ETTI/UPB (Semestrul II):
+
+       NOTAȚII OBLIGATORII:
+       - Eveniment: A, B; probabilitate: P(A); spațiu de selecție (eșantion): Ω
+       - Probabilitate condiționată: P(A|B); independență: P(A∩B) = P(A)·P(B)
+       - Variabilă aleatoare: X (majusculă); valoare concretă: x (minusculă)
+       - Funcție de masă (discret): P(X=x); densitate de probabilitate (continuu): f(x)
+       - Funcție de repartiție (cumulativă): F(x) = P(X≤x)
+       - Medie/speranță: E[X] sau μ; varianță: Var(X) sau σ²; deviație standard: σ
+       - Folosește LaTeX pentru toate formulele
+
+       STRUCTURA OBLIGATORIE pentru orice problemă:
+       **1. Definește spațiul de selecție și evenimentele** — clar, fără ambiguitate
+       **2. Alege modelul potrivit** — probabilitate clasică, condiționată, distribuție cunoscută
+       **3. Verifică ipotezele** — independență? evenimente disjuncte? distribuție discretă/continuă?
+       **4. Calcul**
+       **5. Verificare** — rezultatul e o probabilitate validă (între 0 și 1)?
+
+       ══════════════════════════════════════════
+       PROBABILITATE — FUNDAMENTE
+       ══════════════════════════════════════════
+       - Definiția clasică (Laplace): P(A) = (nr. cazuri favorabile)/(nr. cazuri posibile) —
+         valabilă DOAR când toate rezultatele elementare sunt egal probabile
+       - Axiomele probabilității: P(A)≥0; P(Ω)=1; pentru evenimente disjuncte,
+         P(A∪B)=P(A)+P(B)
+       - Reguli derivate: P(A∪B) = P(A)+P(B)−P(A∩B) (formula generală, pentru evenimente
+         NU neapărat disjuncte); P(complementara lui A) = 1−P(A)
+       - Probabilitate condiționată: P(A|B) = P(A∩B)/P(B), definit doar dacă P(B)>0 —
+         "probabilitatea lui A, ȘTIIND CĂ B s-a întâmplat"
+       - Evenimente independente: P(A|B)=P(A) (cunoașterea lui B nu schimbă probabilitatea
+         lui A) ⟺ P(A∩B)=P(A)·P(B) — NU confunda independență cu disjuncție (evenimente
+         disjuncte sunt de fapt puternic DEPENDENTE: dacă unul se întâmplă, celălalt sigur nu)
+       - Formula probabilității totale: dacă B₁,...,Bₙ formează o partiție a lui Ω,
+         P(A) = ΣP(A|Bᵢ)·P(Bᵢ)
+       - Teorema lui Bayes: P(B|A) = P(A|B)·P(B)/P(A) — permite "inversarea" condiționării,
+         esențială pentru actualizarea probabilităților pe baza de informații noi
+
+       ══════════════════════════════════════════
+       VARIABILE ALEATOARE DISCRETE
+       ══════════════════════════════════════════
+       - Distribuție Bernoulli: un singur experiment cu 2 rezultate (succes/eșec),
+         P(X=1)=p, P(X=0)=1−p
+       - Distribuție binomială: n încercări Bernoulli independente, X=numărul de succese —
+         P(X=k) = C(n,k)·pᵏ·(1−p)^(n-k); E[X]=np, Var(X)=np(1−p)
+       - Distribuție Poisson: modelează numărul de evenimente rare într-un interval
+         (timp/spațiu) — P(X=k) = (λᵏ·e^(-λ))/k!; E[X]=Var(X)=λ — aproximează binomiala
+         când n mare, p mic, np=λ moderat
+
+       ══════════════════════════════════════════
+       VARIABILE ALEATOARE CONTINUE
+       ══════════════════════════════════════════
+       - Densitate de probabilitate f(x): P(a≤X≤b) = ∫ₐᵇf(x)dx (aria de sub curbă, NU
+         valoarea f(x) direct — pentru continuu, P(X=x)=0 pentru orice x izolat)
+       - Distribuție uniformă pe [a,b]: f(x)=1/(b−a) constant pe interval, 0 în rest
+       - Distribuție normală (Gaussiană) N(μ,σ²): f(x) = (1/(σ√(2π)))·e^(-(x-μ)²/(2σ²)) —
+         CEA MAI IMPORTANTĂ distribuție continuă (multe fenomene naturale, erori de măsurare
+         — legătură directă cu Măsurări în Electronică)
+       - Standardizare: Z=(X−μ)/σ transformă orice N(μ,σ²) în N(0,1) (normală standard) —
+         permite folosirea tabelelor standard pentru calculul probabilităților
+       - Regula 68-95-99.7: aproximativ 68% din valori în [μ−σ,μ+σ], 95% în [μ−2σ,μ+2σ],
+         99.7% în [μ−3σ,μ+3σ] — util pentru estimări rapide
+       - Distribuție exponențială: modelează timpul până la următorul eveniment (rate
+         constantă λ) — f(x)=λe^(-λx) pentru x≥0; fără memorie (P(X>s+t|X>s)=P(X>t))
+
+       TEOREMA LIMITEI CENTRALE (CRITIC):
+       - Suma (sau media) unui număr mare de variabile aleatoare independente, indiferent
+         de distribuția lor originală, tinde către o distribuție NORMALĂ — motivul pentru
+         care distribuția normală apare atât de des în practică (erori de măsurare, zgomot
+         termic — legătură directă cu Măsurări în Electronică și Bazele Electrotehnicii)
+
+       ══════════════════════════════════════════
+       STATISTICĂ DESCRIPTIVĂ ȘI INFERENȚIALĂ (introducere)
+       ══════════════════════════════════════════
+       - Medie de selecție (eșantion): x̄ = (1/n)Σxᵢ — estimator al mediei populației μ
+       - Varianță/deviație standard de selecție: măsoară dispersia datelor față de medie
+         (atenție: formula cu n−1 la numitor pentru varianța de selecție NEPĂRTINITOARE,
+         nu n — corecție Bessel)
+       - Estimare punctuală vs. interval de încredere: un interval de încredere dă o
+         PLAJĂ de valori plauzibile pentru parametrul necunoscut, cu un nivel de încredere
+         asociat (ex: 95%) — mai informativ decât o singură valoare estimată
+       - Legătura cu regresia liniară (deja văzută la Informatică Aplicată): metoda celor
+         mai mici pătrate are o justificare probabilistică riguroasă — presupune erori
+         normal distribuite
+
+       CAPCANE FRECVENTE:
+       - Confuzia independență cu disjuncție (evenimente disjuncte NU sunt independente,
+         cu excepția cazului trivial P(A)=0 sau P(B)=0)
+       - Aplicarea formulei clasice Laplace când rezultatele NU sunt egal probabile
+       - Confuzia P(A|B) cu P(B|A) — sunt în general DIFERITE (motivul pentru care există
+         teorema lui Bayes, ca să le convertești corect una în alta)
+       - Tratarea f(x) (densitate) ca probabilitate directă la variabile continue —
+         probabilitatea e ARIA de sub curbă, nu valoarea funcției într-un punct
+       - Uitarea corecției Bessel (n−1) la calculul varianței de selecție dintr-un eșantion
+    """,
+
 }
 
 
@@ -4029,6 +4125,14 @@ SUBJECT_KEYWORDS = {
         "programare dinamică", "programare dinamica", "algoritm greedy",
         "coadă de priorități", "coada de prioritati", "stivă lifo", "coadă fifo",
     ],
+    "teoria probabilităților și statistică matematică": [
+        "probabilitate condiționată", "probabilitate conditionata", "teorema lui bayes",
+        "variabilă aleatoare", "variabila aleatoare", "distribuție normală", "distributie normala",
+        "distribuție binomială", "distributie binomiala", "distribuție poisson",
+        "distributie poisson", "densitate de probabilitate", "speranță matematică",
+        "speranta matematica", "varianță", "varianta", "deviație standard", "deviatie standard",
+        "teorema limitei centrale", "interval de încredere", "interval de incredere",
+    ],
 }
 
 
@@ -4101,6 +4205,11 @@ _STRONG_INDICATORS = {
                      "notație big-o", "notatie big-o", "merge sort", "quick sort", "heap sort",
                      "parcurgere bfs", "parcurgere dfs", "coadă de priorități",
                      "coada de prioritati"],
+    "teoria probabilităților și statistică matematică": ["teorema lui bayes",
+                     "distribuție binomială", "distributie binomiala", "distribuție poisson",
+                     "distributie poisson", "teorema limitei centrale",
+                     "probabilitate condiționată", "probabilitate conditionata",
+                     "densitate de probabilitate"],
 }
 
 def detect_subject_from_text(text: str) -> str | None:
@@ -6394,6 +6503,20 @@ INTREBARI_POOL = {
         "Cum funcționează un heap (movilă)?",
         "Ce înseamnă că un algoritm de sortare e stabil?",
         "Când aleg listă înlănțuită în loc de tablou?",
+    ],
+    "teoria probabilităților și statistică matematică": [
+        "Cum aplic teorema lui Bayes cu un exemplu concret?",
+        "Care e diferența dintre evenimente independente și disjuncte?",
+        "Cum calculez media și varianța unei distribuții binomiale?",
+        "Ce este teorema limitei centrale și de ce contează?",
+        "Care e diferența dintre distribuția binomială și Poisson?",
+        "Cum standardizez o variabilă normală (transformarea Z)?",
+        "Ce înseamnă regula 68-95-99.7 la distribuția normală?",
+        "Cum calculez un interval de încredere pentru medie?",
+        "Care e diferența dintre P(A|B) și P(B|A)?",
+        "De ce varianța de selecție folosește n-1 la numitor?",
+        "Cum aplic formula probabilității totale?",
+        "Ce este densitatea de probabilitate și cum se interpretează?",
     ],
 }
 
