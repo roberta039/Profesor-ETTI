@@ -3565,6 +3565,116 @@ _PROMPT_SUBJECTS: dict[str, str] = {
          embedded practică
     """,
 
+    "structuri de date și algoritmi": r"""
+    1. STRUCTURI DE DATE ȘI ALGORITMI — ANUL II ETTI/UPB (Semestrul I):
+       Extinde Programarea Calculatoarelor (Anul I) — acolo erau bazele C/C++, aici e
+       accentul pe STRUCTURI eficiente de organizare a datelor și ANALIZA algoritmilor.
+
+       CONVENȚII OBLIGATORII:
+       - Cod ÎNTOTDEAUNA în blocuri ```c sau ```cpp
+       - Complexitate ÎNTOTDEAUNA în notație Big-O: O(1), O(log n), O(n), O(n log n), O(n²) etc.
+       - La orice algoritm nou, precizează complexitatea în timp ȘI spațiu (memorie)
+
+       STRUCTURA OBLIGATORIE pentru un exercițiu de structuri de date/algoritmi:
+       **1. Alege structura/algoritmul potrivit** — justifică pe baza operațiilor necesare
+          (acces rapid? inserare frecventă? căutare?)
+       **2. Complexitate teoretică** — analizează ÎNAINTE de a scrie codul
+       **3. Implementare** — cod complet, funcțional
+       **4. Verificare pe exemplu** — trasează algoritmul pe un caz mic, concret
+
+       ══════════════════════════════════════════
+       ANALIZA COMPLEXITĂȚII (Big-O)
+       ══════════════════════════════════════════
+       - Notația Big-O descrie comportamentul ASIMPTOTIC (pentru n mare), nu performanța
+         exactă — O(n) înseamnă "crește liniar cu n", ignorând constante
+       - Ordine uzuale, de la cel mai rapid la cel mai lent: O(1) < O(log n) < O(n) <
+         O(n log n) < O(n²) < O(2ⁿ) < O(n!)
+       - Complexitate în timp (câte operații) vs. în spațiu (câtă memorie suplimentară) —
+         adesea există un compromis între ele (memorie mai multă → timp mai puțin, sau invers)
+       - Cazul cel mai defavorabil (worst-case) e standardul de raportare, dacă nu se
+         precizează altfel (mediu/best-case)
+
+       ══════════════════════════════════════════
+       STRUCTURI DE DATE LINIARE
+       ══════════════════════════════════════════
+       - Tablou (array): acces O(1) prin index, dar inserare/ștergere O(n) (necesită
+         deplasarea elementelor) — dimensiune fixă (la C) sau dinamică (vector în C++)
+       - Listă înlănțuită (linked list): fiecare nod conține date + pointer către următorul —
+         inserare/ștergere O(1) DACĂ ai deja poziția, dar acces O(n) (trebuie parcursă de la cap)
+         → simplu înlănțuită (un sens) vs. dublu înlănțuită (ambele sensuri, permite parcurgere
+         înapoi)
+       - Stivă (stack, LIFO — Last In First Out): push/pop la un singur capăt, O(1) —
+         aplicații: evaluare expresii, apeluri de funcții (call stack), backtracking
+       - Coadă (queue, FIFO — First In First Out): inserare la un capăt, extragere la
+         celălalt, O(1) — aplicații: procesare în ordinea sosirii, BFS pe grafuri
+       - Alegerea structurii depinde STRICT de operațiile dominante ale problemei — nu
+         există o structură "mai bună" universal, doar mai potrivită pentru context
+
+       ══════════════════════════════════════════
+       ARBORI
+       ══════════════════════════════════════════
+       - Arbore binar: fiecare nod are cel mult 2 copii (stâng, drept)
+       - Arbore binar de căutare (BST — Binary Search Tree): pentru orice nod, toate
+         valorile din subarborele stâng sunt MAI MICI, toate din cel drept sunt MAI MARI —
+         permite căutare O(log n) în MEDIE (dar O(n) în cazul defavorabil, dacă arborele
+         devine degenerat/dezechilibrat, similar unei liste)
+       - Parcurgeri BST: in-order (stâng-rădăcină-drept, produce elementele SORTATE),
+         pre-order (rădăcină-stâng-drept), post-order (stâng-drept-rădăcină)
+       - Arbori echilibrați (AVL, roșu-negru — introducere conceptuală): mențin înălțimea
+         O(log n) prin rebalansare automată la inserare/ștergere, garantând complexitate
+         O(log n) chiar și în cazul defavorabil — motivul pentru care structurile din
+         bibliotecile standard (std::map în C++) folosesc arbori echilibrați, nu BST simplu
+       - Heap (movilă): arbore binar aproape complet, cu proprietatea heap (fiecare părinte
+         ≤ sau ≥ copiii săi) — bază pentru coadă de priorități și pentru Heap Sort
+
+       ══════════════════════════════════════════
+       GRAFURI
+       ══════════════════════════════════════════
+       - Reprezentare: matrice de adiacență (O(V²) memorie, acces O(1) la o muchie — bun
+         pentru grafuri dense) vs. listă de adiacență (O(V+E) memorie — bun pentru grafuri rare)
+       - Parcurgere BFS (Breadth-First Search, în lățime): folosește o COADĂ — explorează
+         nivel cu nivel, găsește drumul cu cel mai mic NUMĂR DE MUCHII (nu neapărat cel mai
+         scurt ca distanță ponderată)
+       - Parcurgere DFS (Depth-First Search, în adâncime): folosește o STIVĂ (sau recursivitate) —
+         explorează cât de adânc posibil pe o ramură înainte de a reveni
+       - Algoritmul lui Dijkstra: găsește drumul cel mai scurt (ponderat) de la un nod sursă
+         la toate celelalte — necesită ponderi NENEGATIVE (nu funcționează cu ponderi negative)
+
+       ══════════════════════════════════════════
+       ALGORITMI DE SORTARE AVANSAȚI (complementează bubble/selection/insertion de la Anul I)
+       ══════════════════════════════════════════
+       - Merge Sort: divide-et-impera — împarte în jumătăți, sortează recursiv, interclasează —
+         complexitate GARANTATĂ O(n log n), stabil, dar necesită memorie suplimentară O(n)
+       - Quick Sort: alege un pivot, partiționează în jurul lui, sortează recursiv fiecare
+         parte — complexitate medie O(n log n), dar cazul defavorabil O(n²) (pivot prost ales,
+         ex: mereu cel mai mic/mare element) — alegerea pivotului contează practic
+       - Heap Sort: construiește un heap, extrage repetat elementul maxim/minim — O(n log n)
+         garantat, in-place (fără memorie suplimentară semnificativă), dar NU e stabil
+       - Stabilitate: un algoritm de sortare e "stabil" dacă păstrează ordinea relativă a
+         elementelor egale — relevant când sortezi date cu chei secundare
+
+       ══════════════════════════════════════════
+       TEHNICI ALGORITMICE
+       ══════════════════════════════════════════
+       - Divide et impera (divide and conquer): împarte problema în subprobleme mai mici,
+         de același tip, rezolvă-le recursiv, combină rezultatele (Merge Sort, Quick Sort)
+       - Programare dinamică (introducere): rezolvă probleme cu SUBSTRUCTURĂ OPTIMĂ și
+         SUBPROBLEME SUPRAPUSE, memorând rezultatele deja calculate (evită recalcularea) —
+         exemplu clasic: calculul eficient al șirului Fibonacci
+       - Algoritmi greedy (introducere): la fiecare pas, alege opțiunea local optimă,
+         sperând la un rezultat global optim — funcționează DOAR pentru anumite clase de
+         probleme (nu întotdeauna dă soluția optimă globală)
+
+       CAPCANE FRECVENTE:
+       - Confuzia complexitate în cazul mediu cu cazul defavorabil (ex: Quick Sort e O(n log n)
+         mediu, dar O(n²) defavorabil)
+       - Alegerea unei liste înlănțuite când operația dominantă e ACCESUL (unde tabloul e
+         mai potrivit) sau invers
+       - Presupunerea că un BST simplu garantează O(log n) — doar dacă e echilibrat
+       - Confuzia BFS (coadă, nivel cu nivel) cu DFS (stivă/recursivitate, în adâncime)
+       - Aplicarea algoritmului lui Dijkstra pe grafuri cu ponderi negative (nu funcționează corect)
+    """,
+
 }
 
 
@@ -3912,6 +4022,13 @@ SUBJECT_KEYWORDS = {
         "interrupt", "gpio", "uart", "spi", "i2c", "adc convertor", "pwm",
         "vector de întreruperi", "vector de intreruperi", "polling",
     ],
+    "structuri de date și algoritmi": [
+        "listă înlănțuită", "lista inlantuita", "arbore binar de căutare", "bst",
+        "complexitate big-o", "notație big-o", "notatie big-o", "algoritmul lui dijkstra",
+        "parcurgere bfs", "parcurgere dfs", "merge sort", "quick sort", "heap sort",
+        "programare dinamică", "programare dinamica", "algoritm greedy",
+        "coadă de priorități", "coada de prioritati", "stivă lifo", "coadă fifo",
+    ],
 }
 
 
@@ -3980,6 +4097,10 @@ _STRONG_INDICATORS = {
                      "stack pointer", "arhitectura von neumann", "arhitectura harvard",
                      "vector de întreruperi", "vector de intreruperi", "mod de adresare",
                      "ciclul instrucțiune", "ciclul instructiune"],
+    "structuri de date și algoritmi": ["algoritmul lui dijkstra", "arbore binar de căutare",
+                     "notație big-o", "notatie big-o", "merge sort", "quick sort", "heap sort",
+                     "parcurgere bfs", "parcurgere dfs", "coadă de priorități",
+                     "coada de prioritati"],
 }
 
 def detect_subject_from_text(text: str) -> str | None:
@@ -6259,6 +6380,20 @@ INTREBARI_POOL = {
         "Cum funcționează un ADC (convertor analog-digital)?",
         "Ce este vectorul de întreruperi?",
         "Care e diferența dintre magistrala de date și cea de adrese?",
+    ],
+    "structuri de date și algoritmi": [
+        "Care e diferența dintre tablou și listă înlănțuită?",
+        "Cum funcționează algoritmul lui Dijkstra?",
+        "Care e diferența dintre BFS și DFS?",
+        "Cum calculez complexitatea Big-O a unui algoritm?",
+        "Ce este un arbore binar de căutare și cum funcționează?",
+        "Care e diferența dintre Merge Sort și Quick Sort?",
+        "De ce Quick Sort poate ajunge la O(n²) în cazul defavorabil?",
+        "Ce este programarea dinamică și când o folosesc?",
+        "Care e diferența dintre stivă și coadă?",
+        "Cum funcționează un heap (movilă)?",
+        "Ce înseamnă că un algoritm de sortare e stabil?",
+        "Când aleg listă înlănțuită în loc de tablou?",
     ],
 }
 
