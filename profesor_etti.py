@@ -3771,6 +3771,110 @@ _PROMPT_SUBJECTS: dict[str, str] = {
        - Uitarea corecției Bessel (n−1) la calculul varianței de selecție dintr-un eșantion
     """,
 
+    "baze de date": r"""
+    1. BAZE DE DATE — ANUL II ETTI/UPB (Semestrul II):
+
+       CONVENȚII OBLIGATORII:
+       - Cod SQL ÎNTOTDEAUNA în blocuri ```sql
+       - Nume de tabele/coloane: convenție consecventă (snake_case sau cea din enunțul
+         studentului, dacă există deja o schemă dată)
+       - Cheie primară: PK; cheie externă (foreign key): FK — marchează-le explicit în
+         orice schemă discutată
+
+       STRUCTURA OBLIGATORIE pentru un exercițiu de baze de date:
+       **1. Înțelege schema/cerința** — ce tabele, ce relații între ele
+       **2. Modelare (dacă se cere)** — diagramă ER sau schema relațională
+       **3. Interogare/normalizare** — scrie SQL-ul sau aplică pașii de normalizare
+       **4. Verificare** — rezultatul răspunde exact la cerință? (nu prea multe/puține rânduri)
+
+       ══════════════════════════════════════════
+       MODELUL RELAȚIONAL
+       ══════════════════════════════════════════
+       - Tabel (relație) = mulțime de rânduri (tupluri) cu aceleași coloane (atribute)
+       - Cheie primară (PK): identifică UNIC fiecare rând dintr-un tabel — nu poate fi NULL,
+         nu poate avea duplicate
+       - Cheie externă (FK): o coloană (sau grup) care referă cheia primară a ALTUI tabel —
+         implementează relațiile dintre tabele, garantează integritatea referențială
+       - Tipuri de relații: 1-la-1 (rar, poate indica tabele care ar trebui unite),
+         1-la-mulți (cea mai comună, ex: un client are mai multe comenzi), mulți-la-mulți
+         (necesită un tabel de legătură/asociativ, cu FK către ambele tabele implicate)
+
+       ══════════════════════════════════════════
+       DIAGRAME ENTITATE-RELAȚIE (ER) — MODELARE CONCEPTUALĂ
+       ══════════════════════════════════════════
+       - Entitate: un "obiect" din lumea reală modelat ca tabel (ex: Student, Curs)
+       - Atribut: o proprietate a entității (devine coloană)
+       - Relație: legătura dintre entități, cu o cardinalitate (1:1, 1:N, N:M)
+       - Procesul de la diagrama ER la schema relațională: fiecare entitate → un tabel;
+         relațiile 1:N → FK în tabelul de pe partea "N"; relațiile N:M → tabel asociativ nou
+
+       ══════════════════════════════════════════
+       NORMALIZARE (eliminarea redundanței și anomaliilor)
+       ══════════════════════════════════════════
+       - Scopul normalizării: elimină date redundante și anomaliile de inserare/actualizare/
+         ștergere care apar când aceeași informație e stocată în mai multe locuri
+       - Forma normală 1 (1NF): fiecare celulă conține o SINGURĂ valoare atomică (nu liste,
+         nu valori compuse) — condiție de bază pentru orice tabel relațional valid
+       - Forma normală 2 (2NF): 1NF + fiecare atribut non-cheie depinde de ÎNTREAGA cheie
+         primară (relevant doar la chei compuse — elimină dependențele parțiale)
+       - Forma normală 3 (3NF): 2NF + niciun atribut non-cheie nu depinde de un ALT atribut
+         non-cheie (elimină dependențele tranzitive) — nivelul standard "suficient" pentru
+         majoritatea aplicațiilor practice
+       - Compromis normalizare vs. performanță: normalizarea completă reduce redundanța
+         dar poate necesita mai multe JOIN-uri la interogare — uneori se acceptă
+         DENORMALIZARE controlată pentru performanță (decizie de proiectare, nu greșeală)
+
+       ══════════════════════════════════════════
+       SQL — LIMBAJUL DE INTEROGARE
+       ══════════════════════════════════════════
+       - SELECT de bază: SELECT coloane FROM tabel WHERE condiție — filtrare pe rânduri
+       - JOIN-uri (combinarea datelor din mai multe tabele, pe baza cheilor):
+         → INNER JOIN: doar rândurile care au potrivire în AMBELE tabele
+         → LEFT JOIN: TOATE rândurile din tabelul stâng, chiar dacă nu au potrivire în
+           dreapta (coloanele din dreapta devin NULL unde nu există potrivire)
+         → RIGHT JOIN: analog, dar prioritate tabelului drept
+         → FULL OUTER JOIN: toate rândurile din ambele, cu NULL unde nu există potrivire
+       - GROUP BY + funcții de agregare: COUNT, SUM, AVG, MIN, MAX — grupează rândurile
+         după o coloană și calculează un rezumat statistic pe fiecare grup
+       - HAVING vs. WHERE: WHERE filtrează rândurile ÎNAINTE de grupare, HAVING filtrează
+         GRUPURILE după agregare (ex: găsește doar grupurile cu COUNT>5)
+       - Subinterogări (subqueries): o interogare SELECT în interiorul altei interogări —
+         utilă pentru condiții care depind de rezultatul altei interogări
+       - ORDER BY: sortarea rezultatului final; LIMIT: restricționează numărul de rânduri
+         returnate
+
+       ══════════════════════════════════════════
+       TRANZACȚII ȘI PROPRIETĂȚILE ACID
+       ══════════════════════════════════════════
+       - Tranzacție: o secvență de operații tratată ca o UNITATE indivizibilă — fie se
+         execută TOATE, fie NICIUNA (relevant pentru operații critice, ex: transfer bancar)
+       - Proprietățile ACID:
+         → Atomicitate: tranzacția e "totul sau nimic"
+         → Consistență: tranzacția duce baza de date dintr-o stare validă în altă stare validă
+         → Izolare: tranzacții concurente nu interferează una cu alta (ca și cum ar rula secvențial)
+         → Durabilitate: odată confirmată (commit), modificarea persistă chiar și la o
+           cădere de sistem
+
+       INDECȘI (introducere):
+       - Un index e o structură de date auxiliară (adesea arbore B) care accelerează
+         căutarea pe o coloană — analog cu indexul unei cărți, evită parcurgerea liniară
+         a tuturor rândurilor
+       - Compromis: accelerează SELECT-urile pe coloana indexată, dar încetinește INSERT/
+         UPDATE/DELETE (indexul trebuie actualizat) și ocupă spațiu suplimentar
+
+       CAPCANE FRECVENTE:
+       - Confuzia INNER JOIN cu LEFT JOIN (rezultate diferite când nu există potrivire
+         perfectă între tabele)
+       - Aplicarea condiției de filtrare în HAVING când ar trebui în WHERE (sau invers) —
+         afectează performanța și, uneori, corectitudinea
+       - Uitarea cheii externe (FK) la modelarea relațiilor 1-la-mulți, ducând la date
+         inconsistente
+       - Confuzia normalizare excesivă cu proiectare corectă — 3NF e suficient pentru
+         majoritatea cazurilor, BCNF/4NF/5NF sunt rar necesare în practică
+       - Presupunerea că toate valorile dintr-o coloană cu NULL se comportă ca 0 sau
+         string gol în comparații SQL (NULL are semantică specială, necesită IS NULL)
+    """,
+
 }
 
 
@@ -4133,6 +4237,14 @@ SUBJECT_KEYWORDS = {
         "speranta matematica", "varianță", "varianta", "deviație standard", "deviatie standard",
         "teorema limitei centrale", "interval de încredere", "interval de incredere",
     ],
+    "baze de date": [
+        "cheie primară", "cheie primara", "cheie externă", "cheie externa", "inner join",
+        "left join", "right join", "select from where", "group by having",
+        "diagramă entitate relație", "diagrama entitate relatie", "normalizare bd",
+        "forma normală", "forma normala", "tranzacție acid", "tranzactie acid",
+        "atomicitate consistență izolare", "index bază de date", "index baza de date",
+        "subinterogare", "denormalizare",
+    ],
 }
 
 
@@ -4210,6 +4322,10 @@ _STRONG_INDICATORS = {
                      "distributie poisson", "teorema limitei centrale",
                      "probabilitate condiționată", "probabilitate conditionata",
                      "densitate de probabilitate"],
+    "baze de date": ["diagramă entitate relație", "diagrama entitate relatie",
+                     "forma normală", "forma normala", "tranzacție acid", "tranzactie acid",
+                     "cheie primară", "cheie primara", "cheie externă", "cheie externa",
+                     "inner join", "left join"],
 }
 
 def detect_subject_from_text(text: str) -> str | None:
@@ -6517,6 +6633,20 @@ INTREBARI_POOL = {
         "De ce varianța de selecție folosește n-1 la numitor?",
         "Cum aplic formula probabilității totale?",
         "Ce este densitatea de probabilitate și cum se interpretează?",
+    ],
+    "baze de date": [
+        "Care e diferența dintre INNER JOIN și LEFT JOIN?",
+        "Cum normalizez un tabel la forma normală 3?",
+        "Care e diferența dintre WHERE și HAVING?",
+        "Ce înseamnă proprietățile ACID ale unei tranzacții?",
+        "Cum modelez o relație mulți-la-mulți în baza de date?",
+        "Ce este o cheie externă și la ce servește?",
+        "Cum scriu o interogare SQL cu GROUP BY și funcții de agregare?",
+        "Care e diferența dintre cheie primară și cheie externă?",
+        "Cum funcționează un index și când merită folosit?",
+        "Ce este o subinterogare (subquery) și când o folosesc?",
+        "Care e diferența dintre 2NF și 3NF?",
+        "De ce uneori se acceptă denormalizarea unei baze de date?",
     ],
 }
 
