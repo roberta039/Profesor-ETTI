@@ -3883,7 +3883,8 @@ _PROMPT_SUBJECTS: dict[str, str] = {
 
 
 def get_system_prompt(materie: str | None = None, pas_cu_pas: bool = False,
-                      mod_strategie: bool = False, mod_bac_intensiv: bool = False, mod_avansat: bool = False) -> str:
+                      mod_strategie: bool = False, mod_bac_intensiv: bool = False, mod_avansat: bool = False,
+                      mod_engleza: bool = False) -> str:
     """Returnează System Prompt adaptat materiei selectate și modurilor active.
     
     OPTIMIZARE TOKEN: când materia e selectată explicit, include DOAR blocul acelei materii
@@ -4075,6 +4076,26 @@ def get_system_prompt(materie: str | None = None, pas_cu_pas: bool = False,
         # rămân fără ghid specific de materie, până se scrie blocul respectiv.
         ghid_materie = ""
 
+    # Bloc de limbă — pus ULTIMUL, ca instrucțiunea de limbă să aibă prioritate maximă
+    # (LLM-urile tind să acorde greutate mai mare instrucțiunilor mai recente în prompt)
+    limba_bloc = r"""
+
+    ═══════════════════════════════════════════════════
+    LANGUAGE OVERRIDE (HIGHEST PRIORITY — applies regardless of anything above)
+    ═══════════════════════════════════════════════════
+    Respond ONLY in English, in every message, regardless of what language the student
+    writes in. This applies to explanations, formulas, terminology, examples — everything.
+    The knowledge/behavior guide above is written in Romanian, but treat it purely as your
+    internal source of facts and pedagogical approach — translate the substance into clear,
+    natural English, don't just switch language for filler words while leaving key terms
+    in Romanian. Use standard English technical terminology for this field (ex: "Kirchhoff's
+    laws", not a literal translation), not word-for-word translation from Romanian.
+    Exception: if the student explicitly asks you to explain a specific Romanian term (ex:
+    "how do you say X in Romanian for the exam"), you may include the Romanian term alongside
+    the English explanation.
+    ═══════════════════════════════════════════════════
+""" if mod_engleza else ""
+
     return ("ROL: " + rol_line
             + pas_cu_pas_bloc
             + mod_strategie_bloc
@@ -4082,7 +4103,8 @@ def get_system_prompt(materie: str | None = None, pas_cu_pas: bool = False,
             + mod_avansat_bloc
             + _PROMPT_COMUN
             + ghid_materie
-            + _PROMPT_FINAL)
+            + _PROMPT_FINAL
+            + limba_bloc)
 
 
 
@@ -4093,6 +4115,7 @@ SYSTEM_PROMPT = get_system_prompt(
     mod_avansat=st.session_state.get("mod_avansat", False),
     mod_strategie=st.session_state.get("mod_strategie", False),
     mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+    mod_engleza=st.session_state.get("mod_engleza", False),
 )
 
 
@@ -4396,6 +4419,7 @@ def update_system_prompt_for_subject(materie: str | None):
         mod_avansat=st.session_state.get("mod_avansat", False),
         mod_strategie=st.session_state.get("mod_strategie", False),
         mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+        mod_engleza=st.session_state.get("mod_engleza", False),
     )
 
 
@@ -4562,6 +4586,7 @@ def run_homework_ui():
                             mod_avansat=st.session_state.get("mod_avansat", False),
                             mod_strategie=st.session_state.get("mod_strategie", False),
                             mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+                            mod_engleza=st.session_state.get("mod_engleza", False),
                         )
                     ))
                 st.session_state.hw_corectare = corectare
@@ -4594,6 +4619,7 @@ def run_homework_ui():
                             mod_avansat=st.session_state.get("mod_avansat", False),
                             mod_strategie=st.session_state.get("mod_strategie", False),
                             mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+                            mod_engleza=st.session_state.get("mod_engleza", False),
                         )
                     ))
                 st.session_state.hw_corectare = corectare
@@ -4778,6 +4804,7 @@ def run_quiz_ui():
                         mod_avansat=st.session_state.get("mod_avansat", False),
                         mod_strategie=st.session_state.get("mod_strategie", False),
                         mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+                        mod_engleza=st.session_state.get("mod_engleza", False),
                     )
                 ):
                     full_resp += chunk
@@ -5220,6 +5247,7 @@ with st.sidebar:
                 mod_avansat=st.session_state.get("mod_avansat", False),
                 mod_strategie=st.session_state.get("mod_strategie", False),
                 mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+                mod_engleza=st.session_state.get("mod_engleza", False),
             )
         else:
             # Mod manual — selectorul are prioritate absolută
@@ -5231,6 +5259,7 @@ with st.sidebar:
                 mod_avansat=st.session_state.get("mod_avansat", False),
                 mod_strategie=st.session_state.get("mod_strategie", False),
                 mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+                mod_engleza=st.session_state.get("mod_engleza", False),
             )
         # Forțăm rerun explicit — necesar pe mobil unde sidebar-ul nu declanșează
         # automat rerender-ul paginii principale după schimbare de materie
@@ -5291,6 +5320,7 @@ with st.sidebar:
                 mod_avansat=st.session_state.get("mod_avansat", False),
                 mod_strategie=st.session_state.get("mod_strategie", False),
                 mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+                mod_engleza=st.session_state.get("mod_engleza", False),
             )
             invalidate_session_cache()
             components.html(
@@ -5323,6 +5353,7 @@ with st.sidebar:
                     mod_avansat=st.session_state.get("mod_avansat", False),
                     mod_strategie=st.session_state.get("mod_strategie", False),
                     mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+                    mod_engleza=st.session_state.get("mod_engleza", False),
                 )
                 # FIX 3: actualizăm și URL-ul ?sid= — altfel la refresh se restaurează SID-ul de pedagogie
                 try:
@@ -5347,6 +5378,7 @@ with st.sidebar:
                     mod_avansat=st.session_state.get("mod_avansat", False),
                     mod_strategie=st.session_state.get("mod_strategie", False),
                     mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+                    mod_engleza=st.session_state.get("mod_engleza", False),
                 )
                 # FIX 3b: actualizăm URL-ul și localStorage la sesiunea nouă
                 try:
@@ -5403,6 +5435,7 @@ with st.sidebar:
                 mod_avansat=st.session_state.get("mod_avansat", False),
                 mod_strategie=st.session_state.get("mod_strategie", False),
                 mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+                mod_engleza=st.session_state.get("mod_engleza", False),
             )
             invalidate_session_cache()
             components.html(
@@ -5433,6 +5466,7 @@ with st.sidebar:
                     mod_avansat=st.session_state.get("mod_avansat", False),
                     mod_strategie=st.session_state.get("mod_strategie", False),
                     mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+                    mod_engleza=st.session_state.get("mod_engleza", False),
                 )
                 try:
                     st.query_params["sid"] = _prev_sid
@@ -5455,6 +5489,7 @@ with st.sidebar:
                     mod_avansat=st.session_state.get("mod_avansat", False),
                     mod_strategie=st.session_state.get("mod_strategie", False),
                     mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+                    mod_engleza=st.session_state.get("mod_engleza", False),
                 )
                 try:
                     st.query_params["sid"] = _new_main_sid
@@ -5490,6 +5525,7 @@ with st.sidebar:
             mod_avansat=st.session_state.get("mod_avansat", False),
             mod_strategie=st.session_state.get("mod_strategie", False),
             mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+            mod_engleza=st.session_state.get("mod_engleza", False),
         )
         if pas_cu_pas:
             st.toast("🔢 Mod Pas cu Pas activat!", icon="✅")
@@ -5513,7 +5549,8 @@ with st.sidebar:
             mod_avansat=st.session_state.get("mod_avansat", False),
             pas_cu_pas=st.session_state.get("pas_cu_pas", False),
             mod_strategie=mod_strategie,
-            mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False)
+            mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+            mod_engleza=st.session_state.get("mod_engleza", False),
         )
         st.toast("🧠 Mod Strategie activat!" if mod_strategie else "Mod normal activat.", icon="✅" if mod_strategie else "💬")
         st.rerun()
@@ -5534,6 +5571,7 @@ with st.sidebar:
             pas_cu_pas=st.session_state.get("pas_cu_pas", False),
             mod_strategie=st.session_state.get("mod_strategie", False),
             mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+            mod_engleza=st.session_state.get("mod_engleza", False),
         )
         st.toast("⚡ Mod Avansat activat!" if mod_avansat else "Mod normal activat.", icon="✅" if mod_avansat else "💬")
         st.rerun()
@@ -5553,12 +5591,34 @@ with st.sidebar:
             mod_avansat=st.session_state.get("mod_avansat", False),
             pas_cu_pas=st.session_state.get("pas_cu_pas", False),
             mod_strategie=st.session_state.get("mod_strategie", False),
-            mod_bac_intensiv=mod_bac_intensiv
+            mod_bac_intensiv=mod_bac_intensiv,
+            mod_engleza=st.session_state.get("mod_engleza", False),
         )
         st.toast("🎓 Mod Examen/Colocviu Intensiv activat!" if mod_bac_intensiv else "Mod normal activat.", icon="✅" if mod_bac_intensiv else "💬")
         st.rerun()
     if st.session_state.get("mod_bac_intensiv"):
         st.info("🎓 **Examen/Colocviu Intensiv activ** — focusat pe ce pică la evaluare.", icon="📝")
+
+    # --- Mod Conversație în Engleză (pentru studenții ETTI cu predare în engleză) ---
+    mod_engleza = st.toggle(
+        "🇬🇧 Conversație în Engleză",
+        value=st.session_state.get("mod_engleza", False),
+        help="Profesorul răspunde exclusiv în engleză (util pentru studenții de la programul ETTI predat în limba engleză). Meniurile rămân în română."
+    )
+    if mod_engleza != st.session_state.get("mod_engleza", False):
+        st.session_state.mod_engleza = mod_engleza
+        st.session_state.system_prompt = get_system_prompt(
+            st.session_state.get("materie_selectata"),
+            mod_avansat=st.session_state.get("mod_avansat", False),
+            pas_cu_pas=st.session_state.get("pas_cu_pas", False),
+            mod_strategie=st.session_state.get("mod_strategie", False),
+            mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+            mod_engleza=mod_engleza,
+        )
+        st.toast("🇬🇧 English conversation mode on!" if mod_engleza else "Mod normal activat.", icon="✅" if mod_engleza else "💬")
+        st.rerun()
+    if st.session_state.get("mod_engleza"):
+        st.info("🇬🇧 **English mode active** — the tutor replies in English only.", icon="🗨️")
 
     st.divider()
 
@@ -6674,6 +6734,7 @@ if not st.session_state.get("messages") and not st.session_state.get("pedagogie_
                         mod_avansat=st.session_state.get("mod_avansat", False),
                         mod_strategie=st.session_state.get("mod_strategie", False),
                         mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+                        mod_engleza=st.session_state.get("mod_engleza", False),
                     )
                     st.rerun()
     else:
