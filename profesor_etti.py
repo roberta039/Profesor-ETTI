@@ -4505,6 +4505,31 @@ def extract_text_from_photo(image_bytes: bytes, materie_label: str) -> str:
 # ============================================================
 
 def get_homework_correction_prompt(materie_label: str, text_tema: str, from_photo: bool = False) -> str:
+    if st.session_state.get("mod_engleza", False):
+        source_note_en = (
+            "NOTE: The homework was extracted from a photo. "
+            "Some words may be transcribed imperfectly — judge by the student's intent.\n\n"
+            if from_photo else ""
+        )
+        return (
+            f"You are a university lecturer in {materie_label} grading a university student's homework.\n\n"
+            f"{source_note_en}"
+            f"STUDENT'S HOMEWORK:\n{text_tema}\n\n"
+            f"Respond ONLY in English. Grade thoroughly and constructively, using exactly this structure:\n\n"
+            f"## ✅ What was done well\n"
+            f"[correct aspects — be specific, not generic]\n\n"
+            f"## ❌ Content mistakes\n"
+            f"[each subject-matter mistake explained, with the correct version]\n\n"
+            f"## 🖊️ Language and presentation ({materie_label})\n"
+            f"- Correct use of technical terminology\n"
+            f"- Correct notation, symbols and units\n"
+            f"- Reasoning expressed clearly and logically\n\n"
+            f"## 📊 Estimated grade\n"
+            f"**Grade: X/10** — [short justification]\n\n"
+            f"## 💡 Tips for next time\n"
+            f"[2-3 concrete, actionable recommendations]\n\n"
+            f"Tone: warm and constructive, like a lecturer who wants to help, not discourage."
+        )
     source_note = (
         "NOTĂ: Tema a fost extrasă dintr-o fotografie. "
         "Unele cuvinte pot fi transcrise imperfect — judecă după intenția studentului.\n\n"
@@ -4659,6 +4684,32 @@ MATERII_QUIZ = [m for m in list(MATERII.keys()) if m != "🤖 Automat"]
 
 def get_quiz_prompt(materie_label: str, nivel: str, materie_val: str) -> str:
     """Generează prompt pentru crearea unui quiz."""
+    if st.session_state.get("mod_engleza", False):
+        _niv_en = ["Easy (quick check)", "Medium (seminar level)", "Hard (exam level)"]
+        try:
+            _lvl = _niv_en[NIVELE_QUIZ.index(nivel)]
+        except ValueError:
+            _lvl = "Medium (seminar level)"
+        return f"""Generate a quiz of 5 questions on {materie_label} at {_lvl} level.
+Write everything in English.
+
+STRICT RULES:
+1. Generate EXACTLY 5 numbered questions (1. 2. 3. 4. 5.)
+2. Each question has 4 answer options: A) B) C) D)
+3. After ALL the questions, add a special block with the correct answers (keep the tag names EXACTLY as written, in this format):
+
+[[RASPUNSURI_CORECTE]]
+1: X
+2: X
+3: X
+4: X
+5: X
+[[/RASPUNSURI_CORECTE]]
+
+where X is A, B, C or D.
+4. Questions must be clear and suitable for {_lvl} level.
+5. Use LaTeX ($...$) for mathematical formulas.
+6. Do NOT give explanations now — only the questions and the correct answers at the end."""
     nivel_text = nivel.split(" ", 1)[1].strip("()")
     return f"""Generează un quiz de 5 întrebări la {materie_label} pentru nivel {nivel_text}.
 
@@ -4747,27 +4798,31 @@ def evaluate_quiz(user_answers: dict, correct_answers: dict) -> tuple[int, str]:
     score = sum(1 for q, a in user_answers.items() if correct_answers.get(q) == a)
     total = len(correct_answers)
 
+    _en = st.session_state.get("mod_engleza", False)
     lines = []
     for q in sorted(correct_answers.keys()):
         user_ans = user_answers.get(q, "—")
         correct_ans = correct_answers[q]
         if user_ans == correct_ans:
-            lines.append(f"✅ **Întrebarea {q}**: {user_ans} — Corect!")
+            lines.append(f"✅ **Question {q}**: {user_ans} — Correct!" if _en
+                         else f"✅ **Întrebarea {q}**: {user_ans} — Corect!")
         else:
-            lines.append(f"❌ **Întrebarea {q}**: ai răspuns **{user_ans}**, corect era **{correct_ans}**")
+            lines.append(f"❌ **Question {q}**: you answered **{user_ans}**, the correct answer was **{correct_ans}**" if _en
+                         else f"❌ **Întrebarea {q}**: ai răspuns **{user_ans}**, corect era **{correct_ans}**")
 
     if score == total:
-        verdict = "🏆 Excelent! Nota 10!"
+        verdict = "🏆 Excellent! Perfect score!" if _en else "🏆 Excelent! Nota 10!"
     elif score >= total * 0.8:
-        verdict = "🌟 Foarte bine!"
+        verdict = "🌟 Very good!" if _en else "🌟 Foarte bine!"
     elif score >= total * 0.6:
-        verdict = "👍 Bine, mai exersează puțin!"
+        verdict = "👍 Good, keep practising!" if _en else "👍 Bine, mai exersează puțin!"
     elif score >= total * 0.4:
-        verdict = "📚 Trebuie să mai studiezi."
+        verdict = "📚 You need to study a bit more." if _en else "📚 Trebuie să mai studiezi."
     else:
-        verdict = "💪 Nu-ți face griji, încearcă din nou!"
+        verdict = "💪 Don't worry, try again!" if _en else "💪 Nu-ți face griji, încearcă din nou!"
 
-    feedback = f"### Rezultat: {score}/{total} — {verdict}\n\n" + "\n\n".join(lines)
+    feedback = (f"### Result: {score}/{total} — {verdict}\n\n" if _en
+                else f"### Rezultat: {score}/{total} — {verdict}\n\n") + "\n\n".join(lines)
     return score, feedback
 
 
