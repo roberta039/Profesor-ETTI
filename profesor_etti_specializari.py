@@ -224,7 +224,11 @@ RATE_LIMIT_WINDOW_SEC   = 60   # fereastră de timp în secunde (1 minut)
 _RATE_LIMIT_STORE: dict = defaultdict(list)
 
 # === MODEL GEMINI — singura sursă de adevăr pentru numele modelului ===
-GEMINI_MODEL = "gemini-2.5-flash"
+# Lanț de rezervă (sept. 2026, limite REALE per zi pe tier gratuit, verificate pe dashboard):
+#   1. gemini-3.1-flash-lite (15 RPM / 500 RPD, $0.25/$1.50 per 1M) — principal
+#   2. gemini-3.5-flash-lite (15 RPM / 500 RPD, $0.30/$2.50 per 1M) — rezervă 1
+#   3. gemini-3.8-flash       (5 RPM /  20 RPD, $0.75/$3.75 per 1M) — rezervă 2
+GEMINI_MODEL = "gemini-3.1-flash-lite"
 SUMMARIZE_AFTER_MESSAGES = 30   # Rezumăm când depășim acest număr de mesaje
 MESSAGES_KEPT_AFTER_SUMMARY = 10  # Câte mesaje recente păstrăm după rezumare
 
@@ -2904,12 +2908,13 @@ def run_quiz_ui():
 # trimite toți acești tokeni = cost ridicat. Cu caching, platim o
 # singură dată per sesiune și apoi mult mai puțin pentru tokenii cached.
 #
-# Cerințe Gemini API Context Caching (sursa: ai.google.dev/gemini-api/docs/pricing, mar 2026):
+# Cerințe Gemini API Context Caching (sursa: ai.google.dev/gemini-api/docs/pricing):
 #   - Minim 1.024 tokeni în cache (system prompt-ul nostru e ~21k, OK)
 #   - TTL minim 1 minut, maxim 1 oră (folosim 10 minute)
-#   - Funcționează cu: gemini-2.5-flash, gemini-2.5-pro
-#   - Prețuri cached input disponibile pe gemini-2.5-flash
-#   → Folosim gemini-2.5-flash ca model principal (caching + fallback)
+#   - Dacă gemini-3.1-flash-lite nu suportă caching pe cheia curentă, apelul eșuează
+#     silențios și codul face fallback automat la apel normal fără caching (vezi except
+#     din _get_or_create_cache) — deci caching-ul e un bonus, nu o cerință obligatorie.
+#   → Folosim GEMINI_MODEL (gemini-3.1-flash-lite) ca model principal (caching + fallback)
 #
 # Cache key: hash(system_prompt + api_key) → unic per prompt + cheie
 
@@ -2920,8 +2925,8 @@ def run_quiz_ui():
 _CACHE_TTL_SECONDS = 600          # 10 minute TTL (bine sub limita de 1 oră)
 _CACHE_REFRESH_AT  = 480          # Reîmprospătăm la 8 minute (2 min înainte de expirare)
 _CACHE_MIN_TOKENS  = 1024         # Minim tokeni pentru caching (limita Gemini)
-# Prețuri: https://ai.google.dev/gemini-api/docs/pricing (mar 2026)
-# gemini-2.5-flash: $0.30/$2.50 per 1M tokens normal, cached input disponibil
+# Prețuri: https://ai.google.dev/gemini-api/docs/pricing (sept. 2026)
+# gemini-3.1-flash-lite: $0.25/$1.50 per 1M tokens normal, cached input disponibil
 _CACHE_MODEL       = GEMINI_MODEL  # Model principal cu caching
 
 
@@ -2997,15 +3002,21 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None):
 
     Context Caching: system prompt-ul (~21k tokeni) e cached pentru 10 minute.
     Tokenii cached costă ~4× mai puțin decât tokenii normali (prețuri Gemini API).
-    Caching funcționează pe gemini-2.5-flash; fallback automat dacă API-ul refuză.
+    Caching funcționează pe gemini-3.1-flash-lite; fallback automat dacă API-ul refuză.
     """
-    # Model: gemini-2.5-flash (principal + caching + fallback fără caching)
+    # Model: gemini-3.1-flash-lite (principal + caching + fallback fără caching)
     MODEL_WITH_CACHE    = _CACHE_MODEL
-    # Prețuri (mar 2026, ai.google.dev/gemini-api/docs/pricing):
-    # gemini-2.5-flash: model principal, suportă caching
-    # Prețuri (mar 2026): $0.30/$2.50 per 1M normal, cached input disponibil
+    # Lanț de rezervă — ales pe baza limitelor REALE per zi (RPD) de pe tier gratuit
+    # (verificat pe dashboard, sept. 2026), nu doar pe preț per token:
+    #   gemini-3.1-flash-lite: 15 RPM / 500 RPD — principal
+    #   gemini-3.5-flash-lite: 15 RPM / 500 RPD — rezervă 1 (la fel de robust ca principalul,
+    #       folosit ca prim fallback tocmai pentru că NU se epuizează rapid sub sarcină)
+    #   gemini-3.8-flash:       5 RPM /  20 RPD — rezervă 2 (variantă Flash completă, mai
+    #       scumpă și cu RPD mult mai mic — ultimă variantă, nu primă alegere de fallback)
     MODEL_FALLBACKS_NO_CACHE = [
-        GEMINI_MODEL,   # fallback fără caching: același model, apel normal
+        GEMINI_MODEL,           # fallback fără caching: același model principal, apel normal
+        "gemini-3.5-flash-lite",  # rezervă 1
+        "gemini-3.8-flash",       # rezervă 2
     ]
 
     # Guard: dacă nu există chei API configurate, aruncă eroare clară (nu IndexError silențios)
@@ -3047,6 +3058,15 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None):
             if _use_cache and model_name == MODEL_WITH_CACHE:
                 cached_content_name = _get_or_create_cache(gemini_client, active_prompt, current_key)
 
+            # Nivel de gândire (Gemini 3.x): "low" implicit — rapid, potrivit pentru chat
+            # normal. Toggle-ul "🧠 Gândire Extinsă" din sidebar trece pe "high" — util la
+            # probleme complexe, dar mai lent. FIX: fără asta, modelul folosea nivelul
+            # implicit (de obicei "medium"), iar la întrebări de tip paradox/capcană logică
+            # putea intra într-un raționament foarte lung, fără niciun timeout în UI,
+            # lăsând interfața blocată la "scrie..." la nesfârșit.
+            _thinking_level = "high" if st.session_state.get("mod_gandire_extinsa", False) else "low"
+            _thinking_cfg = genai_types.ThinkingConfig(thinking_level=_thinking_level)
+
             if cached_content_name:
                 # Apel cu caching: system prompt e deja în cache → nu îl mai trimitem
                 gen_config = genai_types.GenerateContentConfig(
@@ -3055,6 +3075,7 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None):
                         genai_types.SafetySetting(category=s["category"], threshold=s["threshold"])
                         for s in safety_settings
                     ],
+                    thinking_config=_thinking_cfg,
                 )
             else:
                 # Apel normal (fără caching): trimitem system prompt complet
@@ -3064,6 +3085,7 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None):
                         genai_types.SafetySetting(category=s["category"], threshold=s["threshold"])
                         for s in safety_settings
                     ],
+                    thinking_config=_thinking_cfg,
                 )
 
             history_new = []
@@ -3626,6 +3648,17 @@ with st.sidebar:
         st.rerun()
     if st.session_state.get("mod_engleza"):
         st.info("🇬🇧 **English mode active** — the tutor replies in English only.", icon="🗨️")
+
+    # --- Mod Gândire Extinsă (nivel de gândire Gemini 3.x: low implicit / high extins) ---
+    # Nu modifică system prompt-ul, deci nu trebuie regenerat — e citit direct din
+    # session_state la fiecare apel API (vezi run_chat_with_rotation), deci un simplu
+    # toggle cu `key` e suficient.
+    st.toggle(
+        "🧠 Gândire Extinsă",
+        key="mod_gandire_extinsa",
+        help="Dezactivat: răspunsuri rapide (nivel 'low'). Activat: modelul gândește mai "
+             "mult înainte să răspundă — util la probleme complexe, dar mai lent."
+    )
 
     st.divider()
 
