@@ -1713,83 +1713,100 @@ st.session_state["_api_keys_list"] = keys
 # === MATERII ===
 MATERII = {
     # ETTI (UPB) — ANII III-IV, generația 2024-2028, toate cele 5 specializări.
-    # Sursă: planuri de învățământ oficiale ETTI (PDF-uri ELA/TST/RST/RST/MON/INF-24-28).
-    # NOTĂ: neverificat linie cu linie de utilizator (spre deosebire de Anul I-II) —
-    # de recomandat o trecere de verificare față de PDF-urile oficiale.
+    # Sursă: planuri de învățământ oficiale ETTI (PDF-uri ELA/TST/RST/MON/INF-24-28),
+    # VERIFICATE linie cu linie pe codurile de disciplină (04.D.05.O.xxx etc.) din PDF-uri.
+    # Discipline cu același nume la ani/specializări diferite sunt consolidate într-o
+    # singură intrare (etichetă cu toate aparițiile), nu duplicate.
     "🤖 Automat":                                 None,  # detectează disciplina din mesaj, întreabă dacă nu poate
 
-    # --- ANUL III, SEMESTRUL I — comun ELA/TST/RST/MON ---
-    "📶 Semnale și Sisteme 3 (An III, ELA/TST/RST/MON)":         "semnale și sisteme 3",
-    "📡 Teoria Transmisiunii Informației (An III, ELA/TST/RST/MON)": "teoria transmisiunii informației",
-    "🔌 Circuite Integrate Analogice (An III, ELA/TST/RST/MON)": "circuite integrate analogice",
-    "📏 Instrumentație Electronică de Măsură (An III, ELA/TST/RST/MON)": "instrumentație electronică de măsură",
-    "📶 Microunde (An III, ELA/TST/RST/MON)":                    "microunde",
+    # --- ANUL III — comun tuturor 5 specializări ---
+    "📶 Semnale și Sisteme 3 (An III, toate specializările)":     "semnale și sisteme 3",
+    "📡 Teoria Transmisiunii Informației (An III, toate specializările)": "teoria transmisiunii informației",
+    "🎲 Decizie și Estimare în Prelucrarea Informațiilor (An III, toate specializările)": "decizie și estimare în prelucrarea informațiilor",
+    "📶 Prelucrarea Digitală a Semnalelor (An III, toate specializările)": "prelucrarea digitală a semnalelor",
 
-    # --- ANUL III, SEMESTRUL I — INF (diferă) ---
+    # --- ANUL III — comun ELA/MON/TST/RST (nu INF) ---
+    "🔌 Circuite Integrate Analogice (An III, ELA/MON/TST/RST)": "circuite integrate analogice",
+    "📏 Instrumentație Electronică de Măsură (An III, ELA/MON/TST/RST)": "instrumentație electronică de măsură",
+    "📶 Microunde (An III, toate specializările — semestru diferit per specializare)": "microunde",
+
+    # --- ANUL III — specific ELA/MON (identice prin tot Anul III) ---
+    "🤖 Inteligență Artificială (An III, ELA/MON)":              "inteligență artificială (an iii, ela-mon)",
+    "📺 Televiziune (An III, ELA/MON/INF)":                      "televiziune",
+    "🗄️ Bazele Sistemelor de Achiziție de Date (An III, ELA/MON)": "bazele sistemelor de achiziție de date",
+    "🧠 Rețele Neurale și Sisteme Fuzzy (An III, ELA/MON)":       "rețele neurale și sisteme fuzzy",
+    "🏭 Electronică și Informatică Industrială (An III, ELA/MON)": "electronică și informatică industrială",
+
+    # --- ANUL III — specific TST ---
+    "🌐 Arhitecturi de Rețea și Internet (An III, TST)":         "arhitecturi de rețea și internet",
+    "📶 Circuite de Microunde (An III, TST)":                    "circuite de microunde",
+    "📡 Comunicații Analogice și Digitale (An III, TST/RST)":    "comunicații analogice și digitale",
+
+    # --- ANUL III — specific RST ---
+    "🌐 Tehnologii de Programare în Internet (An III RST / An IV ELA)": "tehnologii de programare în internet",
+    "🌐 Arhitecturi și Protocoale de Comunicații (An III, RST)": "arhitecturi și protocoale de comunicații",
+
+    # --- ANUL III — specific INF ---
     "🗄️ Achiziția și Prelucrarea Datelor (An III, INF)":         "achiziția și prelucrarea datelor",
     "📏 Măsurători Electronice, Senzori și Traductoare 2 (An III, INF)": "măsurători electronice senzori și traductoare 2",
     "🖥️ Instrumentație Virtuală (An III, INF)":                  "instrumentație virtuală",
-
-    # --- ANUL III, SEMESTRUL II — comun tuturor 5 specializări ---
-    "🎲 Decizie și Estimare în Prelucrarea Informațiilor (An III)": "decizie și estimare în prelucrarea informațiilor",
-    "📶 Prelucrarea Digitală a Semnalelor (An III)":              "prelucrarea digitală a semnalelor",
-
-    # --- ANUL III, SEMESTRUL II — specific ELA ---
-    "📺 Televiziune (An III, ELA/INF)":                          "televiziune",
-    "🧠 Rețele Neurale și Sisteme Fuzzy (An III, ELA)":           "rețele neurale și sisteme fuzzy",
-    "🏭 Electronică și Informatică Industrială (An III, ELA)":    "electronică și informatică industrială",
-
-    # --- ANUL III, SEMESTRUL II — specific MON ---
-    "🔬 Senzori și Circuite de Condiționare a Semnalelor (An III, MON)": "senzori și circuite de condiționare a semnalelor",
-    "💻 Instrumente Software pentru Microelectronică (An III, MON)": "instrumente software pentru microelectronică",
-
-    # --- ANUL III, SEMESTRUL II — specific TST/RST ---
-    "📡 Comunicații Analogice și Digitale (An III, TST/RST)":     "comunicații analogice și digitale",
-    "🌐 Arhitecturi și Protocoale de Comunicații (An III, RST)":  "arhitecturi și protocoale de comunicații",
-    "🌐 Tehnologii de Programare în Internet (An III, RST/ELA)":  "tehnologii de programare în internet",
-
-    # --- ANUL III, SEMESTRUL II — specific INF ---
     "🌐 Programare Web (An III, INF)":                           "programare web",
     "⚙️ Tehnici de Optimizare (An III, INF)":                    "tehnici de optimizare",
-    "🤖 Inteligență Artificială (An III-IV, toate specializările)": "inteligență artificială",
+    "🧮 Arhitectura Sistemelor de Calcul (An III INF / An IV ELA-MON-RST)": "arhitectura sistemelor de calcul",
+    "🤖 Inteligență Artificială 1 (An III, INF)":                "inteligență artificială 1 (an iii, inf)",
 
-    # --- ANUL IV — comun/aproape comun (Arhitectura Sistemelor de Calcul, Calitate și Fiabilitate) ---
-    "🧮 Arhitectura Sistemelor de Calcul (An IV, ELA/RST/TST/MON/INF)": "arhitectura sistemelor de calcul",
-    "✅ Calitate și Fiabilitate (An IV, ELA/RST/TST/MON/INF)":    "calitate și fiabilitate",
+    # --- ANUL IV — comun ELA/TST/RST/INF (nu MON) ---
+    "✅ Calitate și Fiabilitate (An IV, ELA/TST/RST/INF)":       "calitate și fiabilitate",
 
     # --- ANUL IV — specific ELA ---
     "🏥 Imagistică Medicală (An IV, ELA)":                       "imagistică medicală",
     "🏥 Electronică și Informatică Medicală (An IV, ELA)":       "electronică și informatică medicală",
     "⚡ Procesoare Electronice de Putere (An IV, ELA)":          "procesoare electronice de putere",
     "🎮 Grafică 3D (An IV, ELA)":                                "grafică 3d",
-    "🤖 Robotică (An IV, ELA/INF)":                              "robotică",
+    "🤖 Robotică (An IV, ELA)":                                  "robotică",
     "🧪 Testarea Automată a Echipamentelor (An IV, ELA)":        "testarea automată a echipamentelor",
-    "📱 Sisteme de Comunicații Mobile (An IV, ELA/MON)":         "sisteme de comunicații mobile",
-
-    # --- ANUL IV — specific TST/RST ---
-    "📡 Comunicații de Date (An IV, TST/RST)":                   "comunicații de date",
-    "💻 Sisteme de Operare (An IV, TST/RST)":                    "sisteme de operare",
-    "🌐 Rețele și Servicii (An IV, TST/RST)":                    "rețele și servicii",
-    "📶 Rețele de Comunicații Mobile (An IV, TST/RST)":          "rețele de comunicații mobile",
-    "🔒 Detecția și Prevenția Atacurilor Cibernetice (An IV, TST/RST)": "detecția și prevenția atacurilor cibernetice",
-    "☁️ Servicii de Cloud și Containerizare (An IV, TST/RST)":   "servicii de cloud și containerizare",
+    "🧮 Analiza Asistată de Calculator a Circuitelor de Putere (An IV, ELA)": "analiza asistată de calculator a circuitelor de putere",
+    "📱 Sisteme de Comunicații Mobile (An IV, ELA)":             "sisteme de comunicații mobile",
 
     # --- ANUL IV — specific MON ---
     "📶 Tehnici Avansate de Prelucrare Digitală a Semnalelor (An IV, MON)": "tehnici avansate de prelucrare digitală a semnalelor",
     "🔬 Tehnici de Proiectare pentru Structuri VLSI (An IV, MON)": "tehnici de proiectare pentru structuri vlsi",
     "🔬 Bazele Tehnologice ale Microelectronicii (An IV, MON)":  "bazele tehnologice ale microelectronicii",
     "💡 Dispozitive Optoelectronice (An IV, MON)":               "dispozitive optoelectronice",
+    "🔬 Testare și Instrumentație Virtuală în Microelectronică (An IV, MON)": "testare și instrumentație virtuală în microelectronică",
     "🔬 Modelarea Componentelor Microelectronice Active (An IV, MON)": "modelarea componentelor microelectronice active",
     "💡 Senzori și Traductori Fotonici (An IV, MON)":            "senzori și traductori fotonici",
     "🔬 Circuite Integrate de Joasă Tensiune și Mică Putere (An IV, MON)": "circuite integrate de joasă tensiune și mică putere",
+    "🔬 Dispozitive Dielectrice și Magnetice (An IV, MON)":      "dispozitive dielectrice și magnetice",
+
+    # --- ANUL IV — specific TST ---
+    "📡 Comunicații de Date (An IV, TST/RST)":                   "comunicații de date",
+    "🌐 Rețele de Comunicații (An IV, TST)":                     "rețele de comunicații",
+    "📻 Sisteme și Echipamente de Comunicații Radio (An IV, TST)": "sisteme și echipamente de comunicații radio",
+    "📡 Antene și Propagare (An IV, TST)":                       "antene și propagare",
+    "📡 Comunicații Analogice și Digitale - Laborator (An IV, TST/RST)": "comunicații analogice și digitale - laborator",
+    "🤖 Inteligență Artificială (An IV, TST/RST)":               "inteligență artificială (an iv, tst-rst)",
+
+    # --- ANUL IV — specific RST ---
+    "💻 Sisteme de Operare (An IV RST / An IV «2» INF)":         "sisteme de operare",
+    "🌐 Rețele și Servicii (An IV, RST)":                        "rețele și servicii",
+    "🛠️ Inginerie Software pentru Comunicații (An IV, RST)":     "inginerie software pentru comunicații",
+
+    # --- ANUL IV — comun TST/RST ---
+    "📶 Rețele de Comunicații Mobile (An IV, TST/RST)":          "rețele de comunicații mobile",
+    "🔒 Detecția și Prevenția Atacurilor Cibernetice (An IV, TST/RST)": "detecția și prevenția atacurilor cibernetice",
+    "☁️ Servicii de Cloud și Containerizare (An IV, TST/RST)":   "servicii de cloud și containerizare",
 
     # --- ANUL IV — specific INF ---
     "🌐 Rețele de Calculatoare (An IV, INF)":                    "rețele de calculatoare",
     "⚙️ Algoritmi Paraleli și Distribuiți (An IV, INF)":         "algoritmi paraleli și distribuiți",
+    "🤖 Inteligență Artificială 2 - Recunoașterea Formelor (An IV, INF)": "inteligență artificială 2 - recunoașterea formelor",
     "👁️ Prelucrarea Imaginilor (An IV, INF)":                    "prelucrarea imaginilor",
+    "👁️ Analiza Imaginilor (An IV, INF)":                        "analiza imaginilor",
     "🛠️ Inginerie Software (An IV, INF)":                        "inginerie software",
     "📶 Procesoare de Semnal (An IV, INF)":                      "procesoare de semnal",
     "🖱️ Interfețe Om-Mașină (An IV, INF)":                       "interfețe om-mașină",
+    "📡 Sisteme de Comunicații (An IV, INF)":                    "sisteme de comunicații",
 }
 # NOTĂ: acest fișier acoperă DOAR Anii III-IV (toate 5 specializările ETTI: ELA/TST/RST/MON/INF).
 # Anii I-II (trunchi comun) sunt în fișierul separat "profesor_etti.py".
@@ -2058,6 +2075,90 @@ _PROMPT_SUBJECTS: dict[str, str] = {
       se schimbă mai des decât acest ghid poate fi actualizat.
     """,
 
+    "semnale și sisteme 3": r"""
+    1. SEMNALE ȘI SISTEME 3 — ANUL III ETTI/UPB (comună tuturor 5 specializărilor: ELA/MON/TST/RST/INF)
+       Extinde Semnale și Sisteme (Anul II: clasificare, convoluție, funcție de transfer,
+       eșantionare) spre semnale aleatoare și analiza sistemelor discrete în domeniul z —
+       bază directă pentru Teoria Transmisiunii Informației și Prelucrarea Digitală a
+       Semnalelor (ambele studiate în paralel, Anul III).
+
+       NOTAȚII OBLIGATORII:
+       - Semnal aleator (stocastic): X(t) sau x[n] — o familie de realizări posibile, nu o
+         funcție unică; o realizare concretă: x(t)
+       - Funcție de autocorelație: R_x(τ) = E[x(t)x(t+τ)] (continuu) sau R_x[k] (discret)
+       - Funcție de intercorelație: R_xy(τ) = E[x(t)y(t+τ)]
+       - Densitate spectrală de putere (DSP): S_x(f) sau S_x(ω) — transformata Fourier a
+         autocorelației (teorema Wiener-Hincin)
+       - Transformata Z: X(z) = Σx[n]z^(-n); variabilă complexă z = re^(jω)
+       - Folosește LaTeX pentru toate formulele
+
+       STRUCTURA OBLIGATORIE pentru orice exercițiu:
+       **1. Identifică tipul semnalului/sistemului** — determinist sau aleator; continuu
+          sau discret în timp
+       **2. Alege instrumentul potrivit** — autocorelație/DSP pentru semnale aleatoare,
+          transformata Z pentru sisteme discrete
+       **3. Rezolvare pas cu pas**
+       **4. Verificare** — proprietăți cunoscute (R_x(0)≥|R_x(τ)| pentru orice τ, stabilitate
+          prin poziția polilor în planul z)
+
+       ══════════════════════════════════════════
+       SEMNALE ALEATOARE (STOCASTICE)
+       ══════════════════════════════════════════
+       - Proces staționar (în sens larg): media și autocorelația nu depind de originea
+         timpului — E[x(t)]=const, R_x(t,t+τ) depinde doar de τ, nu de t
+       - Proces ergodic: mediile temporale (calculate pe o singură realizare, pe timp lung)
+         sunt egale cu mediile statistice (pe ansamblul realizărilor) — permite estimarea
+         proprietăților statistice dintr-o singură observație practică a semnalului
+       - Zgomot alb: densitate spectrală de putere CONSTANTĂ pe toate frecvențele (model
+         idealizat, dar util); autocorelație = impuls Dirac (necorelat cu el însuși la orice
+         decalaj τ≠0) — model standard pentru zgomotul termic din Bazele Electrotehnicii/
+         Măsurări (legătură directă cu teorema limitei centrale de la Teoria Probabilităților)
+       - Raport semnal-zgomot (SNR): SNR = P_semnal/P_zgomot, adesea exprimat în dB:
+         SNR_dB = 10·log₁₀(P_semnal/P_zgomot) — parametru central pentru calitatea unei
+         transmisii (legătură directă spre Teoria Transmisiunii Informației)
+
+       ══════════════════════════════════════════
+       AUTOCORELAȚIE ȘI DENSITATE SPECTRALĂ DE PUTERE
+       ══════════════════════════════════════════
+       - Proprietățile autocorelației: R_x(0) = puterea medie a semnalului (valoare maximă);
+         R_x(τ) = R_x(-τ) (funcție pară, pentru semnale reale staționare)
+       - Teorema Wiener-Hincin: S_x(f) = ∫R_x(τ)e^(-j2πfτ)dτ — leagă domeniul timp
+         (autocorelație) de domeniul frecvență (densitate spectrală de putere), analog
+         transformatei Fourier obișnuite dar aplicată statisticilor semnalului, nu
+         semnalului direct (care pentru semnale aleatoare nu are, în general, transformată
+         Fourier convergentă)
+       - Filtrarea semnalelor aleatoare: dacă x(t) trece printr-un sistem LTI cu funcție de
+         transfer H(f), DSP la ieșire: S_y(f) = |H(f)|²·S_x(f) — rezultat esențial pentru
+         analiza zgomotului prin lanțuri de circuite/comunicații
+
+       ══════════════════════════════════════════
+       TRANSFORMATA Z ȘI SISTEME DISCRETE
+       ══════════════════════════════════════════
+       - Transformata Z = echivalentul discret al transformatei Laplace (vezi Matematici
+         Speciale, Anul I) — transformă o ecuație cu diferențe într-o ecuație algebrică
+       - Proprietăți fundamentale: liniaritate; întârziere în timp: Z{x[n-k]} = z^(-k)X(z)
+         (analog deplasării în Laplace — util pentru rezolvarea ecuațiilor cu diferențe care
+         descriu filtre digitale)
+       - Funcția de transfer discretă: H(z) = Y(z)/X(z) — caracterizează complet un sistem
+         LTI discret, la fel cum H(s) caracteriza sistemele continue
+       - Regiunea de convergență (ROC) și stabilitate: un sistem discret LTI cauzal e STABIL
+         ⟺ toți polii lui H(z) sunt în INTERIORUL cercului unitate (|z|<1) — analog cu
+         semiplanul stâng la Laplace, dar aici e un cerc, nu o jumătate de plan
+       - Relația cu răspunsul în frecvență: H(e^(jω)) — se obține din H(z) prin substituția
+         z=e^(jω) (evaluare PE cercul unitate), valabilă doar dacă sistemul e stabil
+
+       CAPCANE FRECVENTE:
+       - Confuzia proces staționar cu proces ergodic (staționaritatea e o proprietate a
+         ansamblului de realizări; ergodicitatea permite înlocuirea mediei de ansamblu cu
+         media temporală — nu toate procesele staționare sunt ergodice)
+       - Aplicarea transformatei Fourier directe pe un semnal aleator (nu converge în
+         general) în loc de transformata Fourier a autocorelației (DSP)
+       - Confuzia condiției de stabilitate: cerc unitate (transformata Z, discret) vs.
+         semiplan stâng (transformata Laplace, continuu) — nu se amestecă
+       - Ignorarea regiunii de convergență (ROC) la transformata Z — aceeași expresie X(z)
+         poate corespunde la semnale diferite, în funcție de ROC
+    """,
+
 }
 
 
@@ -2303,13 +2404,26 @@ SYSTEM_PROMPT = get_system_prompt(
 # NOTĂ ETTI: doar disciplinele deja scrise în _PROMPT_SUBJECTS au intrare aici.
 # Se adaugă câte o intrare nouă de fiecare dată când se scrie un bloc nou de materie —
 # altfel modul "🤖 Automat" nu o poate detecta din cuvinte cheie.
-SUBJECT_KEYWORDS = {}
+SUBJECT_KEYWORDS = {
+    "semnale și sisteme 3": [
+        "semnal aleator", "semnal aleatoriu", "proces staționar", "proces stationar",
+        "proces ergodic", "funcție de autocorelație", "functie de autocorelatie",
+        "densitate spectrală de putere", "densitate spectrala de putere",
+        "transformata z", "regiunea de convergență", "regiunea de convergenta",
+        "zgomot alb", "raport semnal-zgomot", "snr", "teorema wiener-hincin",
+        "funcție de transfer discretă", "cerc unitate",
+    ],
+}
 
 
 
 # Cuvinte care sunt exclusive unei materii — boost mare dacă apar
 # NOTĂ ETTI: doar disciplinele deja scrise în _PROMPT_SUBJECTS au intrare aici.
-_STRONG_INDICATORS = {}
+_STRONG_INDICATORS = {
+    "semnale și sisteme 3": ["transformata z", "regiunea de convergență", "regiunea de convergenta",
+                     "teorema wiener-hincin", "proces ergodic", "densitate spectrală de putere",
+                     "densitate spectrala de putere", "zgomot alb"],
+}
 
 def detect_subject_from_text(text: str) -> str | None:
     """Detectează materia dintr-un text folosind cuvinte cheie cu sistem de ponderi.
@@ -4475,7 +4589,22 @@ if st.session_state.get("_suggested_question"):
 
 # ── Întrebări sugerate per materie — afișate doar când chat-ul e gol ──
 # Pool mare de întrebări — 4 alese aleator la fiecare sesiune nouă
-INTREBARI_POOL = {}
+INTREBARI_POOL = {
+    "semnale și sisteme 3": [
+        "Care e diferența dintre proces staționar și proces ergodic?",
+        "Cum calculez densitatea spectrală de putere dintr-o autocorelație?",
+        "Ce este zgomotul alb și de ce contează în comunicații?",
+        "Cum verific stabilitatea unui sistem discret din polii lui H(z)?",
+        "Care e diferența dintre transformata Z și transformata Laplace?",
+        "Cum calculez raportul semnal-zgomot (SNR) în dB?",
+        "Ce este regiunea de convergență (ROC) la transformata Z?",
+        "Cum obțin răspunsul în frecvență dintr-o funcție de transfer discretă?",
+        "Explică-mi teorema Wiener-Hincin",
+        "Cum se propagă densitatea spectrală de putere printr-un filtru?",
+        "Ce înseamnă că un semnal aleator e staționar în sens larg?",
+        "Cum folosesc proprietățile autocorelației pentru verificare?",
+    ],
+}
 
 if not st.session_state.get("messages") and not st.session_state.get("pedagogie_mode") and not st.session_state.get("orientare_mode"):
     materie_curenta = st.session_state.get("materie_selectata")
