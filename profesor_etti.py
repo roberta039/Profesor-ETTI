@@ -12,6 +12,15 @@ import re
 import hashlib
 import secrets
 from collections import defaultdict
+import pathlib
+
+# Pod bidirecțional Streamlit <-> localStorage pentru cheia API a elevului.
+# Fișierul key_bridge/index.html trebuie pus în repo, lângă acest script.
+_KEY_BRIDGE_DIR = pathlib.Path(__file__).resolve().parent / "key_bridge"
+_key_bridge = (
+    components.declare_component("profesor_key_bridge", path=str(_KEY_BRIDGE_DIR))
+    if (_KEY_BRIDGE_DIR / "index.html").exists() else None
+)
 
 # === IMPORTURI PENTRU TIPURI NOI DE FIȘIERE ===
 # python-docx pentru .docx/.doc
@@ -380,16 +389,27 @@ def get_supabase_client() -> Client | None:
         return None
 
 
+SB_RETRY_INTERVAL_SEC = 30  # cât așteptăm între două încercări de reconectare
+
+
 def is_supabase_available() -> bool:
-    """Returnează statusul Supabase din cache — nu face request la fiecare apel.
-    Statusul se actualizează doar când o operație reală eșuează sau reușește."""
-    return st.session_state.get("_sb_online", True)
+    """True dacă putem încerca Supabase acum.
+
+    Online -> True. Offline -> False, dar după SB_RETRY_INTERVAL_SEC lăsăm o
+    singură operație reală să "sondeze" conexiunea (circuit breaker). Dacă
+    reușește, _mark_supabase_online() golește coada; dacă eșuează, se reia
+    așteptarea. Fără asta, un singur eșec temporar bloca sesiunea offline pe vecie.
+    """
+    if st.session_state.get("_sb_online", True):
+        return True
+    return time.time() >= st.session_state.get("_sb_retry_at", 0)
 
 
 def _mark_supabase_offline():
-    """Marchează Supabase ca offline și notifică utilizatorul."""
+    """Marchează Supabase ca offline, programează următoarea încercare și notifică utilizatorul."""
     was_online = st.session_state.get("_sb_online", True)
     st.session_state["_sb_online"] = False
+    st.session_state["_sb_retry_at"] = time.time() + SB_RETRY_INTERVAL_SEC
     if was_online:
         st.toast("⚠️ Baza de date offline — modul local activat.", icon="📴")
 
@@ -718,7 +738,7 @@ def check_rate_limit(session_id: str) -> tuple[bool, int]:
 
 def init_db():
     """Verifică conexiunea la Supabase. Dacă e offline, activează modul local."""
-    online = is_supabase_available()
+    online = st.session_state.get("_sb_online", True)  # starea reală, nu fereastra de reîncercare
     if not online:
         st.warning("📴 **Modul offline activ** — conversația se păstrează în memorie. "
                    "Istoricul va fi sincronizat automat când conexiunea revine.", icon="⚠️")
@@ -787,15 +807,14 @@ def load_history_from_db(session_id, limit: int = MAX_MESSAGES_IN_MEMORY):
             .select("role, content, timestamp")
             .eq("session_id", session_id)
             .eq("app_id", get_app_id())
-            .order("timestamp", desc=False)
+            .neq("role", "srt_data")           # srt_data nu trebuie să consume limita
+            .order("timestamp", desc=True)     # cele mai NOI mesaje primele
             .limit(limit)
             .execute()
         )
-        return [
-            {"role": row["role"], "content": row["content"]}
-            for row in response.data
-            if row["role"] not in ("srt_data",)  # mesajele srt_data sunt invizibile în chat
-        ]
+        # Query-ul a adus mesajele de la cel mai nou la cel mai vechi — le readucem în ordine cronologică
+        rows = list(reversed(response.data or []))
+        return [{"role": row["role"], "content": row["content"]} for row in rows]
     except Exception as e:
         _log("Eroare la încărcarea istoricului", "silent", e)
         return st.session_state.get("messages", [])[-limit:]
@@ -991,28 +1010,7 @@ def inject_session_js():
             window.parent.history.replaceState(null, '', newUrl);
         }}
 
-        // ── API key via postMessage ──
-        // FIX FORMAT CHEIE: nu mai verificăm un prefix fix (ex. 'AIza') — Google
-        // a schimbat formatul cheilor (ex. noile chei încep cu 'AQ.'), iar un prefix
-        // hardcodat blochează cheile valide noi. Verificăm doar o lungime minimă rezonabilă.
-        const storedKey = localStorage.getItem(APIKEY_KEY);
-        if (storedKey && storedKey.length >= 15) {{
-            window.parent.postMessage({{ type: 'profesor_apikey', key: storedKey }}, '*');
-        }}
     }})();
-    </script>
-
-    <script>
-    window._saveApiKeyToStorage = function(key) {{
-        // FIX FORMAT CHEIE: acceptăm orice format de cheie (fără prefix fix),
-        // ca aplicația să funcționeze indiferent cum arată cheile Google în viitor.
-        if (key && key.length >= 15) {{
-            localStorage.setItem('profesor_api_key', key);
-        }}
-    }};
-    window._clearStoredApiKey = function() {{
-        localStorage.removeItem('profesor_api_key');
-    }};
     </script>
     """, height=0)
 
@@ -1361,7 +1359,7 @@ def repair_svg(svg_content: str) -> str:
 
     if 'xmlns=' not in svg_content:
         svg_content = svg_content.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"', 1)
-    if 'viewBox=' not in svg_content.lower():
+    if 'viewbox=' not in svg_content.lower():
         svg_content = svg_content.replace('<svg', '<svg viewBox="0 0 800 600"', 1)
 
     # Pasul 2: repară cu lxml dacă e disponibil
@@ -1401,7 +1399,7 @@ def validate_svg(svg_content: str) -> tuple:
 
     if _LXML_AVAILABLE:
         try:
-            parser = _lxml_etree.XMLParser(recover=True)
+            parser = _lxml_etree.XMLParser(recover=True, resolve_entities=False, no_network=True)
             tree = _lxml_etree.fromstring(svg_content.encode("utf-8"), parser)
             has_content = any(f'<{el}' in svg_content.lower() for el in visual_elements)
             if not has_content:
@@ -1462,6 +1460,41 @@ def _is_gfile_active(gfile) -> bool:
     return state_str in ("FileState.ACTIVE", "ACTIVE") or state_name == "ACTIVE"
 
 
+def _svg_is_wellformed(svg_content: str) -> bool:
+    """Un SVG afișat ca <img> trebuie să fie XML bine format (browserul nu tolerează erori)."""
+    try:
+        if _LXML_AVAILABLE:
+            _lxml_etree.fromstring(
+                svg_content.encode("utf-8"),
+                _lxml_etree.XMLParser(resolve_entities=False, no_network=True),
+            )
+        else:
+            import xml.etree.ElementTree as _ET
+            _ET.fromstring(svg_content)
+        return True
+    except Exception:
+        return False
+
+
+def _render_svg_as_image(svg_content: str, bg: str):
+    """Afișează SVG-ul ca <img src="data:image/svg+xml;base64,...">.
+
+    În contextul <img> browserul NU execută scripturi și nu încarcă resurse externe,
+    deci un SVG malițios nu poate citi localStorage (cheia API) și nu poate face XSS —
+    indiferent cât de bine sau prost a fost curățat de sanitize_svg().
+    """
+    import base64 as _b64
+    b64 = _b64.b64encode(svg_content.encode("utf-8")).decode("ascii")
+    st.markdown(
+        '<div style="text-align:center;margin:10px 0;">'
+        f'<img alt="Desen" src="data:image/svg+xml;base64,{b64}" '
+        f'style="width:100%;max-width:900px;height:auto;background:{bg};'
+        'border-radius:8px;padding:10px;box-sizing:border-box;"/>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+
 def render_message_with_svg(content: str):
     """Renderează mesajul cu suport îmbunătățit pentru SVG."""
     has_svg_markers = '[[DESEN_SVG]]' in content
@@ -1498,41 +1531,31 @@ def render_message_with_svg(content: str):
         
         if svg_code:
             svg_code = sanitize_svg(svg_code)
-            svg_code = repair_svg(svg_code)
+            svg_code = repair_svg(svg_code) or ""
             # Injectam <style> direct in SVG dupa primul tag <svg>
-            # Aceasta suprascrie ORICE background/fill alb pus de AI, indiferent de forma
+            # (într-un <img> CSS-ul paginii nu ajunge în SVG, deci culorile se pun aici)
             _dark_svg = st.session_state.get("dark_mode", False)
+            _bg   = "#0e1117" if _dark_svg else "#ffffff"
+            _text = "#fafafa" if _dark_svg else "#1a1a1a"
             _style_inject = (
                 "<style>"
                 "svg{background:transparent!important}"
                 "rect[id='bg'],rect[id='background'],rect.bg,rect.background{display:none!important}"
-                + ("text{fill:#e0e0e0!important}" if _dark_svg else "")
-                + "</style>"
+                f"text{{fill:{_text}!important}}"
+                f"rect[fill='white'],rect[fill='#fff'],rect[fill='#ffffff'],"
+                f"rect[fill='#FFF'],rect[fill='#FFFFFF']{{fill:{_bg}!important}}"
+                "</style>"
             )
-            svg_code = re.sub(r'(<svg[^>]*>)', r'\1' + _style_inject, svg_code, count=1)
+            svg_code = re.sub(r'(<svg[^>]*>)', lambda m: m.group(1) + _style_inject, svg_code, count=1)
             is_valid, error = validate_svg(svg_code)
-            
+            if is_valid and not _svg_is_wellformed(svg_code):
+                is_valid, error = False, "SVG-ul nu e XML valid"
+
             if is_valid:
                 if before_text.strip():
                     st.markdown(before_text.strip())
-                
-                # components.html reda SVG exact, fara sanitizare Streamlit
-                _is_dark = st.session_state.get("dark_mode", False)
-                _bg      = "#0e1117" if _is_dark else "#ffffff"
-                _text    = "#fafafa" if _is_dark else "#1a1a1a"
-                _svg_height = 650
-                components.html(
-                    f'''<style>
-                    html,body{{margin:0;padding:0;background:{_bg};}}
-                    .svg-wrap{{background:{_bg};width:100%;padding:10px 4px;box-sizing:border-box;border-radius:8px;}}
-                    svg{{background:transparent!important;max-width:100%;height:auto;}}
-                    svg text{{fill:{_text}!important;}}
-                    svg rect[fill="white"],svg rect[fill="#fff"],svg rect[fill="#ffffff"]{{fill:{_bg}!important;}}
-                    </style>
-                    <div class="svg-wrap">{svg_code}</div>''',
-                    height=_svg_height,
-                    scrolling=False,
-                )
+
+                _render_svg_as_image(svg_code, _bg)
                 
                 if after_text.strip():
                     st.markdown(after_text.strip())
@@ -1575,6 +1598,22 @@ inject_session_js()
 # ── Pasul 1: citește cheia studentului din session_state (salvată direct, fără URL)
 # FIX 1: cheia NU mai vine prin ?apikey= în URL — e salvată direct în session_state
 # la click pe "Salvează cheia" și persistată în localStorage de JS via _saveApiKeyToStorage()
+# Restaurăm cheia din localStorage (o singură dată pe sesiune Streamlit) și executăm
+# comenzile save/clear trimise de butoanele din sidebar. Doar dacă nu ai chei în secrets.
+_has_owner_keys = ("GOOGLE_API_KEYS" in st.secrets) or ("GOOGLE_API_KEY" in st.secrets)
+_kb_cmd = st.session_state.pop("_kb_cmd", None)
+if _key_bridge is not None and not _has_owner_keys:
+    _kb_val = _key_bridge(cmd=_kb_cmd, key="_kb_bridge", default=None)
+    if _kb_val is not None and not st.session_state.get("_kb_synced"):
+        st.session_state["_kb_synced"] = True
+        if (
+            isinstance(_kb_val, str)
+            and 15 <= len(_kb_val) <= 200
+            and not any(ch.isspace() for ch in _kb_val)
+            and not st.session_state.get("_manual_api_key")
+        ):
+            st.session_state["_manual_api_key"] = _kb_val
+
 saved_manual_key = st.session_state.get("_manual_api_key", "")
 
 # ── Pasul 2: construiește lista de chei (secrets + manuală) ──
@@ -1673,12 +1712,9 @@ with st.sidebar:
                 if is_plausible_key:
                     st.session_state["_manual_api_key"] = clean
                     keys.append(clean)
-                    # FIX 1: salvăm direct în localStorage via JS — cheia NU mai apare în URL
-                    components.html(
-                        f"<script>window.parent._saveApiKeyToStorage && "
-                        f"window.parent._saveApiKeyToStorage({json.dumps(clean)});</script>",
-                        height=0
-                    )
+                    # Salvăm în localStorage prin podul key_bridge (rulează la rerun-ul de mai jos)
+                    st.session_state["_kb_synced"] = True
+                    st.session_state["_kb_cmd"] = {"op": "save", "key": clean, "n": secrets.token_hex(4)}
                     st.toast("✅ Cheie salvată în browser!", icon="🔑")
                     st.rerun()
                 else:
@@ -1691,8 +1727,8 @@ with st.sidebar:
             if st.button("🗑️ Șterge cheia", use_container_width=True, key="del_api_key"):
                 st.session_state.pop("_manual_api_key", None)
                 st.query_params.pop("apikey", None)
-                # FIX 5: folosim components importat la nivel de modul
-                components.html("<script>localStorage.removeItem('profesor_api_key');</script>", height=0)
+                st.session_state["_kb_synced"] = True
+                st.session_state["_kb_cmd"] = {"op": "clear", "n": secrets.token_hex(4)}
                 st.rerun()
 
 if not keys:
@@ -5075,8 +5111,11 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None):
         )
 
     active_prompt = system_prompt or st.session_state.get("system_prompt") or SYSTEM_PROMPT
-    max_retries = max(len(keys) * 3, 6)
+    # Fiecare cheie poate parcurge tot lanțul de modele o dată (+ marjă pentru cache/503)
+    max_retries = len(keys) * len(MODEL_FALLBACKS_NO_CACHE) + 4
     last_error = None
+    _model_idx = 0   # poziția curentă în MODEL_FALLBACKS_NO_CACHE
+    _rotations = 0   # câte chei au fost deja epuizate/invalide în ACEST apel
     _deadline = time.time() + 45  # Timeout global: max 45 secunde de reîncercări
 
     # Încearcă să obțină un cache valid pentru system prompt
@@ -5088,15 +5127,12 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None):
             st.session_state.key_index = 0
         current_key = keys[st.session_state.key_index]
 
-        # Selectăm modelul: cu caching (prima încercare) sau fallback fără caching
+        # Selectăm modelul: cu caching (prima încercare) sau poziția curentă din lanțul de rezervă
+        cached_content_name = None  # definit înainte de try — folosit și în except
         if _use_cache and attempt == 0:
             model_name = MODEL_WITH_CACHE
         else:
-            fb_idx = min(
-                (attempt - 1) // max(len(keys), 1) if not _use_cache else attempt // max(len(keys), 1),
-                len(MODEL_FALLBACKS_NO_CACHE) - 1
-            )
-            model_name = MODEL_FALLBACKS_NO_CACHE[max(fb_idx, 0)]
+            model_name = MODEL_FALLBACKS_NO_CACHE[_model_idx]
 
         try:
             gemini_client = genai.Client(api_key=current_key)
@@ -5202,51 +5238,58 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None):
 
         except Exception as e:
             last_error = e
-            # FIX bug 4: folosim repr(e) + type pentru detecție robustă —
-            # str(e) poate fi gol sau fără codul de eroare pentru unele excepții Google API
+            # str(e) poate fi gol sau fără codul de eroare — folosim și repr(e)
             error_msg = str(e) + " " + repr(e)
+            _err_low = error_msg.lower()
 
-            # Dacă eroarea vine de la modelul cu caching, dezactivăm caching și reîncercăm
-            # cu modelul normal (nu rotăm cheia — cheia e OK, modelul/caching-ul e problema)
-            _is_cache_model_error = (
-                _use_cache and model_name == MODEL_WITH_CACHE
-                and cached_content_name is None  # caching a eșuat, nu cheia
-                and "400" not in error_msg       # nu e eroare de cheie
+            _is_invalid_key = (
+                "API key not valid" in error_msg
+                or "API_KEY_INVALID" in error_msg
+                or "api_key_invalid" in _err_low
+                or "invalid api key" in _err_low
             )
-            if _is_cache_model_error or (
+            # \b429\b: nu confundăm cu un "429" din mijlocul altui număr
+            _is_quota = (
+                re.search(r"\b429\b", error_msg) is not None
+                or "quota" in _err_low
+                or "rate_limit" in _err_low
+                or "rate limit" in _err_low
+                or "resource_exhausted" in _err_low
+            )
+            _cur_idx = (MODEL_FALLBACKS_NO_CACHE.index(model_name)
+                        if model_name in MODEL_FALLBACKS_NO_CACHE else 0)
+
+            # Eroare legată de caching (nu de cheie/quota): dezactivăm caching-ul și reîncercăm
+            if (
                 _use_cache and model_name == MODEL_WITH_CACHE
-                and ("not supported" in error_msg.lower() or "cach" in error_msg.lower())
+                and not (_is_invalid_key or _is_quota)
+                and (
+                    (cached_content_name is None and "400" not in error_msg)
+                    or "not supported" in _err_low
+                    or "cach" in _err_low
+                )
             ):
                 _use_cache = False
                 st.session_state["_ctx_cache_enabled"] = False
-                continue  # reîncearcă cu MODEL_FALLBACKS_NO_CACHE[0]
+                continue
 
-            # Erori de cheie invalidă (400 API_KEY_INVALID, 429 quota, rate limit) —
-            # tratate toate la fel: invalidăm cache-ul cheii și rotăm
-            _is_key_error = (
-                "API key not valid" in error_msg
-                or "API_KEY_INVALID" in error_msg
-                or "api_key_invalid" in error_msg.lower()
-                or "invalid api key" in error_msg.lower()
-                or "429" in error_msg
-                or "quota" in error_msg.lower()
-                or "rate_limit" in error_msg.lower()
-            )
-
-            if _is_key_error:
-                # Invalidăm cache-ul cheii care tocmai a eșuat
-                _invalidate_cache_for_key(current_key)
-                # Rotăm cheia; dacă am epuizat toate, afișăm mesaj prietenos
-                _quota_key = "_quota_rotations"
-                rotations = st.session_state.get(_quota_key, 0) + 1
-                st.session_state[_quota_key] = rotations
-                if len(keys) <= 1 or rotations >= len(keys):
-                    st.session_state.pop(_quota_key, None)
+            if _is_invalid_key or _is_quota:
+                if _is_invalid_key:
+                    _invalidate_cache_for_key(current_key)
+                # Quota Gemini e per MODEL și per PROIECT: încercăm întâi modelul următor
+                # cu aceeași cheie. Doar când lanțul de modele e epuizat rotim cheia.
+                if _is_quota and not _is_invalid_key and _cur_idx < len(MODEL_FALLBACKS_NO_CACHE) - 1:
+                    _model_idx = _cur_idx + 1
+                    st.toast(f"⚠️ Limită atinsă pe {model_name} — încerc {MODEL_FALLBACKS_NO_CACHE[_model_idx]}...", icon="🔄")
+                    continue
+                _rotations += 1
+                if len(keys) <= 1 or _rotations >= len(keys):
                     raise Exception(
                         "Toate cheile API sunt epuizate sau invalide. "
                         "Reîncearcă mai târziu sau adaugă o cheie personală în sidebar. 🔑"
                     )
                 st.session_state.key_index = (st.session_state.key_index + 1) % len(keys)
+                _model_idx = 0  # cheie nouă -> reluăm lanțul de la modelul principal
                 st.toast(f"⚠️ Cheie invalidă/epuizată — schimb la cheia {st.session_state.key_index + 1}...", icon="🔄")
                 time.sleep(0.5)
                 continue
@@ -5255,7 +5298,13 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None):
                 # 400 fără cheie invalidă = cerere malformată — nu are sens să reîncercăm
                 raise Exception(f"❌ Cerere invalidă (400): {error_msg}") from e
 
-            elif "503" in error_msg or "overloaded" in error_msg.lower() or "resource_exhausted" in error_msg.lower():
+            elif "503" in error_msg or "overloaded" in _err_low or "unavailable" in _err_low:
+                # Supraîncărcarea e de obicei per model: trecem la următorul model dacă mai există
+                if _cur_idx < len(MODEL_FALLBACKS_NO_CACHE) - 1:
+                    _model_idx = _cur_idx + 1
+                    st.toast(f"🐢 {model_name} ocupat — încerc {MODEL_FALLBACKS_NO_CACHE[_model_idx]}...", icon="⏳")
+                    time.sleep(0.5)
+                    continue
                 if time.time() >= _deadline:
                     raise Exception(
                         "Serviciul AI este supraîncărcat. Te rugăm să încerci din nou în câteva secunde. 🐢"
@@ -6860,9 +6909,15 @@ if st.session_state.get("_history_may_be_incomplete"):
         icon="⚠️"
     )
     if st.button("🔄 Verifică conexiunea acum", key="_check_conn_btn"):
-        # Forțăm re-marcarea ca online pentru a testa
-        st.session_state.pop("_sb_online", None)
-        st.session_state.pop("_history_may_be_incomplete", None)
+        # Testăm conexiunea ACUM. Dacă merge, _mark_supabase_online() trimite și coada offline.
+        st.session_state["_sb_retry_at"] = 0
+        try:
+            get_supabase_client().table("sessions").select("session_id").limit(1).execute()
+            _mark_supabase_online()
+            st.session_state.pop("_history_may_be_incomplete", None)
+        except Exception:
+            _mark_supabase_offline()
+            st.toast("Încă offline — mai încerc automat.", icon="📴")
         st.rerun()
 
 # === HANDLER RETRY după eroare de cheie API ===
