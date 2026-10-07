@@ -127,18 +127,14 @@ def _extract_text_from_uploaded_file(uploaded_file) -> str | None:
         except Exception as e:
             return f"⚠️ Nu s-a putut citi fișierul .docx: {e}"
 
-    # ── .doc (format vechi Word — binar): extragere text brut ──
-    # python-docx nu citește .doc vechi; extragem text brut cu regex pe bytes.
+    # ── .doc (format vechi Word — binar) ──
+    # Extragerea "text brut" din binar pierdea diacriticele și amesteca nume de fonturi/stiluri
+    # în text, deci modelul primea gunoi. Mai bine un mesaj clar decât un răspuns greșit.
     if fname.endswith(".doc") or ftype == "application/msword":
-        try:
-            # Extragem șiruri ASCII printabile din binarul .doc
-            text_chunks = re.findall(rb'[\x20-\x7E]{4,}', raw_bytes)
-            text = "\n".join(chunk.decode("ascii", errors="ignore") for chunk in text_chunks)
-            if not text.strip():
-                return "⚠️ Fișierul .doc pare a fi gol sau nu conține text lizibil."
-            return text[:MAX_TEXT_CHARS]
-        except Exception as e:
-            return f"⚠️ Nu s-a putut citi fișierul .doc: {e}"
+        return (
+            "⚠️ Fișierele **.doc** (Word vechi) nu pot fi citite corect — diacriticele se pierd. "
+            "Deschide documentul în Word sau LibreOffice, salvează-l ca **.docx** și încarcă-l din nou."
+        )
 
     # ── .dbf: dbfread ──
     if fname.endswith(".dbf") or "dbf" in ftype or "dbase" in ftype:
@@ -232,15 +228,17 @@ CLEANUP_DAYS_OLD = 90  # Păstrăm istoricul 90 de zile — acoperă vacanțe, p
 RATE_LIMIT_MAX_REQUESTS = 20    # cereri maxime per fereastră (per sesiune)
 RATE_LIMIT_WINDOW_SEC   = 60    # fereastra, în secunde
 RATE_LIMIT_SESSION_DAY  = 200   # cereri AI / zi / sesiune   (0 = dezactivat; override: secrets RATE_LIMIT_SESSION_DAY)
-RATE_LIMIT_GLOBAL_DAY   = 2000  # cereri AI / zi / toți elevii (0 = dezactivat; override: secrets RATE_LIMIT_GLOBAL_DAY)
+RATE_LIMIT_GLOBAL_DAY   = 1000  # cereri AI / zi / toți elevii (0 = dezactivat; override: secrets RATE_LIMIT_GLOBAL_DAY)
+                                # ≈ cota unui proiect Google pe zi (500 + 500 + 20); înmulțește cu nr. de proiecte din secrets
 # Contoarele stau într-un @st.cache_resource (vezi _get_rate_store): o variabilă globală din
 # script ar fi recreată la FIECARE rerun și limitatorul n-ar bloca niciodată nimic.
 
 # === MODEL GEMINI — singura sursă de adevăr pentru numele modelului ===
-# Lanț de rezervă (sept. 2026, prețuri per 1M tokeni input/output):
-#   1. gemini-3.1-flash-lite ($0.25/$1.50) — principal, cel mai ieftin, folosit implicit
-#   2. gemini-3.8-flash      ($0.75/$3.75, preț introductiv până 31 dec. 2026) — rezervă 1
-#   3. gemini-3.5-flash      ($1.50/$9.00) — rezervă 2, cel mai scump, ultima variantă
+# Lanț de rezervă (vezi MODEL_FALLBACKS_NO_CACHE în run_chat_with_rotation).
+# Limite free tier verificate pe dashboard (sept. 2026); cotele sunt per PROIECT Google și per model:
+#   1. gemini-3.1-flash-lite — principal            (15 RPM / 500 RPD)
+#   2. gemini-3.5-flash-lite — rezervă 1            (15 RPM / 500 RPD)
+#   3. gemini-3.8-flash      — rezervă 2, ultima    ( 5 RPM /  20 RPD)
 GEMINI_MODEL = "gemini-3.1-flash-lite"
 SUMMARIZE_AFTER_MESSAGES = 30   # Rezumăm când depășim acest număr de mesaje
 MESSAGES_KEPT_AFTER_SUMMARY = 10  # Câte mesaje recente păstrăm după rezumare
@@ -826,6 +824,46 @@ def _build_attachment_payload(media_content, text_file_content) -> list:
     return final_payload
 
 
+def _stream_preview(text: str) -> str:
+    """Textul afișat cât timp răspunsul se generează.
+
+    Codul unui desen (marker [[DESEN_SVG]], <svg> sau <path>) nu se arată elevului ca text brut:
+    afișăm doar ce e înaintea lui + un mesaj; desenul apare randat la final.
+    """
+    cut = len(text)
+    for marker in ("[[DESEN_SVG]]", "<svg", "<path"):
+        i = text.find(marker)
+        if i != -1:
+            cut = min(cut, i)
+    if cut < len(text):
+        return text[:cut].rstrip() + "\n\n*🎨 Domnul Profesor desenează...*\n\n▌"
+    return text + "▌"
+
+
+def _salvage_partial_response(e: Exception, partial: str, placeholder, context: str = "") -> bool:
+    """Stream-ul a căzut DUPĂ ce o parte din răspuns a ajuns la elev: o păstrăm (afișată + salvată).
+
+    Returnează True dacă am păstrat răspunsul parțial (handler-ul nu mai afișează eroarea).
+    Un desen SVG rămas neterminat e tăiat; sub ~40 de caractere considerăm că nu merită păstrat.
+    """
+    partial = (partial or "").strip()
+    cut = partial.rfind("<svg")
+    if cut != -1 and "</svg>" not in partial[cut:]:
+        partial = partial[:cut].rstrip()
+    if len(partial) < 40:
+        return False
+    _log(f"[AI] răspuns întrerupt ({context}) — păstrat parțial", "silent", e)
+    placeholder.empty()
+    render_message_with_svg(partial)
+    st.session_state.messages.append({"role": "assistant", "content": partial})
+    save_message_with_limits(st.session_state.session_id, "assistant", partial)
+    st.session_state.pop("_retry_history", None)
+    st.session_state.pop("_retry_payload", None)
+    st.warning("⚠️ Răspunsul s-a întrerupt (problemă temporară cu serviciul AI). "
+               "Scrie „continuă” ca să primești restul.")
+    return True
+
+
 # === ERORI AI — mesaje prietenoase pentru elevi, detalii tehnice doar în log ===
 
 def _show_ai_error(e: Exception, context: str = "") -> str:
@@ -840,6 +878,9 @@ def _show_ai_error(e: Exception, context: str = "") -> str:
     elif "cerere invalidă" in low or re.search(r"\b400\b", low):
         cat, msg = "bad_request", ("⚠️ Cererea nu a putut fi procesată (mesaj prea lung sau conținut neacceptat). "
                                    "Reformulează întrebarea sau încearcă cu un fișier mai mic.")
+    elif "niciun text" in low:
+        cat, msg = "empty", ("🤔 Nu am primit niciun răspuns de la AI (poate a fost blocat de filtre). "
+                             "Reformulează întrebarea și încearcă din nou.")
     elif any(x in low for x in ("timeout", "timed out", "connection", "connect", "network", "ssl")):
         cat, msg = "network", "📡 Problemă de conexiune cu serviciul AI. Verifică internetul și încearcă din nou."
     else:
@@ -1807,7 +1848,7 @@ with st.sidebar:
 **Pasul 6** — Lipește cheia mai jos și apasă **Salvează**.
 
 ---
-💡 **Limită gratuită:** 15 cereri/minut, 1 milion tokeni/zi — suficient pentru teme și exerciții.
+💡 **Limită gratuită:** depinde de model și se aplică per proiect Google (cereri pe minut și pe zi); o vezi în Google AI Studio. De obicei e suficientă pentru teme și exerciții.
                 """)
 
             # ── Câmpul de input și butonul de salvare ──
@@ -5236,8 +5277,16 @@ def _invalidate_cache_for_key(api_key: str) -> None:
     }
 
 
-def run_chat_with_rotation(history_obj, payload, system_prompt=None):
+def run_chat_with_rotation(history_obj, payload, system_prompt=None, live_stream=False):
     """Rulează chat cu rotație automată a cheilor API, fallback modele și context caching.
+
+    live_stream=False (implicit): răspunsul e colectat integral și emis la final — o eroare
+        la jumătatea stream-ului e reîncercată transparent (potrivit pentru SRT, teme, quiz,
+        rezumate, unde nu afișăm text pe măsură ce vine).
+    live_stream=True: bucățile sunt emise IMEDIAT (elevul vede răspunsul apărând). Reîncercările
+        (rotație cheie / model de rezervă) merg doar cât timp nu a fost emis nimic; dacă stream-ul
+        cade după prima bucată, excepția se propagă (o reîncercare ar dubla textul) și handler-ul
+        poate păstra răspunsul parțial — vezi _salvage_partial_response().
 
     Context Caching: system prompt-ul (~21k tokeni) e cached pentru 10 minute.
     Tokenii cached costă ~4× mai puțin decât tokenii normali (prețuri Gemini API).
@@ -5284,6 +5333,7 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None):
 
         # Selectăm modelul: cu caching (prima încercare) sau poziția curentă din lanțul de rezervă
         cached_content_name = None  # definit înainte de try — folosit și în except
+        _started = False            # True după ce prima bucată a fost emisă către UI (live_stream)
         if _use_cache and attempt == 0:
             model_name = MODEL_WITH_CACHE
         else:
@@ -5357,9 +5407,10 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None):
             _prompt_tokens = 0
             _output_tokens = 0
             for chunk in response_stream:
+                _piece = None
                 try:
                     if chunk.text:
-                        chunks.append(chunk.text)
+                        _piece = chunk.text
                     # Colectăm usage_metadata din ultimul chunk (Gemini îl include la final)
                     if hasattr(chunk, "usage_metadata") and chunk.usage_metadata:
                         um = chunk.usage_metadata
@@ -5369,6 +5420,16 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None):
                             _output_tokens = um.candidates_token_count
                 except Exception:
                     continue
+                if _piece:
+                    if live_stream:
+                        _started = True
+                        yield _piece          # elevul vede textul imediat
+                    else:
+                        chunks.append(_piece)
+
+            if live_stream and not _started:
+                # Fără text deloc (ex.: blocat de filtre / răspuns gol) — nu salvăm o bulă goală în chat
+                raise Exception("Modelul nu a returnat niciun text (posibil blocat de filtrele de siguranță).")
             # Actualizăm contoarele per cheie în session_state
             _key_id = f"_tokens_key_{st.session_state.get('key_index', 0)}"
             _prev = st.session_state.get(_key_id, {"prompt": 0, "output": 0, "calls": 0})
@@ -5393,6 +5454,9 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None):
 
         except Exception as e:
             last_error = e
+            if _started:
+                # Elevul a primit deja o parte din răspuns: o reîncercare ar dubla textul.
+                raise
             # str(e) poate fi gol sau fără codul de eroare — folosim și repr(e)
             error_msg = str(e) + " " + repr(e)
             _err_low = error_msg.lower()
@@ -5411,6 +5475,7 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None):
                 or "rate limit" in _err_low
                 or "resource_exhausted" in _err_low
             )
+            _is_overload = ("503" in error_msg or "overloaded" in _err_low or "unavailable" in _err_low)
             _cur_idx = (MODEL_FALLBACKS_NO_CACHE.index(model_name)
                         if model_name in MODEL_FALLBACKS_NO_CACHE else 0)
 
@@ -5419,7 +5484,7 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None):
                 _use_cache and model_name == MODEL_WITH_CACHE
                 and not (_is_invalid_key or _is_quota)
                 and (
-                    (cached_content_name is None and "400" not in error_msg)
+                    (cached_content_name is None and "400" not in error_msg and not _is_overload)
                     or "not supported" in _err_low
                     or "cach" in _err_low
                 )
@@ -5453,7 +5518,7 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None):
                 # 400 fără cheie invalidă = cerere malformată — nu are sens să reîncercăm
                 raise Exception(f"❌ Cerere invalidă (400): {error_msg}") from e
 
-            elif "503" in error_msg or "overloaded" in _err_low or "unavailable" in _err_low:
+            elif _is_overload:
                 # Supraîncărcarea e de obicei per model: trecem la următorul model dacă mai există
                 if _cur_idx < len(MODEL_FALLBACKS_NO_CACHE) - 1:
                     _model_idx = _cur_idx + 1
@@ -6385,7 +6450,7 @@ with st.sidebar:
         st.caption(f"🔑 Cheie API activă: {st.session_state.key_index + 1}/{len(keys)}")
 
         # ── Statistici token usage per cheie (sesiunea curentă) ──
-        # Notă: Gemini Free tier = 1.500 req/zi și 1.000.000 token/min per cheie.
+        # Notă: limitele free tier diferă pe model (vezi MODEL_FALLBACKS_NO_CACHE) și se aplică per proiect Google.
         # Nu avem acces la quota rămasă prin API — afișăm consumul din sesiunea curentă.
         _active_idx = st.session_state.get("key_index", 0)
         _key_id = f"_tokens_key_{_active_idx}"
@@ -6666,9 +6731,9 @@ if st.session_state.get("_quick_action"):
             full_response = ""
             message_placeholder.markdown(TYPING_HTML, unsafe_allow_html=True)
             try:
-                for text_chunk in run_chat_with_rotation(history_obj, [injected]):
+                for text_chunk in run_chat_with_rotation(history_obj, [injected], live_stream=True):
                     full_response += text_chunk
-                    message_placeholder.markdown(full_response + "▌")
+                    message_placeholder.markdown(_stream_preview(full_response))
                 message_placeholder.empty()
                 render_message_with_svg(full_response)
                 st.session_state.messages.append({"role": "assistant", "content": full_response})
@@ -6676,15 +6741,16 @@ if st.session_state.get("_quick_action"):
                 st.session_state.pop("_retry_history", None)
                 st.session_state.pop("_retry_payload", None)
             except Exception as e:
-                message_placeholder.empty()
-                _is_key_err = any(x in str(e) for x in ["epuizat", "invalide", "quota", "429", "API key"])
-                if _is_key_err:
-                    _show_ai_error(e, "acțiune rapidă")
-                    if st.button("🔄 Reîncercați răspunsul", key="_retry_quick_action", type="primary"):
-                        st.session_state["_pending_retry"] = True
-                        st.rerun()
-                else:
-                    _show_ai_error(e, "acțiune rapidă")
+                if not _salvage_partial_response(e, full_response, message_placeholder, "acțiune rapidă"):
+                    message_placeholder.empty()
+                    _is_key_err = any(x in str(e) for x in ["epuizat", "invalide", "quota", "429", "API key"])
+                    if _is_key_err:
+                        _show_ai_error(e, "acțiune rapidă")
+                        if st.button("🔄 Reîncercați răspunsul", key="_retry_quick_action", type="primary"):
+                            st.session_state["_pending_retry"] = True
+                            st.rerun()
+                    else:
+                        _show_ai_error(e, "acțiune rapidă")
     st.stop()
 
 # ── Handler mesaj în așteptare — materie nedetectată în mod Automat ──
@@ -6766,9 +6832,9 @@ if st.session_state.get("_suggested_question"):
         full_response = ""
         message_placeholder.markdown(TYPING_HTML, unsafe_allow_html=True)
         try:
-            for text_chunk in run_chat_with_rotation(history_obj, _sq_payload):
+            for text_chunk in run_chat_with_rotation(history_obj, _sq_payload, live_stream=True):
                 full_response += text_chunk
-                message_placeholder.markdown(full_response + "▌")
+                message_placeholder.markdown(_stream_preview(full_response))
             message_placeholder.empty()
             render_message_with_svg(full_response)
             st.session_state.messages.append({"role": "assistant", "content": full_response})
@@ -6776,16 +6842,17 @@ if st.session_state.get("_suggested_question"):
             st.session_state.pop("_retry_history", None)
             st.session_state.pop("_retry_payload", None)
         except Exception as e:
-            _sq_failed = True
-            message_placeholder.empty()
-            _is_key_err = any(x in str(e) for x in ["epuizat", "invalide", "quota", "429", "API key"])
-            if _is_key_err:
-                _show_ai_error(e, "întrebare sugerată")
-                if st.button("🔄 Reîncercați răspunsul", key="_retry_suggested", type="primary"):
-                    st.session_state["_pending_retry"] = True
-                    st.rerun()
-            else:
-                _show_ai_error(e, "întrebare sugerată")
+            _sq_failed = True   # fără rerun: mesajul (eroare / avertisment) trebuie să rămână vizibil
+            if not _salvage_partial_response(e, full_response, message_placeholder, "întrebare sugerată"):
+                message_placeholder.empty()
+                _is_key_err = any(x in str(e) for x in ["epuizat", "invalide", "quota", "429", "API key"])
+                if _is_key_err:
+                    _show_ai_error(e, "întrebare sugerată")
+                    if st.button("🔄 Reîncercați răspunsul", key="_retry_suggested", type="primary"):
+                        st.session_state["_pending_retry"] = True
+                        st.rerun()
+                else:
+                    _show_ai_error(e, "întrebare sugerată")
     # IMPORTANT: la eroare NU facem rerun — altfel mesajul de eroare dispare imediat
     if not _sq_failed:
         st.rerun()
@@ -7152,12 +7219,9 @@ if st.session_state.pop("_pending_retry", False):
             _rph.markdown(TYPING_HTML, unsafe_allow_html=True)
             _rfull = ""
             try:
-                for _chunk in run_chat_with_rotation(_retry_history, _retry_payload):
+                for _chunk in run_chat_with_rotation(_retry_history, _retry_payload, live_stream=True):
                     _rfull += _chunk
-                    if "<svg" in _rfull or ("<path" in _rfull and "stroke=" in _rfull):
-                        _rph.markdown(_rfull.split("<path")[0] + "\n\n*🎨 Domnul Profesor desenează...*\n\n▌")
-                    else:
-                        _rph.markdown(_rfull + "▌")
+                    _rph.markdown(_stream_preview(_rfull))
                 _rph.empty()
                 render_message_with_svg(_rfull)
                 st.session_state.messages.append({"role": "assistant", "content": _rfull})
@@ -7165,8 +7229,9 @@ if st.session_state.pop("_pending_retry", False):
                 st.session_state.pop("_retry_history", None)
                 st.session_state.pop("_retry_payload", None)
             except Exception as _re:
-                _rph.empty()
-                _show_ai_error(_re, "reîncercare")
+                if not _salvage_partial_response(_re, _rfull, _rph, "reîncercare"):
+                    _rph.empty()
+                    _show_ai_error(_re, "reîncercare")
     st.stop()
 
 # === CHAT INPUT ===
@@ -7567,7 +7632,7 @@ if user_input := st.chat_input("Întreabă profesorul..."):
             message_placeholder.markdown(TYPING_HTML, unsafe_allow_html=True)
 
             try:
-                stream_generator = run_chat_with_rotation(history_obj, final_payload)
+                stream_generator = run_chat_with_rotation(history_obj, final_payload, live_stream=True)
                 first_chunk = True
 
                 for text_chunk in stream_generator:
@@ -7575,12 +7640,7 @@ if user_input := st.chat_input("Întreabă profesorul..."):
                     if first_chunk:
                         first_chunk = False  # typing indicator dispare la primul chunk
 
-                    if "<svg" in full_response or ("<path" in full_response and "stroke=" in full_response):
-                        message_placeholder.markdown(
-                            full_response.split("<path")[0] + "\n\n*🎨 Domnul Profesor desenează...*\n\n▌"
-                        )
-                    else:
-                        message_placeholder.markdown(full_response + "▌")
+                    message_placeholder.markdown(_stream_preview(full_response))
 
                 message_placeholder.empty()
                 render_message_with_svg(full_response)
@@ -7592,14 +7652,15 @@ if user_input := st.chat_input("Întreabă profesorul..."):
                 st.session_state.pop("_retry_payload", None)
 
             except Exception as e:
-                message_placeholder.empty()
-                err_str = str(e)
-                # Dacă eroarea e de cheie/quota, oferim buton de reîncercare automată
-                _is_key_err = any(x in err_str for x in ["epuizat", "invalide", "quota", "429", "API key"])
-                if _is_key_err:
-                    _show_ai_error(e, "chat")
-                    if st.button("🔄 Reîncercați răspunsul", key="_retry_after_key_error", type="primary"):
-                        st.session_state["_pending_retry"] = True
-                        st.rerun()
-                else:
-                    _show_ai_error(e, "chat")
+                if not _salvage_partial_response(e, full_response, message_placeholder, "chat"):
+                    message_placeholder.empty()
+                    err_str = str(e)
+                    # Dacă eroarea e de cheie/quota, oferim buton de reîncercare automată
+                    _is_key_err = any(x in err_str for x in ["epuizat", "invalide", "quota", "429", "API key"])
+                    if _is_key_err:
+                        _show_ai_error(e, "chat")
+                        if st.button("🔄 Reîncercați răspunsul", key="_retry_after_key_error", type="primary"):
+                            st.session_state["_pending_retry"] = True
+                            st.rerun()
+                    else:
+                        _show_ai_error(e, "chat")
