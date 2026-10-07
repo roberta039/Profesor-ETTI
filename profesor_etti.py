@@ -11,6 +11,7 @@ import random
 import re
 import hashlib
 import secrets
+import threading
 from collections import defaultdict
 import pathlib
 
@@ -223,14 +224,17 @@ MAX_MESSAGES_TO_SEND_TO_AI = 20
 MAX_MESSAGES_IN_DB_PER_SESSION = 500
 CLEANUP_DAYS_OLD = 90  # Păstrăm istoricul 90 de zile — acoperă vacanțe, pauze lungi
 
-# === RATE LIMITING (per sesiune — proxy pentru IP în Streamlit Cloud) ===
-# Streamlit Cloud nu expune IP-ul direct; session_id e unic per browser/tab.
-# 20 cereri/minut e suficient pentru uz normal (student care scrie și trimite mesaje).
-# Mărește RATE_LIMIT_MAX_REQUESTS dacă studenții primesc false-positive des.
-RATE_LIMIT_MAX_REQUESTS = 20   # cereri maxime per fereastră
-RATE_LIMIT_WINDOW_SEC   = 60   # fereastră de timp în secunde (1 minut)
-# Stocare în memorie — se resetează la restart server (comportament corect pentru rate limiting)
-_RATE_LIMIT_STORE: dict = defaultdict(list)
+# === RATE LIMITING (minut + zi per sesiune + plafon global pe zi) ===
+# Streamlit Cloud nu expune IP-ul direct; session_id e unic per browser/tab, dar clientul
+# și-l poate schimba (tab nou). De aceea există și un plafon GLOBAL pe zi.
+# Limitele zilnice se aplică DOAR când folosești cheile tale din secrets (cota ta partajată);
+# un elev care folosește propria cheie personală e limitat doar pe minut.
+RATE_LIMIT_MAX_REQUESTS = 20    # cereri maxime per fereastră (per sesiune)
+RATE_LIMIT_WINDOW_SEC   = 60    # fereastra, în secunde
+RATE_LIMIT_SESSION_DAY  = 200   # cereri AI / zi / sesiune   (0 = dezactivat; override: secrets RATE_LIMIT_SESSION_DAY)
+RATE_LIMIT_GLOBAL_DAY   = 2000  # cereri AI / zi / toți elevii (0 = dezactivat; override: secrets RATE_LIMIT_GLOBAL_DAY)
+# Contoarele stau într-un @st.cache_resource (vezi _get_rate_store): o variabilă globală din
+# script ar fi recreată la FIECARE rerun și limitatorul n-ar bloca niciodată nimic.
 
 # === MODEL GEMINI — singura sursă de adevăr pentru numele modelului ===
 # Lanț de rezervă (sept. 2026, prețuri per 1M tokeni input/output):
@@ -242,47 +246,6 @@ SUMMARIZE_AFTER_MESSAGES = 30   # Rezumăm când depășim acest număr de mesaj
 MESSAGES_KEPT_AFTER_SUMMARY = 10  # Câte mesaje recente păstrăm după rezumare
 
 # === ISTORIC CONVERSAȚII ===
-def get_session_list(limit: int = 20) -> list[dict]:
-    """Returnează lista sesiunilor folosind view-ul session_previews din Supabase.
-
-    Un singur query în loc de două — agregarea se face în DB, nu în Python.
-    View-ul returnează direct: session_id, app_id, last_active, msg_count, preview.
-
-    Cache: invalidat imediat după orice modificare (mesaj nou, sesiune ștearsă etc.)
-    """
-    cache_ts  = st.session_state.get("_sess_list_ts", 0)
-    cache_val = st.session_state.get("_sess_list_cache", None)
-    force_refresh = st.session_state.get("_sess_cache_dirty", False)
-    if force_refresh:
-        st.session_state["_sess_cache_dirty"] = False
-
-    if not force_refresh and cache_val is not None and (time.time() - cache_ts) < 5:
-        return cache_val
-
-    try:
-        supabase = get_supabase_client()
-
-        # Un singur query pe view-ul session_previews (agregare în DB)
-        resp = (
-            supabase.table("session_previews")
-            .select("session_id, last_active, msg_count, preview")
-            .eq("app_id", get_app_id())
-            .gt("msg_count", 0)
-            .order("last_active", desc=True)
-            .limit(limit)
-            .execute()
-        )
-        result = resp.data or []
-
-        st.session_state["_sess_list_cache"] = result
-        st.session_state["_sess_list_ts"]    = time.time()
-        return result
-
-    except Exception as e:
-        _log("Eroare la încărcarea sesiunilor", "silent", e)
-        return cache_val or []
-
-
 def _cleanup_gfiles() -> None:
     """Șterge toate fișierele uploadate pe Google Files API din sesiunea curentă.
     Apelat la switch sesiune, conversație nouă și explicit de utilizator.
@@ -702,38 +665,188 @@ def _log(msg: str, level: str = "silent", exc: Exception = None):
 
 # === RATE LIMITING ===
 
-def check_rate_limit(session_id: str) -> tuple[bool, int]:
-    """Verifică dacă sesiunea a depășit rata maximă de cereri.
+@st.cache_resource
+def _get_rate_store() -> dict:
+    """Store partajat între toate sesiunile și între rerun-uri (trăiește cât procesul serverului)."""
+    return {
+        "lock": threading.Lock(),
+        "minute": defaultdict(list),     # session_id -> [timestamps] (fereastră glisantă)
+        "day": "",                       # ziua de cotă curentă
+        "session_day": defaultdict(int), # session_id -> cereri azi
+        "global_day": 0,                 # cereri azi, toate sesiunile
+    }
 
-    Folosește sliding window (fereastră glisantă) — mai precis decât fixed window.
-    _RATE_LIMIT_STORE e un dict global în memorie: se resetează la restart server,
-    ceea ce e comportamentul corect (nu vrem să penalizăm studenții după un deployment).
+
+def _quota_day() -> str:
+    """Ziua de cotă Gemini: RPD se resetează la miezul nopții Pacific (≈ 10:00 ora României)."""
+    from datetime import datetime, timedelta, timezone
+    try:
+        from zoneinfo import ZoneInfo
+        return datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")
+    except Exception:
+        return (datetime.now(timezone.utc) - timedelta(hours=8)).strftime("%Y-%m-%d")
+
+
+def _owner_keys_in_use() -> bool:
+    """True dacă aplicația rulează cu cheile tale din secrets (cota partajată a tuturor elevilor)."""
+    try:
+        return ("GOOGLE_API_KEYS" in st.secrets) or ("GOOGLE_API_KEY" in st.secrets)
+    except Exception:
+        return False
+
+
+def _rl_int(name: str, default: int) -> int:
+    try:
+        return int(st.secrets.get(name, default))
+    except Exception:
+        return default
+
+
+def check_rate_limit(session_id: str, cost: int = 1, burst: bool = True) -> tuple[bool, int]:
+    """Verifică limitele: per minut (sesiune), per zi (sesiune) și per zi (global).
+
+    cost  — câte apeluri AI consumă acțiunea (ex.: poză = OCR + corectare = 2).
+    burst — dacă True, cererea contează și în fereastra de 1 minut; False = doar taxare
+            zilnică suplimentară (ex.: bucățile unei traduceri SRT).
+    Setează st.session_state["_rl_reason"] la "minute" | "session_day" | "global_day" când refuză.
 
     Returns:
-        (allowed, remaining) — dacă cererea e permisă și câte mai are disponibile.
+        (allowed, remaining_in_minute)
     """
-    now          = time.time()
+    store = _get_rate_store()
+    now = time.time()
     window_start = now - RATE_LIMIT_WINDOW_SEC
+    owner = _owner_keys_in_use()
+    sess_lim = _rl_int("RATE_LIMIT_SESSION_DAY", RATE_LIMIT_SESSION_DAY) if owner else 0
+    glob_lim = _rl_int("RATE_LIMIT_GLOBAL_DAY", RATE_LIMIT_GLOBAL_DAY) if owner else 0
+    today = _quota_day()
 
-    # Curăță cererile mai vechi decât fereastra (sliding window)
-    _RATE_LIMIT_STORE[session_id] = [
-        t for t in _RATE_LIMIT_STORE[session_id] if t > window_start
-    ]
+    with store["lock"]:
+        if store["day"] != today:               # zi nouă de cotă -> resetăm contoarele zilnice
+            store["day"] = today
+            store["session_day"].clear()
+            store["global_day"] = 0
 
-    count = len(_RATE_LIMIT_STORE[session_id])
-    if count >= RATE_LIMIT_MAX_REQUESTS:
-        return False, 0
+        hist = [t for t in store["minute"][session_id] if t > window_start]
+        store["minute"][session_id] = hist
 
-    _RATE_LIMIT_STORE[session_id].append(now)
+        reason = None
+        if burst and len(hist) >= RATE_LIMIT_MAX_REQUESTS:
+            reason = "minute"
+        elif sess_lim > 0 and store["session_day"][session_id] + cost > sess_lim:
+            reason = "session_day"
+        elif glob_lim > 0 and store["global_day"] + cost > glob_lim:
+            reason = "global_day"
 
-    # Curăță sesiunile inactive din store (evită memory leak la multe sesiuni unice)
-    if len(_RATE_LIMIT_STORE) > 5000:
-        dead = [k for k, v in _RATE_LIMIT_STORE.items()
-                if not v or v[-1] < window_start]
-        for k in dead:
-            del _RATE_LIMIT_STORE[k]
+        if reason:
+            st.session_state["_rl_reason"] = reason
+            return False, 0
 
-    return True, RATE_LIMIT_MAX_REQUESTS - count - 1
+        if burst:
+            hist.append(now)
+        if owner:
+            store["session_day"][session_id] += cost
+            store["global_day"] += cost
+
+        # Curăță sesiunile inactive (evită memory leak la multe sesiuni unice)
+        if len(store["minute"]) > 5000:
+            for k in [k for k, v in store["minute"].items() if not v or v[-1] < window_start]:
+                del store["minute"][k]
+            for k in [k for k in store["session_day"] if k not in store["minute"]]:
+                del store["session_day"][k]
+
+        remaining = RATE_LIMIT_MAX_REQUESTS - len(hist)
+
+    st.session_state["_rl_reason"] = None
+    return True, remaining
+
+
+def enforce_rate_limit(cost: int = 1, burst: bool = True) -> bool:
+    """Aplică limitele și arată mesajul potrivit. True = poți continua cu apelul AI."""
+    allowed, remaining = check_rate_limit(st.session_state.get("session_id", "anon"), cost=cost, burst=burst)
+    if allowed:
+        if burst and remaining <= 3:
+            st.toast(f"⚠️ Mai ai {remaining} cereri disponibile în acest minut.", icon="⏱️")
+        return True
+
+    reason = st.session_state.get("_rl_reason")
+    if reason == "session_day":
+        msg = (f"📅 **Ai atins limita zilnică de {_rl_int('RATE_LIMIT_SESSION_DAY', RATE_LIMIT_SESSION_DAY)} "
+               "de cereri.** Se resetează zilnic în jurul orei 10:00 (ora României).")
+    elif reason == "global_day":
+        msg = ("📅 **Serviciul gratuit a atins limita zilnică pentru toți elevii.** "
+               "Se resetează zilnic în jurul orei 10:00 (ora României). Revino atunci!")
+    else:
+        msg = (f"⏱️ **Prea multe cereri!** Ai trimis {RATE_LIMIT_MAX_REQUESTS} mesaje "
+               "în ultimul minut. Așteaptă câteva secunde și încearcă din nou.")
+    st.warning(msg, icon="🛑")
+    return False
+
+
+def _build_attachment_payload(media_content, text_file_content) -> list:
+    """Părțile de payload pentru fișierul atașat (imagine/PDF = Google File; text = injectat în prompt)."""
+    final_payload = []
+    if media_content:
+        # Prompt contextual bazat pe tipul fișierului încărcat
+        # FIX: uploaded_file poate fi out-of-scope — citim din session_state
+        _uf = st.session_state.get("_current_uploaded_file_meta", {})
+        fname = _uf.get("name", "")
+        ftype = _uf.get("type", "") or ""
+        if ftype.startswith("image/"):
+            final_payload.append(
+                "Studentul ți-a trimis o imagine. Analizează-o vizual complet: "
+                "descrie ce vezi (obiecte, persoane, text, culori, forme, diagrame, exerciții scrise de mână) "
+                "și răspunde la întrebarea studentului ținând cont de tot conținutul vizual."
+            )
+        else:
+            final_payload.append(
+                f"Studentul ți-a trimis documentul '{fname}'. "
+                "Citește și analizează tot conținutul înainte de a răspunde."
+            )
+        final_payload.append(media_content)
+    elif text_file_content:
+        # Fișier text (txt/docx/doc/dbf/srt) — injectăm conținutul direct în prompt
+        _uf = st.session_state.get("_current_uploaded_file_meta", {})
+        fname = _uf.get("name", "")
+        fname_lower = fname.lower()
+        if fname_lower.endswith(".srt"):
+            file_desc = "un fișier de subtitrare (.srt)"
+        elif fname_lower.endswith((".docx", ".doc")):
+            file_desc = "un document Word"
+        elif fname_lower.endswith(".dbf"):
+            file_desc = "o bază de date DBF"
+        else:
+            file_desc = "un fișier text"
+        final_payload.append(
+            f"Studentul ți-a trimis {file_desc} cu numele '{fname}'. "
+            f"Conținutul complet al fișierului este:\n\n"
+            f"--- ÎNCEPUT FIȘIER ---\n{text_file_content}\n--- SFÂRȘIT FIȘIER ---\n\n"
+            f"Analizează conținutul de mai sus și răspunde la întrebarea studentului."
+        )
+    return final_payload
+
+
+# === ERORI AI — mesaje prietenoase pentru elevi, detalii tehnice doar în log ===
+
+def _show_ai_error(e: Exception, context: str = "") -> str:
+    """Loghează excepția pe server și arată un mesaj prietenos. Returnează categoria erorii."""
+    _log(f"[AI] eroare{' (' + context + ')' if context else ''}", "silent", e)
+    low = (str(e) + " " + repr(e)).lower()
+    if "toate cheile" in low or "epuizat" in low or "quota" in low or re.search(r"\b429\b", low):
+        cat, msg = "quota", ("⏳ Serviciul AI gratuit a atins temporar limita de utilizare. "
+                             "Încearcă din nou peste câteva minute.")
+    elif "supraînc" in low or "overloaded" in low or re.search(r"\b503\b", low):
+        cat, msg = "overload", "🐢 Serviciul AI este aglomerat acum. Încearcă din nou în câteva secunde."
+    elif "cerere invalidă" in low or re.search(r"\b400\b", low):
+        cat, msg = "bad_request", ("⚠️ Cererea nu a putut fi procesată (mesaj prea lung sau conținut neacceptat). "
+                                   "Reformulează întrebarea sau încearcă cu un fișier mai mic.")
+    elif any(x in low for x in ("timeout", "timed out", "connection", "connect", "network", "ssl")):
+        cat, msg = "network", "📡 Problemă de conexiune cu serviciul AI. Verifică internetul și încearcă din nou."
+    else:
+        cat, msg = "other", ("❌ A apărut o problemă neașteptată. Încearcă din nou; "
+                             "dacă se repetă, anunță administratorul aplicației.")
+    st.error(msg)
+    return cat
 
 
 def init_db():
@@ -1049,8 +1162,14 @@ def get_or_create_session_id() -> str:
 
     if is_valid_session_id(sid_from_url):
         # URL are ?sid= valid — înregistrează dacă e nou, altfel restaurează
-        if not session_exists_in_db(sid_from_url):
-            register_session(sid_from_url)
+        # O singură verificare în DB per SID și sesiune Streamlit (înainte: un query la FIECARE rerun).
+        # Nu marcăm SID-ul ca verificat cât Supabase e offline — altfel nu s-ar mai înregistra niciodată.
+        _reg_sids = st.session_state.setdefault("_sid_registered", set())
+        if sid_from_url not in _reg_sids:
+            if not session_exists_in_db(sid_from_url):
+                register_session(sid_from_url)
+            if st.session_state.get("_sb_online", True):
+                _reg_sids.add(sid_from_url)
         st.session_state["session_id"] = sid_from_url
         # FIX PERSISTENȚĂ LISTĂ CONVERSAȚII: dacă gate-ul de mai jos a transmis
         # ?known= la restaurare (vezi blocul JS), îl absorbim aici în session_state
@@ -1155,13 +1274,13 @@ def trim_session_messages():
         current_count = len(st.session_state.messages)
 
         if current_count > MAX_MESSAGES_IN_MEMORY:
-            excess = current_count - MAX_MESSAGES_IN_MEMORY
-            first_msg = st.session_state.messages[0] if st.session_state.messages else None
-            st.session_state.messages = st.session_state.messages[excess:]
-            # Re-inserează primul mesaj dacă nu e deja prezent (context inițial)
-            if first_msg and (not st.session_state.messages or st.session_state.messages[0] != first_msg):
-                st.session_state.messages.insert(0, first_msg)
-            st.toast(f"📝 Am arhivat {excess} mesaje vechi pentru performanță.", icon="📦")
+            msgs = st.session_state.messages
+            # Păstrăm primul mesaj + ultimele (MAX-1) => exact MAX (înainte rămâneau MAX+1,
+            # deci se re-tăia și apărea toast-ul la fiecare mesaj nou).
+            st.session_state.messages = [msgs[0]] + msgs[-(MAX_MESSAGES_IN_MEMORY - 1):]
+            if not st.session_state.get("_trim_notified"):
+                st.session_state["_trim_notified"] = True
+                st.toast("📝 Conversația e lungă: mesajele vechi au fost arhivate pentru performanță.", icon="📦")
 
 
 def summarize_conversation(messages: list) -> str | None:
@@ -1274,10 +1393,14 @@ def save_message_with_limits(session_id: str, role: str, content: str):
     save_message_to_db(session_id, role, content)
     invalidate_session_cache()  # FIX: un mesaj nou înseamnă date noi în sidebar
     
-    # Rulează trim în același thread — Streamlit nu e thread-safe
-    # Rulăm la fiecare 50 mesaje pentru a nu bloca UI-ul la fiecare salvare
-    if len(st.session_state.get("messages", [])) % 50 == 0:
+    # Rulează trim în același thread — Streamlit nu e thread-safe.
+    # Contor de salvări (nu len(messages) % 50: lista e plafonată la MAX_MESSAGES_IN_MEMORY,
+    # deci condiția devenea adevărată la FIECARE mesaj odată ajuns la plafon).
+    _saves = st.session_state.get("_db_saves_since_trim", 0) + 1
+    if _saves >= 50:
         trim_db_messages(session_id)
+        _saves = 0
+    st.session_state["_db_saves_since_trim"] = _saves
     
     trim_session_messages()
 
@@ -4482,7 +4605,7 @@ safety_settings = [
 
 
 
-def extract_text_from_photo(image_bytes: bytes, materie_label: str) -> str:
+def extract_text_from_photo(image_bytes: bytes, materie_label: str, mime_type: str = "image/jpeg") -> str:
     """Extrage textul scris de mână dintr-o fotografie folosind Gemini Vision.
     
     Folosește Google Files API (upload real) în loc de base64 inline —
@@ -4495,10 +4618,11 @@ def extract_text_from_photo(image_bytes: bytes, materie_label: str) -> str:
         # FIX bug 1: upload-ul fișierului e mutat ÎNĂUNTRUL contextului with —
         # tmp_path există garantat când îl folosim, TemporaryDirectory îl curăță după ieșire
         with tempfile.TemporaryDirectory() as tmpdir:
-            tmp_path = os.path.join(tmpdir, "upload.jpg")
+            _ext = {"image/png": ".png", "image/webp": ".webp", "image/heic": ".heic", "image/heif": ".heif"}.get(mime_type, ".jpg")
+            tmp_path = os.path.join(tmpdir, "upload" + _ext)
             with open(tmp_path, "wb") as tmp:
                 tmp.write(image_bytes)
-            gfile = gemini_client.files.upload(file=tmp_path, config=genai_types.UploadFileConfig(mime_type="image/jpeg"))
+            gfile = gemini_client.files.upload(file=tmp_path, config=genai_types.UploadFileConfig(mime_type=mime_type))
         # Fișierul temporar a fost șters de TemporaryDirectory; gfile (referința Google) rămâne validă
 
         poll = 0
@@ -4537,7 +4661,8 @@ def extract_text_from_photo(image_bytes: bytes, materie_label: str) -> str:
                 pass
 
     except Exception as e:
-        return f"[Eroare la citirea pozei: {e}]"
+        _log("Eroare OCR poză", "silent", e)
+        return "[Eroare la citirea pozei]"
 
 
 # ============================================================
@@ -4601,6 +4726,26 @@ def get_homework_correction_prompt(materie_label: str, text_tema: str, from_phot
     )
 
 
+def _run_homework_correction(hw_materie: str, text: str, from_photo: bool):
+    """Generează corectarea temei. La eroare arată un mesaj prietenos și returnează None."""
+    try:
+        prompt = get_homework_correction_prompt(hw_materie, text, from_photo=from_photo)
+        return "".join(run_chat_with_rotation(
+            [], [prompt],
+            system_prompt=get_system_prompt(
+                materie=MATERII.get(hw_materie),
+                pas_cu_pas=st.session_state.get("pas_cu_pas", False),
+                mod_avansat=st.session_state.get("mod_avansat", False),
+                mod_strategie=st.session_state.get("mod_strategie", False),
+                mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+                mod_engleza=st.session_state.get("mod_engleza", False),
+            )
+        ))
+    except Exception as e:
+        _show_ai_error(e, "corectare temă")
+        return None
+
+
 def run_homework_ui():
     st.subheader("📚 Corectare Temă")
 
@@ -4634,29 +4779,41 @@ def run_homework_ui():
             )
 
             if hw_photo and not st.session_state.get("hw_ocr_done"):
-                st.image(hw_photo, caption="Fotografia încărcată", use_container_width=True)
-                with st.spinner("🔍 Profesorul citește tema..."):
-                    text_extras = extract_text_from_photo(hw_photo.read(), hw_materie)
-                st.session_state.hw_text       = text_extras
-                st.session_state.hw_ocr_done   = True
-                st.session_state.hw_from_photo = True
-                st.session_state.hw_materie    = hw_materie
-                with st.spinner("📝 Se corectează tema..."):
-                    prompt = get_homework_correction_prompt(hw_materie, text_extras, from_photo=True)
-                    corectare = "".join(run_chat_with_rotation(
-                        [], [prompt],
-                        system_prompt=get_system_prompt(
-                            materie=MATERII.get(hw_materie),
-                            pas_cu_pas=st.session_state.get("pas_cu_pas", False),
-                            mod_avansat=st.session_state.get("mod_avansat", False),
-                            mod_strategie=st.session_state.get("mod_strategie", False),
-                            mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
-                            mod_engleza=st.session_state.get("mod_engleza", False),
-                        )
-                    ))
-                st.session_state.hw_corectare = corectare
-                st.session_state.hw_done      = True
-                st.rerun()
+                try:
+                    st.image(hw_photo, caption="Fotografia încărcată", use_container_width=True)
+                except Exception:
+                    # ex. HEIC: browserul/Pillow nu o poate previzualiza, dar Gemini o poate citi
+                    st.caption(f"📎 {hw_photo.name} (previzualizare indisponibilă pentru acest format)")
+                if st.session_state.get("hw_ocr_failed_for") == hw_photo.name:
+                    # OCR eșuat: NU corectăm niciodată textul de eroare ca și cum ar fi tema elevului
+                    st.error("❌ Nu am putut citi tema din poză. Încearcă o poză mai clară "
+                             "sau lipește textul în tabul „Scrie / lipește textul”.")
+                    if st.button("🔄 Încearcă din nou", key="hw_ocr_retry"):
+                        st.session_state.pop("hw_ocr_failed_for", None)
+                        st.rerun()
+                else:
+                    if not enforce_rate_limit(cost=2):  # OCR + corectare = 2 apeluri AI
+                        st.stop()
+                    with st.spinner("🔍 Profesorul citește tema..."):
+                        text_extras = extract_text_from_photo(hw_photo.read(), hw_materie, hw_photo.type or "image/jpeg")
+                    if not text_extras or text_extras.startswith("[Eroare"):
+                        st.session_state["hw_ocr_failed_for"] = hw_photo.name
+                        st.rerun()
+                    st.session_state.hw_text       = text_extras
+                    st.session_state.hw_ocr_done   = True
+                    st.session_state.hw_from_photo = True
+                    st.session_state.hw_materie    = hw_materie
+                    with st.spinner("📝 Se corectează tema..."):
+                        corectare = _run_homework_correction(hw_materie, text_extras, from_photo=True)
+                    if corectare is not None:
+                        st.session_state.hw_corectare = corectare
+                        st.session_state.hw_done      = True
+                        st.rerun()
+                    # Corectarea a eșuat, dar textul din poză e bun: îl punem în tabul de text
+                    # ca elevul să poată apăsa „Corectează tema” fără să mai facă poza.
+                    st.session_state["hw_text_input"] = text_extras
+                    st.info("📄 Am citit tema din poză. Apasă **Corectează tema** în tabul "
+                            "„Scrie / lipește textul” ca să reîncerci corectarea.")
             elif hw_photo and st.session_state.get("hw_ocr_done"):
                 with st.expander("📄 Text extras din poză", expanded=False):
                     st.text(st.session_state.get("hw_text", ""))
@@ -4674,22 +4831,14 @@ def run_homework_ui():
                          use_container_width=True, disabled=not hw_text.strip()):
                 st.session_state.hw_materie    = hw_materie
                 st.session_state.hw_from_photo = False
+                if not enforce_rate_limit():
+                    st.stop()
                 with st.spinner("📝 Se corectează tema..."):
-                    prompt = get_homework_correction_prompt(hw_materie, hw_text, from_photo=False)
-                    corectare = "".join(run_chat_with_rotation(
-                        [], [prompt],
-                        system_prompt=get_system_prompt(
-                            materie=MATERII.get(hw_materie),
-                            pas_cu_pas=st.session_state.get("pas_cu_pas", False),
-                            mod_avansat=st.session_state.get("mod_avansat", False),
-                            mod_strategie=st.session_state.get("mod_strategie", False),
-                            mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
-                            mod_engleza=st.session_state.get("mod_engleza", False),
-                        )
-                    ))
-                st.session_state.hw_corectare = corectare
-                st.session_state.hw_done      = True
-                st.rerun()
+                    corectare = _run_homework_correction(hw_materie, hw_text, from_photo=False)
+                if corectare is not None:
+                    st.session_state.hw_corectare = corectare
+                    st.session_state.hw_done      = True
+                    st.rerun()
 
     else:
         mat = st.session_state.get("hw_materie", "")
@@ -4888,21 +5037,27 @@ def run_quiz_ui():
 
         if st.button("🚀 Generează Quiz", type="primary", use_container_width=True):
             quiz_materie_val = MATERII[quiz_materie_label]
-            with st.spinner("📝 Profesorul pregătește întrebările..."):
-                prompt = get_quiz_prompt(quiz_materie_label, quiz_nivel, quiz_materie_val)
-                full_resp = ""
-                for chunk in run_chat_with_rotation(
-                    [], [prompt],
-                    system_prompt=get_system_prompt(
-                        materie=quiz_materie_val,
-                        pas_cu_pas=st.session_state.get("pas_cu_pas", False),
-                        mod_avansat=st.session_state.get("mod_avansat", False),
-                        mod_strategie=st.session_state.get("mod_strategie", False),
-                        mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
-                        mod_engleza=st.session_state.get("mod_engleza", False),
-                    )
-                ):
-                    full_resp += chunk
+            if not enforce_rate_limit():
+                st.stop()
+            try:
+                with st.spinner("📝 Profesorul pregătește întrebările..."):
+                    prompt = get_quiz_prompt(quiz_materie_label, quiz_nivel, quiz_materie_val)
+                    full_resp = ""
+                    for chunk in run_chat_with_rotation(
+                        [], [prompt],
+                        system_prompt=get_system_prompt(
+                            materie=quiz_materie_val,
+                            pas_cu_pas=st.session_state.get("pas_cu_pas", False),
+                            mod_avansat=st.session_state.get("mod_avansat", False),
+                            mod_strategie=st.session_state.get("mod_strategie", False),
+                            mod_bac_intensiv=st.session_state.get("mod_bac_intensiv", False),
+                            mod_engleza=st.session_state.get("mod_engleza", False),
+                        )
+                    ):
+                        full_resp += chunk
+            except Exception as e:
+                _show_ai_error(e, "quiz")
+                return
 
             questions_text, correct = parse_quiz_response(full_resp)
             if len(correct) >= 3:
@@ -5863,9 +6018,22 @@ with st.sidebar:
                 key="_dl_srt_sidebar",
             )
 
-    if st.button("🗑️ Șterge Istoricul", type="primary"):
-        clear_history_db(st.session_state.session_id)
-        st.session_state.messages = []
+    # Confirmare în doi pași; flag-ul e legat de sesiunea curentă (nu ștergem altă conversație din greșeală)
+    if st.session_state.get("_confirm_clear_current") == st.session_state.session_id:
+        st.warning("Ștergi definitiv toate mesajele din această conversație?", icon="⚠️")
+        _cc1, _cc2 = st.columns(2)
+        with _cc1:
+            if st.button("✅ Da, șterge", key="_clear_current_yes", type="primary", use_container_width=True):
+                st.session_state.pop("_confirm_clear_current", None)
+                clear_history_db(st.session_state.session_id)
+                st.session_state.messages = []
+                st.rerun()
+        with _cc2:
+            if st.button("↩️ Anulează", key="_clear_current_no", use_container_width=True):
+                st.session_state.pop("_confirm_clear_current", None)
+                st.rerun()
+    elif st.button("🗑️ Șterge Istoricul", type="primary"):
+        st.session_state["_confirm_clear_current"] = st.session_state.session_id
         st.rerun()
 
     st.divider()
@@ -6027,7 +6195,8 @@ with st.sidebar:
                             os.unlink(tmp_path)
 
                 except Exception as e:
-                    st.error(f"❌ Eroare la încărcarea fișierului: {e}")
+                    _log("Eroare la încărcarea fișierului", "silent", e)
+                    st.error("❌ Fișierul nu a putut fi încărcat. Verifică formatul și dimensiunea și încearcă din nou.")
 
             # ── Preview în sidebar ──
             if media_content:
@@ -6163,6 +6332,28 @@ with st.sidebar:
         _ped_prefix = "🧠 " if _is_ped_session else ""
         label = f"{'▶ ' if is_current else ''}{_ped_prefix}{_preview_text}"
         caption = f"{format_time_ago(s['last_active'])} · {s['msg_count']} mesaje"
+        if st.session_state.get("_confirm_del_sid") == s["session_id"]:
+            # Rând de confirmare în loc de rândul normal
+            with st.container():
+                st.warning(f"Ștergi „{_preview_text[:40]}”?", icon="⚠️")
+                _d1, _d2 = st.columns(2)
+                with _d1:
+                    if st.button("Da, șterge", key=f"delyes_{s['session_id']}", type="primary", use_container_width=True):
+                        st.session_state.pop("_confirm_del_sid", None)
+                        clear_history_db(s["session_id"])
+                        if is_current:
+                            st.session_state.messages = []
+                        # Scoate din lista locală
+                        _my_sids2 = st.session_state.get("_my_session_ids", [])
+                        if s["session_id"] in _my_sids2:
+                            _my_sids2.remove(s["session_id"])
+                        st.session_state["_my_session_ids"] = _my_sids2
+                        st.rerun()
+                with _d2:
+                    if st.button("Anulează", key=f"delno_{s['session_id']}", use_container_width=True):
+                        st.session_state.pop("_confirm_del_sid", None)
+                        st.rerun()
+            continue
         with st.container():
             col_btn, col_del = st.columns([5, 1])
             with col_btn:
@@ -6178,14 +6369,7 @@ with st.sidebar:
                         st.rerun()
             with col_del:
                 if st.button("🗑", key=f"del_{s['session_id']}", help="Șterge"):
-                    clear_history_db(s["session_id"])
-                    if is_current:
-                        st.session_state.messages = []
-                    # Scoate din lista locală
-                    _my_sids2 = st.session_state.get("_my_session_ids", [])
-                    if s["session_id"] in _my_sids2:
-                        _my_sids2.remove(s["session_id"])
-                    st.session_state["_my_session_ids"] = _my_sids2
+                    st.session_state["_confirm_del_sid"] = s["session_id"]
                     st.rerun()
 
     st.divider()
@@ -6395,6 +6579,8 @@ TYPING_HTML = """
 
 if st.session_state.get("_quick_action"):
     action = st.session_state.pop("_quick_action")
+    if not enforce_rate_limit():
+        st.stop()
     # FIX Bug 2: _quick_action_ref nu era setat nicăieri — eliminat, nu mai e necesar
     # (context-ul vine direct din ultimul mesaj al asistentului/utilizatorului)
 
@@ -6493,12 +6679,12 @@ if st.session_state.get("_quick_action"):
                 message_placeholder.empty()
                 _is_key_err = any(x in str(e) for x in ["epuizat", "invalide", "quota", "429", "API key"])
                 if _is_key_err:
-                    st.warning("⚠️ Cheia API s-a epuizat. Cheia a fost schimbată — apasă **Reîncercați**.", icon="🔑")
+                    _show_ai_error(e, "acțiune rapidă")
                     if st.button("🔄 Reîncercați răspunsul", key="_retry_quick_action", type="primary"):
                         st.session_state["_pending_retry"] = True
                         st.rerun()
                 else:
-                    st.error(f"❌ Eroare: {e}")
+                    _show_ai_error(e, "acțiune rapidă")
     st.stop()
 
 # ── Handler mesaj în așteptare — materie nedetectată în mod Automat ──
@@ -6518,6 +6704,10 @@ if st.session_state.get("_pending_user_msg") and st.session_state.get("materie_s
                     st.session_state["_detected_subject"] = cod
                     st.session_state.pop("_pending_user_msg", None)
                     st.session_state["_suggested_question"] = _pending_msg
+                    # Mesajul e DEJA afișat, salvat și taxat (la chat_input) — legăm flag-urile de text,
+                    # ca un flag rămas din greșeală să nu afecteze o altă întrebare.
+                    st.session_state["_rl_prepaid"] = _pending_msg
+                    st.session_state["_sq_already_saved"] = _pending_msg
                     st.rerun()
 
     st.stop()
@@ -6525,10 +6715,15 @@ if st.session_state.get("_pending_user_msg") and st.session_state.get("materie_s
 # ── Handler întrebare sugerată — ÎNAINTE de afișarea butoanelor ──
 if st.session_state.get("_suggested_question"):
     user_input = st.session_state.pop("_suggested_question")
-    with st.chat_message("user"):
-        st.markdown(user_input)
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    save_message_with_limits(st.session_state.session_id, "user", user_input)
+    if st.session_state.pop("_rl_prepaid", None) != user_input and not enforce_rate_limit():
+        st.stop()
+    # Vine din alegerea materiei (mod Automat)? Atunci mesajul e deja în istoric — nu-l mai adăugăm.
+    _already_saved = (st.session_state.pop("_sq_already_saved", None) == user_input)
+    if not _already_saved:
+        with st.chat_message("user"):
+            st.markdown(user_input)
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        save_message_with_limits(st.session_state.session_id, "user", user_input)
 
     # ── Detecție și routing materie ──
     _materie_manuala = st.session_state.get("materie_selectata")
@@ -6548,27 +6743,52 @@ if st.session_state.get("_suggested_question"):
             st.session_state["_pending_user_msg"] = user_input
             st.rerun()
 
-    context_messages = get_context_for_ai(st.session_state.messages)
+    # Mesajul curent al elevului e deja în st.session_state.messages (salvat înainte de apel),
+    # dar îl trimitem separat în payload — îl scoatem din istoric ca să nu ajungă de 2 ori la model.
+    context_messages = get_context_for_ai(st.session_state.messages[:-1])
     history_obj = []
     for msg in context_messages:
         role_gemini = "model" if msg["role"] == "assistant" else "user"
         history_obj.append({"role": role_gemini, "parts": [msg["content"]]})
 
+    # După alegerea materiei, fișierul/poza atașată la mesajul original trebuie să ajungă la model
+    # (înainte se pierdea: "rezolvă problema din poză" nu conține cuvinte-cheie de materie).
+    _sq_payload = _build_attachment_payload(media_content, text_file_content) if _already_saved else []
+    _sq_payload.append(user_input)
+
+    # Salvăm pentru retry în caz de eroare de cheie
+    st.session_state["_retry_history"] = history_obj
+    st.session_state["_retry_payload"] = _sq_payload
+
+    _sq_failed = False
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
         full_response = ""
         message_placeholder.markdown(TYPING_HTML, unsafe_allow_html=True)
         try:
-            for text_chunk in run_chat_with_rotation(history_obj, [user_input]):
+            for text_chunk in run_chat_with_rotation(history_obj, _sq_payload):
                 full_response += text_chunk
                 message_placeholder.markdown(full_response + "▌")
             message_placeholder.empty()
             render_message_with_svg(full_response)
             st.session_state.messages.append({"role": "assistant", "content": full_response})
             save_message_with_limits(st.session_state.session_id, "assistant", full_response)
+            st.session_state.pop("_retry_history", None)
+            st.session_state.pop("_retry_payload", None)
         except Exception as e:
-            st.error(f"❌ Eroare: {e}")
-    st.rerun()
+            _sq_failed = True
+            message_placeholder.empty()
+            _is_key_err = any(x in str(e) for x in ["epuizat", "invalide", "quota", "429", "API key"])
+            if _is_key_err:
+                _show_ai_error(e, "întrebare sugerată")
+                if st.button("🔄 Reîncercați răspunsul", key="_retry_suggested", type="primary"):
+                    st.session_state["_pending_retry"] = True
+                    st.rerun()
+            else:
+                _show_ai_error(e, "întrebare sugerată")
+    # IMPORTANT: la eroare NU facem rerun — altfel mesajul de eroare dispare imediat
+    if not _sq_failed:
+        st.rerun()
 
 # ── Întrebări sugerate per materie — afișate doar când chat-ul e gol ──
 # Pool mare de întrebări — 4 alese aleator la fiecare sesiune nouă
@@ -6946,23 +7166,15 @@ if st.session_state.pop("_pending_retry", False):
                 st.session_state.pop("_retry_payload", None)
             except Exception as _re:
                 _rph.empty()
-                st.error(f"❌ Eroare și la reîncercare: {_re}")
+                _show_ai_error(_re, "reîncercare")
     st.stop()
 
 # === CHAT INPUT ===
 if user_input := st.chat_input("Întreabă profesorul..."):
 
-    # --- Rate Limiting per sesiune ---
-    _rl_allowed, _rl_remaining = check_rate_limit(st.session_state.session_id)
-    if not _rl_allowed:
-        st.warning(
-            f"⏱️ **Prea multe cereri!** Ai trimis {RATE_LIMIT_MAX_REQUESTS} mesaje "
-            f"în ultimul minut. Așteaptă câteva secunde și încearcă din nou.",
-            icon="🛑"
-        )
+    # --- Rate limiting (minut + zi per sesiune + global) ---
+    if not enforce_rate_limit():
         st.stop()
-    elif _rl_remaining <= 3:
-        st.toast(f"⚠️ Mai ai {_rl_remaining} cereri disponibile în acest minut.", icon="⏱️")
 
     # --- Debounce: blochează mesaje duplicate trimise rapid ---
     now_ts = time.time()
@@ -7083,50 +7295,15 @@ if user_input := st.chat_input("Întreabă profesorul..."):
                 st.session_state["_pending_user_msg"] = user_input
                 st.rerun()
 
-    context_messages = get_context_for_ai(st.session_state.messages)
+    # Mesajul curent al elevului e deja în st.session_state.messages (salvat înainte de apel),
+    # dar îl trimitem separat în payload — îl scoatem din istoric ca să nu ajungă de 2 ori la model.
+    context_messages = get_context_for_ai(st.session_state.messages[:-1])
     history_obj = []
     for msg in context_messages:
         role_gemini = "model" if msg["role"] == "assistant" else "user"
         history_obj.append({"role": role_gemini, "parts": [msg["content"]]})
     
-    final_payload = []
-    if media_content:
-        # Prompt contextual bazat pe tipul fișierului încărcat
-        # FIX: uploaded_file poate fi out-of-scope — citim din session_state
-        _uf = st.session_state.get("_current_uploaded_file_meta", {})
-        fname = _uf.get("name", "")
-        ftype = _uf.get("type", "") or ""
-        if ftype.startswith("image/"):
-            final_payload.append(
-                "Studentul ți-a trimis o imagine. Analizează-o vizual complet: "
-                "descrie ce vezi (obiecte, persoane, text, culori, forme, diagrame, exerciții scrise de mână) "
-                "și răspunde la întrebarea studentului ținând cont de tot conținutul vizual."
-            )
-        else:
-            final_payload.append(
-                f"Studentul ți-a trimis documentul '{fname}'. "
-                "Citește și analizează tot conținutul înainte de a răspunde."
-            )
-        final_payload.append(media_content)
-    elif text_file_content:
-        # Fișier text (txt/docx/doc/dbf/srt) — injectăm conținutul direct în prompt
-        _uf = st.session_state.get("_current_uploaded_file_meta", {})
-        fname = _uf.get("name", "")
-        fname_lower = fname.lower()
-        if fname_lower.endswith(".srt"):
-            file_desc = "un fișier de subtitrare (.srt)"
-        elif fname_lower.endswith((".docx", ".doc")):
-            file_desc = "un document Word"
-        elif fname_lower.endswith(".dbf"):
-            file_desc = "o bază de date DBF"
-        else:
-            file_desc = "un fișier text"
-        final_payload.append(
-            f"Studentul ți-a trimis {file_desc} cu numele '{fname}'. "
-            f"Conținutul complet al fișierului este:\n\n"
-            f"--- ÎNCEPUT FIȘIER ---\n{text_file_content}\n--- SFÂRȘIT FIȘIER ---\n\n"
-            f"Analizează conținutul de mai sus și răspunde la întrebarea studentului."
-        )
+    final_payload = _build_attachment_payload(media_content, text_file_content)
     final_payload.append(user_input)
 
     # ═══════════════════════════════════════════════════════════════════════════
@@ -7197,6 +7374,11 @@ if user_input := st.chat_input("Întreabă profesorul..."):
         chunks        = [parsed_blocks[i:i + SRT_CHUNK_SIZE]
                          for i in range(0, total_blocks, SRT_CHUNK_SIZE)]
         total_chunks  = len(chunks)
+
+        # Fiecare bucată = cel puțin un apel AI. Mesajul a plătit deja 1 cerere la chat_input,
+        # deci taxăm restul bucăților doar față de limitele zilnice/globale (fără burst pe minut).
+        if total_chunks > 1 and not enforce_rate_limit(cost=total_chunks - 1, burst=False):
+            st.stop()
 
         _orig_name        = _uf_meta.get("name", "subtitrare.srt")
         _trad_name        = re.sub(r'\.srt$', '_RO.srt', _orig_name, flags=re.IGNORECASE)
@@ -7347,13 +7529,9 @@ if user_input := st.chat_input("Întreabă profesorul..."):
                 err_str = str(e)
                 _is_key_err = any(x in err_str for x in ["epuizat", "invalide", "quota", "429", "API key"])
                 if _is_key_err:
-                    st.warning(
-                        "⚠️ Cheia API s-a epuizat în timpul traducerii. "
-                        "Cheia a fost schimbată automat — apasă **Reîncercați** pentru a relua.",
-                        icon="🔑"
-                    )
+                    _show_ai_error(e, "traducere SRT")
                 else:
-                    st.error(f"❌ Eroare la traducere: {e}")
+                    _show_ai_error(e, "traducere SRT")
 
         # ── Butonul de descărcare — ÎN AFARA with st.chat_message ──
         # Folosim session_state pentru date, cheie FIXĂ (nu depinde de _orig_name variabil)
@@ -7419,13 +7597,9 @@ if user_input := st.chat_input("Întreabă profesorul..."):
                 # Dacă eroarea e de cheie/quota, oferim buton de reîncercare automată
                 _is_key_err = any(x in err_str for x in ["epuizat", "invalide", "quota", "429", "API key"])
                 if _is_key_err:
-                    st.warning(
-                        "⚠️ Cheia API s-a epuizat în timpul răspunsului. "
-                        "Cheia a fost schimbată automat — apasă **Reîncercați** pentru a primi răspunsul.",
-                        icon="🔑"
-                    )
+                    _show_ai_error(e, "chat")
                     if st.button("🔄 Reîncercați răspunsul", key="_retry_after_key_error", type="primary"):
                         st.session_state["_pending_retry"] = True
                         st.rerun()
                 else:
-                    st.error(f"❌ Eroare: {e}")
+                    _show_ai_error(e, "chat")
