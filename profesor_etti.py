@@ -263,7 +263,7 @@ def _cleanup_gfiles() -> None:
             gf = st.session_state.pop(k, None)
             if gf:
                 try:
-                    _client.files.delete(gf.name)
+                    _client.files.delete(name=gf.name)
                 except Exception:
                     pass  # expirat deja sau alt motiv — ignorăm
     except Exception:
@@ -4675,13 +4675,13 @@ def extract_text_from_photo(image_bytes: bytes, materie_label: str, mime_type: s
         while str(gfile.state) in ("FileState.PROCESSING", "PROCESSING") and poll < 30:
             _ocr_status.caption(f"\u23f3 Procesare imagine Google ({poll + 1}s)...")
             time.sleep(1)
-            gfile = gemini_client.files.get(gfile.name)
+            gfile = gemini_client.files.get(name=gfile.name)
             poll += 1
         _ocr_status.empty()
 
         if not _is_gfile_active(gfile):
             try:
-                gemini_client.files.delete(gfile.name)
+                gemini_client.files.delete(name=gfile.name)
             except Exception:
                 pass
             return "[Eroare: imaginea nu a putut fi procesată de Google]"
@@ -4701,7 +4701,7 @@ def extract_text_from_photo(image_bytes: bytes, materie_label: str, mime_type: s
         finally:
             # Curăță fișierul de pe Google indiferent de rezultat (succes sau eroare)
             try:
-                gemini_client.files.delete(gfile.name)
+                gemini_client.files.delete(name=gfile.name)
             except Exception:
                 pass
 
@@ -5304,7 +5304,7 @@ def _reupload_gfile(client, old_gfile):
         poll = 0
         while str(new.state) in ("FileState.PROCESSING", "PROCESSING") and poll < 60:
             time.sleep(1)
-            new = client.files.get(new.name)
+            new = client.files.get(name=new.name)
             poll += 1
         if not _is_gfile_active(new):
             return None
@@ -5323,7 +5323,7 @@ def _reupload_gfile(client, old_gfile):
 def _ensure_gfile_for_client(client, gfile):
     """Fișierul e vizibil cu cheia curentă? Da -> îl păstrăm (aceleași proiecte). Nu -> îl re-urcăm."""
     try:
-        cur = client.files.get(gfile.name)
+        cur = client.files.get(name=gfile.name)
         if _is_gfile_active(cur):
             return gfile
     except Exception:
@@ -6283,7 +6283,7 @@ with st.sidebar:
             if cached_gf:
                 try:
                     gemini_client = genai.Client(api_key=keys[st.session_state.key_index])
-                    refreshed = gemini_client.files.get(cached_gf.name)
+                    refreshed = gemini_client.files.get(name=cached_gf.name)
                     if str(refreshed.state) in ("FileState.ACTIVE", "ACTIVE", "FileState.PROCESSING", "PROCESSING") or getattr(refreshed.state, "name", "") in ("ACTIVE", "PROCESSING"):
                         media_content = refreshed
                 except Exception:
@@ -6325,7 +6325,7 @@ with st.sidebar:
                             poll = 0
                             while str(gfile.state) in ("FileState.PROCESSING", "PROCESSING") and poll < 60:
                                 time.sleep(1)
-                                gfile = gemini_client.files.get(gfile.name)
+                                gfile = gemini_client.files.get(name=gfile.name)
                                 poll += 1
 
                         if _is_gfile_active(gfile):
@@ -6378,7 +6378,7 @@ with st.sidebar:
                     if gf:
                         try:
                             gemini_client = genai.Client(api_key=keys[st.session_state.key_index])
-                            gemini_client.files.delete(gf.name)
+                            gemini_client.files.delete(name=gf.name)
                             _log("Fișier eliminat de pe Google Files API.", "info")
                         except Exception as _e:
                             _log(f"Nu s-a putut șterge fișierul Google Files API: {_e}", "silent")
