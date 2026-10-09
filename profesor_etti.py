@@ -249,6 +249,7 @@ def _cleanup_gfiles() -> None:
     Apelat la switch sesiune, conversație nouă și explicit de utilizator.
     Fișierele expiră oricum după 48h, dar le ștergem proactiv pentru igienă.
     """
+    st.session_state.pop("_gsrc_map", None)  # octeții păstrați pentru re-upload
     gfile_keys = [k for k in st.session_state.keys() if k.startswith("_gfile_")]
     if not gfile_keys:
         return
@@ -878,6 +879,9 @@ def _show_ai_error(e: Exception, context: str = "") -> str:
     elif "cerere invalidă" in low or re.search(r"\b400\b", low):
         cat, msg = "bad_request", ("⚠️ Cererea nu a putut fi procesată (mesaj prea lung sau conținut neacceptat). "
                                    "Reformulează întrebarea sau încearcă cu un fișier mai mic.")
+    elif "access the file" in low or "files/" in low:
+        cat, msg = "file", ("📎 Fișierul atașat nu mai poate fi folosit (a expirat sau serviciul a fost schimbat). "
+                            "Elimină-l din bara laterală și încarcă-l din nou.")
     elif "niciun text" in low:
         cat, msg = "empty", ("🤔 Nu am primit niciun răspuns de la AI (poate a fost blocat de filtre). "
                              "Reformulează întrebarea și încearcă din nou.")
@@ -5277,6 +5281,56 @@ def _invalidate_cache_for_key(api_key: str) -> None:
     }
 
 
+def _reupload_gfile(client, old_gfile):
+    """Re-urcă un fișier atașat pe proiectul cheii curente.
+
+    Fișierele din Google Files API aparțin PROIECTULUI cheii care le-a încărcat: după o rotație
+    spre o cheie din alt proiect, URI-ul vechi dă 403. Octeții originali sunt păstrați în
+    st.session_state["_gsrc_map"] (doar fișiere ≤ 25 MB). Returnează fișierul nou sau None.
+    """
+    srcs = st.session_state.get("_gsrc_map") or {}
+    src = srcs.get(getattr(old_gfile, "name", ""))
+    if not src:
+        return None
+    data, mime = src
+    suffix = {"image/jpeg": ".jpg", "image/jpg": ".jpg", "image/png": ".png", "image/webp": ".webp",
+              "image/gif": ".gif", "application/pdf": ".pdf"}.get(mime, ".bin")
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            tmp.write(data)
+            tmp_path = tmp.name
+        new = client.files.upload(file=tmp_path, config=genai_types.UploadFileConfig(mime_type=mime))
+        poll = 0
+        while str(new.state) in ("FileState.PROCESSING", "PROCESSING") and poll < 60:
+            time.sleep(1)
+            new = client.files.get(new.name)
+            poll += 1
+        if not _is_gfile_active(new):
+            return None
+        srcs[new.name] = (data, mime)                # păstrăm și intrarea veche (retry cu payload vechi)
+        for key in [x for x in st.session_state.keys() if str(x).startswith("_gfile_")]:
+            if getattr(st.session_state.get(key), "name", None) == old_gfile.name:
+                st.session_state[key] = new            # reruns viitoare folosesc fișierul nou
+        return new
+    except Exception:
+        return None
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+
+def _ensure_gfile_for_client(client, gfile):
+    """Fișierul e vizibil cu cheia curentă? Da -> îl păstrăm (aceleași proiecte). Nu -> îl re-urcăm."""
+    try:
+        cur = client.files.get(gfile.name)
+        if _is_gfile_active(cur):
+            return gfile
+    except Exception:
+        pass
+    return _reupload_gfile(client, gfile) or gfile
+
+
 def run_chat_with_rotation(history_obj, payload, system_prompt=None, live_stream=False):
     """Rulează chat cu rotație automată a cheilor API, fallback modele și context caching.
 
@@ -5320,6 +5374,10 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None, live_stream
     last_error = None
     _model_idx = 0   # poziția curentă în MODEL_FALLBACKS_NO_CACHE
     _rotations = 0   # câte chei au fost deja epuizate/invalide în ACEST apel
+    _payload_list = list(payload) if isinstance(payload, list) else [payload]
+    _has_gfile = any((not isinstance(p, str)) and hasattr(p, "uri") for p in _payload_list)
+    _file_refresh_pending = False  # True => verificăm/re-urcăm fișierele atașate cu cheia curentă
+    _file_refreshes = 0
     _deadline = time.time() + 45  # Timeout global: max 45 secunde de reîncercări
 
     # Încearcă să obțină un cache valid pentru system prompt
@@ -5386,8 +5444,16 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None, live_stream
                     )
                 )
 
+            if _file_refresh_pending:
+                _payload_list = [
+                    _ensure_gfile_for_client(gemini_client, p)
+                    if (not isinstance(p, str) and hasattr(p, "uri")) else p
+                    for p in _payload_list
+                ]
+                _file_refresh_pending = False
+
             current_parts = []
-            for p in (payload if isinstance(payload, list) else [payload]):
+            for p in _payload_list:
                 if isinstance(p, str):
                     current_parts.append(genai_types.Part(text=p))
                 elif hasattr(p, "uri"):
@@ -5476,13 +5542,18 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None, live_stream
                 or "resource_exhausted" in _err_low
             )
             _is_overload = ("503" in error_msg or "overloaded" in _err_low or "unavailable" in _err_low)
+            # Fișierul atașat nu e accesibil cu cheia/proiectul curent (403/404 pe files/...)
+            _is_file_err = _has_gfile and (
+                "access the file" in _err_low or "files/" in _err_low
+                or ("file" in _err_low and any(x in _err_low for x in ("permission_denied", "not_found", "not found")))
+            )
             _cur_idx = (MODEL_FALLBACKS_NO_CACHE.index(model_name)
                         if model_name in MODEL_FALLBACKS_NO_CACHE else 0)
 
             # Eroare legată de caching (nu de cheie/quota): dezactivăm caching-ul și reîncercăm
             if (
                 _use_cache and model_name == MODEL_WITH_CACHE
-                and not (_is_invalid_key or _is_quota)
+                and not (_is_invalid_key or _is_quota or _is_file_err)
                 and (
                     (cached_content_name is None and "400" not in error_msg and not _is_overload)
                     or "not supported" in _err_low
@@ -5491,6 +5562,12 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None, live_stream
             ):
                 _use_cache = False
                 st.session_state["_ctx_cache_enabled"] = False
+                continue
+
+            if _is_file_err and not (_is_invalid_key or _is_quota) and _file_refreshes < 2 \
+                    and st.session_state.get("_gsrc_map"):
+                _file_refreshes += 1
+                _file_refresh_pending = True
                 continue
 
             if _is_invalid_key or _is_quota:
@@ -5510,6 +5587,8 @@ def run_chat_with_rotation(history_obj, payload, system_prompt=None, live_stream
                     )
                 st.session_state.key_index = (st.session_state.key_index + 1) % len(keys)
                 _model_idx = 0  # cheie nouă -> reluăm lanțul de la modelul principal
+                if _has_gfile:
+                    _file_refresh_pending = True  # cheia nouă poate fi în alt proiect: verificăm fișierul
                 st.toast(f"⚠️ Cheie invalidă/epuizată — schimb la cheia {st.session_state.key_index + 1}...", icon="🔄")
                 time.sleep(0.5)
                 continue
@@ -6252,6 +6331,12 @@ with st.sidebar:
                         if _is_gfile_active(gfile):
                             media_content = gfile
                             st.session_state[file_key] = gfile  # cache pentru reruns
+                            # Octeții originali (≤ 25 MB), pentru re-upload dacă rotația ne mută pe o cheie
+                            # din alt proiect Google (fișierele Files API sunt legate de proiect).
+                            _src_bytes = uploaded_file.getvalue()
+                            st.session_state["_gsrc_map"] = (
+                                {gfile.name: (_src_bytes, mime_type)} if len(_src_bytes) <= 25 * 1024 * 1024 else {}
+                            )
                         else:
                             st.error(f"❌ Fișierul nu a putut fi procesat (stare: {getattr(gfile.state, 'name', str(gfile.state))})")
 
@@ -6300,6 +6385,7 @@ with st.sidebar:
                     media_content = None
                     st.session_state.pop("_current_uploaded_file_meta", None)
                     st.session_state.pop("_active_gfile_key", None)
+                    st.session_state.pop("_gsrc_map", None)
                     # FIX Bug 1: marcăm fișierul ca "de ignorat" — după rerun, widget-ul
                     # st.file_uploader încă returnează fișierul (nu se poate reseta programatic),
                     # deci blocăm re-uploadul prin cheie de excludere.
@@ -7214,6 +7300,13 @@ if st.session_state.pop("_pending_retry", False):
     _retry_history  = st.session_state.get("_retry_history")
     _retry_payload  = st.session_state.get("_retry_payload")
     if _retry_history is not None and _retry_payload is not None:
+        if media_content is not None:
+            # Payload-ul salvat poate conține un fișier urcat cu o cheie veche; sidebar-ul tocmai
+            # l-a verificat/re-urcat cu cheia curentă, deci îl înlocuim cu versiunea actuală.
+            _retry_payload = [
+                media_content if (not isinstance(_p, str) and hasattr(_p, "uri")) else _p
+                for _p in _retry_payload
+            ]
         with st.chat_message("assistant"):
             _rph = st.empty()
             _rph.markdown(TYPING_HTML, unsafe_allow_html=True)
