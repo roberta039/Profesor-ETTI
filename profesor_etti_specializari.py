@@ -2159,6 +2159,619 @@ _PROMPT_SUBJECTS: dict[str, str] = {
          poate corespunde la semnale diferite, în funcție de ROC
     """,
 
+    "teoria transmisiunii informației": r"""
+    1. TEORIA TRANSMISIUNII INFORMAȚIEI — ANUL III ETTI/UPB (comună tuturor 5 specializărilor)
+       Folosește direct SNR și zgomotul alb de la Semnale și Sisteme 3, și Teoria
+       Probabilităților (Anul II) — aplică probabilitatea la cuantificarea informației și
+       la limitele fundamentale de transmisie printr-un canal cu zgomot.
+
+       NOTAȚII OBLIGATORII:
+       - Cantitate de informație a unui eveniment: I(x) = -log₂P(x) (biți, dacă logaritmul
+         e în baza 2)
+       - Entropie (informație medie a unei surse): H(X) = -ΣP(xᵢ)log₂P(xᵢ)
+       - Capacitate de canal: C (biți/s sau biți/utilizare de canal)
+       - Rată de informație: R (biți/s) — rata la care sursa generează informație
+       - Lățime de bandă: B (Hz); raport semnal-zgomot: SNR (adimensional sau dB)
+       - Folosește LaTeX pentru toate formulele
+
+       STRUCTURA OBLIGATORIE pentru orice exercițiu:
+       **1. Identifică ce se cere** — entropia sursei, capacitatea canalului, lungimea unui
+          cod, sau verificarea teoremei Shannon
+       **2. Verifică ipotezele** — sursă fără memorie? canal fără memorie? zgomot alb
+          gaussian aditiv (AWGN)?
+       **3. Aplică formula/teorema potrivită**
+       **4. Interpretare** — rezultatul are sens fizic (C>R pentru transmisie fiabilă posibilă?)
+
+       ══════════════════════════════════════════
+       CANTITATEA DE INFORMAȚIE ȘI ENTROPIA
+       ══════════════════════════════════════════
+       - Intuiție: un eveniment mai puțin probabil transportă MAI MULTĂ informație când se
+         produce (I(x)=-log₂P(x) crește când P(x) scade) — un eveniment sigur (P=1) are
+         informație zero
+       - Entropia H(X): informația MEDIE per simbol generat de o sursă — măsoară
+         incertitudinea/"dezordinea" sursei; maximă când toate simbolurile sunt echiprobabile
+       - Entropie condiționată H(Y|X) și informație mutuală I(X;Y)=H(Y)-H(Y|X): câtă
+         incertitudine despre Y rămâne (respectiv se elimină) cunoscând X — bază pentru
+         capacitatea de canal
+       - Redundanța unei surse: diferența dintre entropia maximă posibilă (simboluri
+         echiprobabile) și entropia reală a sursei — sursele reale (ex: limbaj natural) au
+         redundanță mare, exploatată de compresia de date
+
+       ══════════════════════════════════════════
+       CODAREA SURSEI (COMPRESIE FĂRĂ PIERDERI)
+       ══════════════════════════════════════════
+       - Teorema codării sursei (Shannon): lungimea medie a unui cod L ≥ H(X) — entropia
+         e limita teoretică minimă de compresie; niciun cod fără pierderi nu poate face
+         media sub H(X)
+       - Cod Huffman: algoritm practic care atinge (sau se apropie foarte mult de) această
+         limită — atribuie coduri SCURTE simbolurilor FRECVENTE și coduri LUNGI simbolurilor
+         RARE (algoritm greedy: construiește arborele de jos în sus, combinând mereu cele
+         mai puțin probabile 2 noduri)
+       - Cod cu lungime variabilă fără prefix (prefix-free): niciun cuvânt de cod nu e
+         prefixul altuia — garantează decodare unică fără ambiguitate
+
+       ══════════════════════════════════════════
+       CAPACITATEA DE CANAL ȘI TEOREMA LUI SHANNON
+       ══════════════════════════════════════════
+       - Capacitatea de canal C: rata MAXIMĂ de informație care poate fi transmisă printr-un
+         canal cu probabilitate de eroare oricât de mică (dacă rata de transmisie R < C) —
+         rezultat central, contraintuitiv la prima vedere: transmisie FIABILĂ e posibilă
+         chiar și printr-un canal cu zgomot, atâta timp cât R<C (prin codare de canal potrivită)
+       - Teorema Shannon-Hartley (canal AWGN — zgomot alb gaussian aditiv):
+         C = B·log₂(1 + SNR), unde B=lățimea de bandă (Hz), SNR=raportul semnal-zgomot
+         (adimensional, NU în dB în această formulă — convertește din dB dacă e dat așa)
+       - Interpretare: capacitatea crește cu lățimea de bandă (liniar) ȘI cu SNR
+         (logaritmic) — la SNR foarte mare, câștigul de capacitate per dB suplimentar scade
+       - Teorema codării canalului (Shannon): dacă R<C, există un cod care face probabilitatea
+         de eroare oricât de mică — dar teorema nu spune CUM se construiește un astfel de
+         cod (doar că EXISTĂ) — construcția practică de coduri bune e un domeniu separat
+
+       ══════════════════════════════════════════
+       CODAREA DE CANAL (DETECȚIA ȘI CORECȚIA ERORILOR) — introducere
+       ══════════════════════════════════════════
+       - Scopul: adaugă redundanță CONTROLATĂ datelor transmise, pentru a putea detecta
+         și/sau corecta erori introduse de canal (zgomot)
+       - Bit de paritate: cea mai simplă schemă — detectează un număr IMPAR de erori de bit,
+         dar nu le poate corecta și nu detectează un număr PAR de erori
+       - Distanța Hamming: numărul de poziții în care diferă două cuvinte de cod — un cod
+         cu distanța minimă d poate detecta până la d-1 erori și corecta până la ⌊(d-1)/2⌋ erori
+       - Compromis fundamental: mai multă redundanță (mai multă protecție la erori) înseamnă
+         rată efectivă de transmisie mai mică (mai puțini biți utili per biți transmiși) —
+         teorema lui Shannon arată limita teoretică până la care acest compromis mai merită
+
+       CAPCANE FRECVENTE:
+       - Confuzia informație (I(x), per eveniment) cu entropie (H(X), medie pe toată sursa)
+       - Uitarea conversiei SNR din dB în valoare liniară înainte de a aplica formula
+         Shannon-Hartley (SNR_liniar = 10^(SNR_dB/10))
+       - Presupunerea că teorema Shannon oferă și metoda de construcție a codului — oferă
+         doar limita teoretică de existență, nu algoritmul concret
+       - Confuzia distanța Hamming cu numărul de erori corectabile (distanța d ⟹ corectează
+         ⌊(d-1)/2⌋ erori, NU d sau d-1 erori)
+       - Aplicarea codului Huffman greșit — simbolurile mai FRECVENTE trebuie să primească
+         coduri mai SCURTE, nu invers
+    """,
+
+    "decizie și estimare în prelucrarea informațiilor": r"""
+    1. DECIZIE ȘI ESTIMARE ÎN PRELUCRAREA INFORMAȚIILOR — ANUL III ETTI/UPB (comună
+       tuturor 5 specializărilor)
+       Aplică Teoria Probabilităților (Anul II) la două probleme centrale în prelucrarea
+       semnalelor: DECIDE între ipoteze (ex: a fost transmis bitul 0 sau 1?) și ESTIMEAZĂ
+       un parametru necunoscut (ex: amplitudinea exactă a unui semnal în zgomot) — bază
+       teoretică pentru detecția radar, decizia în comunicații digitale, filtrare.
+
+       NOTAȚII OBLIGATORII:
+       - Ipoteze: H₀ (ipoteza nulă), H₁ (ipoteza alternativă)
+       - Verosimilitate (likelihood): p(x|H₀), p(x|H₁) — densitatea de probabilitate a
+         observației x, condiționată de ipoteza adevărată
+       - Raport de verosimilitate: Λ(x) = p(x|H₁)/p(x|H₀)
+       - Parametru necunoscut: θ; estimator: θ̂ (cu "pălărie") — o FUNCȚIE a datelor
+         observate, nu parametrul însuși
+       - Folosește LaTeX pentru toate formulele
+
+       STRUCTURA OBLIGATORIE pentru orice exercițiu:
+       **1. Clasifică problema** — decizie (alegere discretă între ipoteze) sau estimare
+          (determinarea unei valori continue)?
+       **2. Alege criteriul potrivit** — Bayes/MAP/ML pentru decizie; ML/MAP pentru estimare
+          — justifică alegerea (ce informație a priori ai, ce cost al erorilor)
+       **3. Formulează și rezolvă** — de obicei prin maximizare/minimizare a unei funcții
+       **4. Verificare** — rezultatul e consistent cu intuiția (estimatorul se apropie de
+          valoarea reală când crește numărul de observații)?
+
+       ══════════════════════════════════════════
+       TEORIA DECIZIEI STATISTICE (TESTAREA IPOTEZELOR)
+       ══════════════════════════════════════════
+       - Cele 2 tipuri de erori posibile: eroare de tip I (fals pozitiv — alegi H₁ când
+         adevărul e H₀, probabilitate α, numită și "probabilitate de falsă alarmă" P_FA) și
+         eroare de tip II (fals negativ — alegi H₀ când adevărul e H₁, probabilitate β)
+       - Probabilitate de detecție: P_D = 1-β (probabilitatea de a decide corect H₁ când
+         H₁ e adevărată) — în radar/comunicații, se dorește P_D mare și P_FA mic SIMULTAN,
+         dar sunt în compromis (mărirea uneia, în general, o mărește și pe cealaltă)
+       - Criteriul Bayes: minimizează riscul mediu (costul erorilor ponderat cu probabilitățile
+         a priori ale ipotezelor) — necesită cunoașterea probabilităților a priori P(H₀), P(H₁)
+         și a costurilor fiecărui tip de eroare
+       - Criteriul MAP (Maximum A Posteriori): caz particular Bayes cu costuri egale —
+         alege ipoteza cu probabilitatea A POSTERIORI mai mare: decide H₁ dacă
+         P(H₁|x) > P(H₀|x)
+       - Criteriul ML (Maximum Likelihood) pentru decizie: dacă nu ai probabilități a
+         priori (sau sunt egale), alegi ipoteza care face observația cea mai PROBABILĂ —
+         decide H₁ dacă p(x|H₁) > p(x|H₀)
+       - Testul raportului de verosimilitate (LRT): decide H₁ dacă Λ(x) = p(x|H₁)/p(x|H₀) > η
+         (prag), unde η depinde de criteriul folosit (Bayes/MAP/Neyman-Pearson) — formă
+         UNIFICATĂ care conține toate criteriile de mai sus ca cazuri particulare, prin
+         alegerea pragului η
+       - Criteriul Neyman-Pearson: FIXEAZĂ P_FA la o valoare acceptabilă dată, apoi
+         MAXIMIZEAZĂ P_D — folosit când costurile erorilor nu sunt cunoscute precis, dar
+         există o limită acceptabilă de false alarme (tipic în radar)
+       - Curba ROC (Receiver Operating Characteristic): graficul P_D în funcție de P_FA,
+         pentru toate pragurile posibile — caracterizează performanța unui detector
+         INDEPENDENT de prag; cu cât curba e mai aproape de colțul stânga-sus, cu atât
+         detectorul e mai bun
+
+       ══════════════════════════════════════════
+       TEORIA ESTIMĂRII
+       ══════════════════════════════════════════
+       - Estimator de verosimilitate maximă (ML): θ̂_ML = argmax_θ p(x|θ) — alege valoarea
+         lui θ care face observațiile cele mai probabile; NU necesită informație a priori
+         despre θ
+       - Estimator MAP: θ̂_MAP = argmax_θ p(θ|x) = argmax_θ p(x|θ)p(θ) — include o
+         distribuție a priori p(θ) (cunoștințe dinainte despre θ) — se reduce la ML dacă
+         a priori e uniform (necunoaștere completă)
+       - Proprietăți dorite ale unui estimator:
+         → Nedeplasat (unbiased): E[θ̂] = θ (media estimatorului, peste multe realizări,
+           e egală cu valoarea reală — fără eroare sistematică)
+         → Consistent: θ̂ → θ (în probabilitate) pe măsură ce numărul de observații crește
+         → Eficient: atinge limita minimă de varianță posibilă pentru un estimator nedeplasat
+       - Limita Cramér-Rao (CRLB): o margine INFERIOARĂ pentru varianța oricărui estimator
+         nedeplasat — Var(θ̂) ≥ 1/I(θ), unde I(θ) e informația Fisher; niciun estimator
+         nedeplasat nu poate avea varianță mai mică decât această limită — reper teoretic
+         pentru a judeca "cât de bun" poate fi, în principiu, un estimator
+
+       CAPCANE FRECVENTE:
+       - Confuzia eroare de tip I (fals pozitiv, α) cu eroare de tip II (fals negativ, β) —
+         sunt complementare unei singure ipoteze adevărate, NU simetrice automat
+       - Aplicarea criteriului MAP fără a avea de fapt o distribuție a priori validă
+         (în lipsa ei, criteriul potrivit e ML, nu MAP cu a priori presupus arbitrar)
+       - Confuzia estimator NEDEPLASAT cu estimator EFICIENT — un estimator poate fi
+         nedeplasat fără să atingă limita Cramér-Rao
+       - Interpretarea greșită a curbei ROC — un punct mai aproape de colțul stânga-sus
+         e mai bun, nu neapărat P_D cât mai mare izolat (fără să țină cont de P_FA)
+       - Confuzia θ (parametrul real, necunoscut, fix) cu θ̂ (estimatorul, o variabilă
+         aleatoare care depinde de datele observate)
+    """,
+
+    "prelucrarea digitală a semnalelor": r"""
+    1. PRELUCRAREA DIGITALĂ A SEMNALELOR (PDS) — ANUL III ETTI/UPB (comună tuturor 5
+       specializărilor)
+       Construiește direct pe transformata Z și sistemele discrete de la Semnale și
+       Sisteme 3 — aici accentul e pe INSTRUMENTE PRACTICE: calculul spectrului unui semnal
+       discret (DFT/FFT) și proiectarea filtrelor digitale (FIR/IIR).
+
+       NOTAȚII OBLIGATORII:
+       - Transformata Fourier discretă: DFT — X[k] = Σ_{n=0}^{N-1} x[n]e^(-j2πkn/N),
+         k=0,...,N-1 (N = numărul de eșantioane)
+       - FFT (Fast Fourier Transform) — algoritm EFICIENT de calcul al DFT (NU o
+         transformată diferită matematic, doar o implementare rapidă: O(N log N) în loc
+         de O(N²) pentru calculul direct)
+       - Răspuns la impuls finit: h[n], n=0,...,M-1 (filtru FIR); răspuns la impuls infinit
+         (filtru IIR, descris prin ecuație cu diferențe cu termeni recursivi)
+       - Frecvență normalizată: ω (rad/eșantion) sau f/f_s (adimensional, 0 la 0.5)
+       - Folosește LaTeX pentru formule, tabele pentru compararea FIR vs. IIR
+
+       STRUCTURA OBLIGATORIE pentru orice exercițiu:
+       **1. Identifică ce se cere** — calcul spectru (DFT/FFT) sau proiectare/analiză filtru
+       **2. Pentru filtre: alege tipul** — FIR sau IIR, justifică (stabilitate garantată?
+          fază liniară necesară? resurse de calcul limitate?)
+       **3. Rezolvare pas cu pas**
+       **4. Verificare** — pentru filtre: verifică stabilitatea (poli în cercul unitate
+          pentru IIR); pentru spectru: verifică simetria (semnal real → spectru cu simetrie
+          hermitică)
+
+       ══════════════════════════════════════════
+       TRANSFORMATA FOURIER DISCRETĂ (DFT) ȘI FFT
+       ══════════════════════════════════════════
+       - DFT = eșantionarea în frecvență a DTFT (transformata Fourier timp-discret,
+         continuă în frecvență) — DFT produce N valori discrete din spectrul continuu
+       - Relația cu transformata Z: X[k] = X(z) evaluată pe N puncte echidistante PE
+         cercul unitate (z=e^(j2πk/N)) — leagă DFT direct de teoria discutată la Semnale
+         și Sisteme 3
+       - FFT: NU e o transformată diferită, e un ALGORITM rapid pentru calculul DFT —
+         exploatează simetriile/redundanțele din calcul (algoritmul Cooley-Tukey, tipic
+         necesită N = putere a lui 2) — reduce complexitatea de la O(N²) la O(N log N),
+         diferență enormă practic pentru N mare
+       - Rezoluția în frecvență: Δf = f_s/N — crește N (mai multe eșantioane analizate)
+         pentru rezoluție mai fină în frecvență
+       - Scurgere spectrală (spectral leakage): apare quando semnalul analizat nu conține
+         un număr ÎNTREG de perioade în fereastra de N eșantioane — energia "se scurge" în
+         binurile de frecvență vecine, distorsionând spectrul calculat
+       - Ferestre (windowing) pentru DFT: multiplicarea semnalului cu o fereastră
+         (Hamming, Hanning, Blackman — nu dreptunghiulară implicită) ÎNAINTE de DFT reduce
+         scurgerea spectrală, cu prețul lărgirii lobului principal — compromis rezoluție
+         vs. scurgere
+
+       ══════════════════════════════════════════
+       FILTRE DIGITALE FIR (Finite Impulse Response)
+       ══════════════════════════════════════════
+       - Ecuație: y[n] = Σ_{k=0}^{M-1} h[k]x[n-k] — o simplă convoluție, FĂRĂ feedback
+         (fără termeni y[n-k] în formulă)
+       - ÎNTOTDEAUNA stabil (BIBO) — nu există poli în afara originii planului z (toți
+         polii lui H(z) sunt la z=0) — avantaj major față de IIR
+       - Poate avea FAZĂ LINIARĂ EXACTĂ — dacă coeficienții h[n] sunt SIMETRICI (sau
+         antisimetrici) — proprietate critică pentru aplicații unde distorsiunea de fază
+         (deformarea formei semnalului) trebuie evitată (ex: procesare audio/imagine de
+         calitate, ECG)
+       - Proiectare prin metoda ferestrei: pornește de la răspunsul la impuls ideal
+         (teoretic infinit, ex: filtru trece-jos ideal = funcție sinc), îl TRUNCHIAZĂ la M
+         termeni și îl multiplică cu o fereastră pentru a reduce oscilațiile Gibbs produse
+         de trunchiere bruscă
+
+       ══════════════════════════════════════════
+       FILTRE DIGITALE IIR (Infinite Impulse Response)
+       ══════════════════════════════════════════
+       - Ecuație cu diferențe: y[n] = Σb_k·x[n-k] - Σa_k·y[n-k] — ARE feedback (termeni
+         recursivi y[n-k]), de aceea răspunsul la impuls poate fi teoretic infinit în durată
+       - Avantaj: atinge o selectivitate (bandă de tranziție abruptă) cu MULT mai puțini
+         coeficienți decât un FIR echivalent — mai eficient computațional
+       - Dezavantaj: stabilitatea NU e garantată automat — trebuie verificată explicit
+         (toți polii lui H(z) STRICT în interiorul cercului unitate); faza, în general,
+         NU e liniară
+       - Proiectare prin transformare din prototipuri analogice: se proiectează filtrul
+         în domeniul continuu (Butterworth, Chebyshev — filtre analogice clasice) apoi se
+         convertește la domeniul discret prin transformata biliniară: s = (2/T)·(1-z⁻¹)/(1+z⁻¹)
+         — "deformează" frecvențele (frequency warping), de compensat la proiectare
+
+       ══════════════════════════════════════════
+       FIR vs. IIR — ALEGEREA POTRIVITĂ
+       ══════════════════════════════════════════
+       - Alege FIR când: stabilitatea garantată e critică, faza liniară e necesară, sau
+         se poate tolera o complexitate de calcul mai mare
+       - Alege IIR când: eficiența computațională contează mult (resurse limitate, timp
+         real strict) și faza neliniară e acceptabilă pentru aplicație
+
+       CAPCANE FRECVENTE:
+       - Confuzia DFT (transformata matematică) cu FFT (algoritmul de calcul) — FFT
+         calculează EXACT DFT, mai rapid, nu altceva
+       - Ignorarea scurgerii spectrale la interpretarea unui spectru calculat cu DFT fără
+         fereastră adecvată pe un semnal cu număr necorespunzător de perioade
+       - Presupunerea că un filtru FIR e întotdeauna "mai bun" — IIR poate fi necesar
+         când resursele de calcul sunt limitate și faza liniară nu e critică
+       - Uitarea verificării stabilității la proiectarea unui filtru IIR (poli în afara
+         cercului unitate = sistem instabil)
+       - Confuzia simetrie coeficienți FIR (condiție pentru fază liniară) cu orice set
+         arbitrar de coeficienți FIR (nu toate FIR au fază liniară, doar cele simetrice)
+    """,
+
+    "microunde": r"""
+    1. MICROUNDE — ANUL III ETTI/UPB (comună tuturor 5 specializărilor — poziționată
+       Semestrul I la TST/RST/INF, Semestrul II la ELA/MON)
+       Extinde Bazele Electrotehnicii (regim sinusoidal, impedanțe complexe) spre frecvențe
+       unde lungimea de undă devine comparabilă cu dimensiunile circuitului — aici
+       modelul "circuit cu fire" nu mai e valabil, trebuie gândit în termeni de UNDE care
+       se propagă pe linii de transmisie.
+
+       NOTAȚII OBLIGATORII:
+       - Impedanță caracteristică a liniei: Z₀ (Ω) — proprietate a liniei, NU a sarcinii
+       - Coeficient de reflexie: Γ = (Z_L-Z₀)/(Z_L+Z₀) (număr complex, |Γ|≤1 pentru linii
+         fără pierderi cu sarcină pasivă)
+       - Raport de undă staționară: VSWR = (1+|Γ|)/(1-|Γ|) (adimensional, ≥1)
+       - Constantă de propagare: γ = α+jβ (α=atenuare, β=constantă de fază)
+       - Parametri de împrăștiere (S): S₁₁, S₂₁, S₁₂, S₂₂ pentru un cuadripol (2 porturi)
+       - Folosește LaTeX pentru formule; diagrama Smith se descrie textual (poziție pe
+         cerc, unghi) dacă nu se cere desen SVG
+
+       STRUCTURA OBLIGATORIE pentru orice exercițiu:
+       **1. Verifică regimul** — frecvența e suficient de mare încât lungimea de undă să
+          fie comparabilă cu dimensiunile circuitului? (dacă da, teoria liniilor de
+          transmisie se aplică; altfel, Bazele Electrotehnicii clasică e suficientă)
+       **2. Calculează mărimile caracteristice** — Z₀, Γ, VSWR, după caz
+       **3. Rezolvare pas cu pas** — adaptare de impedanță, analiză cu parametri S, etc.
+       **4. Verificare** — |Γ|≤1 pentru sarcini pasive; VSWR≥1 întotdeauna
+
+       ══════════════════════════════════════════
+       LINII DE TRANSMISIE
+       ══════════════════════════════════════════
+       - De ce contează la microunde: la frecvențe înalte, timpul de propagare a
+         semnalului de-a lungul unui conductor NU mai e neglijabil față de perioada
+         semnalului — tensiunea/curentul variază cu POZIȚIA pe linie, nu doar cu timpul
+       - Impedanța caracteristică Z₀: raportul tensiune/curent pentru o undă care se
+         propagă într-un singur sens pe o linie infinită (sau perfect adaptată) — depinde
+         de geometria liniei (cablu coaxial, microstrip etc.), NU de sarcina conectată
+       - Coeficientul de reflexie Γ: cât din unda incidentă se reflectă înapoi la
+         interfața cu o sarcină Z_L≠Z₀ — Γ=0 ⟺ adaptare perfectă (toată puterea e
+         transferată la sarcină, nicio reflexie)
+       - VSWR: măsoară cât de "neadaptat" e sistemul — VSWR=1 (adaptare perfectă) până la
+         VSWR→∞ (circuit deschis sau scurtcircuit, reflexie totală)
+       - Linie în scurtcircuit/gol: cazuri particulare importante — Z_L=0 (Γ=-1, VSWR→∞)
+         sau Z_L→∞ (Γ=+1, VSWR→∞) — folosite practic ca elemente reactive (stub-uri)
+
+       ══════════════════════════════════════════
+       DIAGRAMA SMITH ȘI ADAPTAREA DE IMPEDANȚĂ
+       ══════════════════════════════════════════
+       - Diagrama Smith: reprezentare grafică a coeficientului de reflexie Γ (în planul
+         complex, |Γ|≤1, deci în interiorul unui cerc unitate), cu cercuri de rezistență
+         și arce de reactanță constantă suprapuse — permite citirea GRAFICĂ a impedanței
+         normalizate z=Z/Z₀ direct din poziția lui Γ, fără calcul explicit cu numere complexe
+       - Adaptarea de impedanță: scopul e Γ=0 la intrarea unui circuit, pentru transfer
+         maxim de putere și eliminarea reflexiilor — metode uzuale: stub-uri (segmente de
+         linie în scurtcircuit/gol, de lungime aleasă), transformator de sfert de undă
+         (λ/4), rețele cu elemente concentrate (L, C) la frecvențe mai joase
+       - Transformatorul de sfert de undă: o linie de lungime λ/4 cu impedanța
+         caracteristică Z₁=√(Z₀·Z_L) adaptează perfect o sarcină reală Z_L la o linie Z₀ —
+         rezultat simplu și des folosit
+
+       ══════════════════════════════════════════
+       GHIDURI DE UNDĂ (WAVEGUIDES) — introducere
+       ══════════════════════════════════════════
+       - La frecvențe foarte înalte, liniile coaxiale/microstrip au pierderi mari —
+         ghidurile de undă (tuburi metalice goale) transportă energia EM cu pierderi mult
+         mai mici
+       - Frecvență de tăiere (cutoff): sub această frecvență, ghidul NU propagă unda
+         (atenuare exponențială) — fiecare mod de propagare (TE, TM) are propria frecvență
+         de tăiere, determinată de dimensiunile ghidului
+
+       ══════════════════════════════════════════
+       PARAMETRII S (SCATTERING) — ANALIZA CIRCUITELOR LA MICROUNDE
+       ══════════════════════════════════════════
+       - De ce parametri S, nu parametri clasici (Z, Y, H): la microunde, tensiunea și
+         curentul sunt greu de măsurat direct (variază cu poziția) — parametrii S leagă
+         UNDELE incidente și reflectate la fiecare port, mărimi direct măsurabile cu
+         echipamente de microunde (analizor de rețea)
+       - Pentru un cuadripol (2 porturi): S₁₁=coeficient de reflexie la portul 1 (cu
+         portul 2 adaptat); S₂₁=câștig/atenuare de la portul 1 la portul 2 (transmisie
+         directă); S₁₂, S₂₂ analog
+       - Interpretare practică: |S₂₁|² = câștigul de putere (sau atenuarea, dacă <1) prin
+         circuit; |S₁₁|² = fracția de putere reflectată la intrare (legat direct de Γ și VSWR)
+
+       CAPCANE FRECVENTE:
+       - Confuzia impedanța caracteristică Z₀ (proprietate a liniei) cu impedanța de
+         sarcină Z_L (ce se conectează la capătul liniei) — sunt mărimi complet diferite
+       - Presupunerea că VSWR mic înseamnă automat putere mare transmisă — VSWR măsoară
+         ADAPTAREA, nu puterea absolută
+       - Aplicarea formulelor de circuit cu parametri grupați (R, L, C clasici) la
+         frecvențe unde teoria liniilor de transmisie e deja necesară
+       - Confuzia S₁₁ (reflexie, caracterizează portul 1 singur) cu S₂₁ (transmisie,
+         caracterizează calea 1→2)
+       - Ignorarea faptului că fiecare mod de propagare într-un ghid de undă are propria
+         frecvență de tăiere — sub ea, modul respectiv pur și simplu nu se propagă
+    """,
+
+    "circuite integrate analogice": r"""
+    1. CIRCUITE INTEGRATE ANALOGICE — ANUL III ETTI/UPB (ELA/MON/TST/RST; INF nu o are)
+       Continuă Circuite Electronice Fundamentale (Anul II: amplificatoare cu un tranzistor,
+       reacție, AO ideal) spre blocurile din INTERIORUL unui circuit integrat analogic:
+       oglinzi de curent, etaj diferențial, structura internă a AO, compensare în frecvență,
+       etaje de ieșire, referințe de tensiune.
+
+       NOTAȚII OBLIGATORII:
+       - Semnal mare/DC: litere mari cu indici mari (V_BE, I_C); semnal mic: litere mici
+         (v_be, i_c) — aceeași convenție ca la Circuite Electronice Fundamentale
+       - Transconductanță g_m; rezistență de ieșire a tranzistorului r_o; câștig intrinsec
+         g_m·r_o
+       - Mod diferențial (v_d = v₁−v₂) și mod comun (v_cm = (v₁+v₂)/2); câștiguri A_d, A_cm
+       - Rejecția modului comun: CMRR = |A_d/A_cm| (adesea în dB: 20·log₁₀)
+       - Produsul câștig-bandă: GBW; viteza de creștere: SR (slew rate); margine de fază: PM
+       - Folosește LaTeX pentru formule; precizează MEREU dacă lucrezi cu BJT sau MOSFET
+
+       STRUCTURA OBLIGATORIE pentru analiza unui bloc:
+       **1. Identifică blocul** — oglindă de curent, etaj diferențial, etaj de câștig,
+          etaj de ieșire, referință
+       **2. Analiza DC (punct static)** — curenți și tensiuni de polarizare; verifică că
+          tranzistoarele sunt în regiunea corectă (activ/saturație)
+       **3. Analiza de semnal mic** — g_m, r_o, câștig, rezistențe de intrare/ieșire
+       **4. Verificare** — ordin de mărime plauzibil (ex: câștig intrinsec g_m·r_o de zeci-
+          sute pentru un tranzistor singur)
+
+       ══════════════════════════════════════════
+       SURSE ȘI OGLINZI DE CURENT
+       ══════════════════════════════════════════
+       - Rol: într-un circuit integrat, rezistoarele mari ocupă mult spațiu, deci
+         polarizarea se face cu SURSE DE CURENT realizate din tranzistoare; o singură
+         referință de curent se "copiază" în mai multe ramuri prin oglinzi
+       - Oglindă simplă MOSFET: I_out = I_ref·(W/L)_out/(W/L)_ref (rapoartele de dimensiuni
+         stabilesc raportul curenților) — valabil în saturație și ignorând modularea
+         lungimii canalului
+       - Oglindă simplă BJT: I_out = I_ref/(1 + 2/β) ≈ I_ref pentru β mare — eroarea vine
+         din curenții de bază finiți
+       - Rezistența de ieșire a sursei de curent ≈ r_o (cât mai mare, cu atât sursa e mai
+         ideală); variante cu rezistență de ieșire mai mare: oglindă cascodă
+       - Capcană: oglinda copiază corect DOAR dacă ambele tranzistoare sunt în saturație /
+         regiune activă și au aceeași tensiune de comandă — altfel curentul copiat deviază
+
+       ══════════════════════════════════════════
+       ETAJUL DIFERENȚIAL
+       ══════════════════════════════════════════
+       - Structură: două tranzistoare identice cu emitoarele (sursele) legate la o sursă de
+         curent comună I_tail; amplifică DIFERENȚA dintre cele două intrări și rejectează
+         semnalul comun ambelor
+       - Câștig diferențial (ieșire diferențială, BJT cu sarcini rezistive R_C): A_d = −g_m·R_C
+       - CMRR mare e dorit: perturbațiile care apar identic pe ambele intrări (zgomot de
+         alimentare, interferențe) se anulează; un I_tail cu rezistență de ieșire mare
+         îmbunătățește CMRR
+       - Sarcină activă (oglindă de curent ca sarcină, în loc de rezistoare): crește mult
+         câștigul, la valori de ordinul g_m·(r_o1‖r_o2), și convertește ieșirea diferențială
+         într-una asimetrică fără pierderea de câștig
+       - Tensiune de decalaj (offset) de intrare: asimetriile reale dintre cele două
+         tranzistoare produc o ieșire nenulă chiar cu intrări egale — apare ca o sursă de
+         eroare; se raportează la intrare (V_OS)
+
+       ══════════════════════════════════════════
+       STRUCTURA INTERNĂ A AMPLIFICATORULUI OPERAȚIONAL
+       ══════════════════════════════════════════
+       - AO tipic în doi etaje: (1) etaj diferențial de intrare cu sarcină activă, (2) etaj
+         de câștig (sursă/emitor comun), urmat de (3) etaj de ieșire cu impedanță mică
+       - Compensare în frecvență (Miller): un condensator C_c pe etajul 2 creează un pol
+         DOMINANT la frecvență joasă și îndepărtează al doilea pol ("pole splitting") —
+         scopul: ca la câștig unitar, defazajul total să rămână sub 180° cu o margine de
+         siguranță, deci AO să fie STABIL în reacție negativă
+       - Margine de fază: PM = 180° − |faza la frecvența unde |A·β| = 1|; se dorește de
+         regulă PM ≥ 45°–60°; PM mică → oscilații/suprareglare la răspunsul în treaptă
+       - GBW ≈ g_m1/C_c (pentru AO compensat Miller); la reacție negativă, banda scade
+         cu câștigul: f_−3dB ≈ GBW/A_v (de închidere a buclei)
+       - Slew rate: SR ≈ I_tail/C_c — viteza maximă de variație a ieșirii; limitează
+         semnalele mari rapide chiar dacă banda de semnal mic ar permite mai mult
+       - Neidealități de DC: tensiune de offset V_OS, curent de polarizare I_B, curent de
+         offset I_OS — contează la amplificarea semnalelor mici/continue
+
+       ══════════════════════════════════════════
+       ETAJE DE IEȘIRE
+       ══════════════════════════════════════════
+       - Rol: impedanță de ieșire mică și capacitate de a debita curent în sarcină, fără
+         a încărca etajele de câștig (de obicei repetor pe emitor/sursă)
+       - Clasa B (push-pull): eficient, dar apare distorsiune de trecere prin zero
+         (crossover) când ambele tranzistoare sunt blocate în jurul lui 0 V
+       - Clasa AB: polarizare ușoară în conducție (cu o sursă de tensiune tip V_BE
+         multiplicator sau diode) elimină crossover-ul, cu un curent static mic
+
+       ══════════════════════════════════════════
+       REFERINȚE DE TENSIUNE (BANDGAP) — introducere
+       ══════════════════════════════════════════
+       - Problemă: o referință de tensiune trebuie să fie independentă de temperatură
+       - Principiu bandgap: V_BE scade cu temperatura (≈ −2 mV/°C, CTAT — complementar cu
+         temperatura absolută), iar diferența ΔV_BE a două joncțiuni la densități de curent
+         diferite crește cu temperatura (PTAT — proporțional cu temperatura absolută);
+         o combinație ponderată a celor două anulează coeficientul de temperatură, la o
+         valoare de ≈ 1,2–1,25 V (apropiată de banda interzisă a siliciului)
+
+       COMPARATOARE (scurt)
+       - Un comparator e un AO folosit fără reacție negativă (sau cu reacție pozitivă):
+         ieșirea comută între două nivele după semnul diferenței dintre intrări
+       - Histerezis (trigger Schmitt, reacție pozitivă): două praguri diferite la urcare
+         și la coborâre — evită comutările repetate din cauza zgomotului în jurul pragului
+
+       CAPCANE FRECVENTE:
+       - Presupunerea că oglinda de curent copiază exact, ignorând curenții de bază (BJT)
+         sau modularea canalului (MOSFET) și faptul că tranzistoarele trebuie să fie în
+         saturație/activ
+       - Confuzia câștig diferențial (A_d) cu câștig de mod comun (A_cm) — scopul etajului
+         e A_d mare și A_cm mic (CMRR mare)
+       - Confuzia GBW (produs câștig-bandă, parametru al AO) cu banda efectivă a
+         montajului (aceasta scade când câștigul în buclă închisă crește)
+       - Confundarea slew rate (limită pentru semnale MARI, rapide) cu banda de semnal
+         mic — un AO poate avea bandă suficientă și totuși distorsiona un semnal mare
+       - Ignorarea marginii de fază la compensare: un AO cu câștig mare dar PM mică
+         oscilează sau are suprareglaj mare
+       - Amestecarea coeficientului de temperatură al lui V_BE (negativ, CTAT) cu cel al
+         tensiunii termice kT/q (pozitiv, PTAT) la principiul bandgap
+    """,
+
+
+    "instrumentație electronică de măsură": r"""
+    1. INSTRUMENTAȚIE ELECTRONICĂ DE MĂSURĂ — ANUL III ETTI/UPB (ELA/MON/TST/RST)
+       Extinde Măsurări în Electronică și Telecomunicații (Anul I: teoria erorilor,
+       voltmetru/ampermetru, osciloscop de bază) spre instrumentele electronice reale:
+       multimetru digital, osciloscop, generator, numărător de frecvență, analizor de
+       spectru, și spre limitările lor (bandă, rezoluție, încărcarea circuitului, zgomot).
+
+       NOTAȚII OBLIGATORII:
+       - Bandă a instrumentului: BW (−3 dB); timp de creștere: t_r
+       - Rezoluție ADC: N biți; cuantă (LSB) = V_FS/2^N
+       - Frecvență de eșantionare: f_s; rezoluție de bandă a analizorului: RBW
+       - Impedanță de intrare: R_in ‖ C_in; impedanță de sursă: R_s
+       - Nivele în dB: dBm (raportat la 1 mW), dBV (raportat la 1 V)
+       - Folosește LaTeX pentru formule; dă mereu unitățile; precizează dacă o valoare e
+         de vârf, vârf-la-vârf, medie sau eficace (RMS)
+
+       STRUCTURA OBLIGATORIE pentru o problemă de măsurare:
+       **1. Mărimea și semnalul** — ce se măsoară, ce formă are, ce bandă ocupă
+       **2. Alegerea instrumentului și a setărilor** — justifică (bandă, rezoluție,
+          impedanță de intrare, mod de cuplare)
+       **3. Surse de eroare specifice instrumentului** — încărcare, bandă, cuantizare,
+          zgomot, mod de calcul al valorii eficace
+       **4. Estimarea erorii/incertitudinii** — cu formula potrivită
+       **5. Rezultat** — valoare ± incertitudine, cu unitate
+
+       ══════════════════════════════════════════
+       EFECTUL DE ÎNCĂRCARE AL INSTRUMENTULUI
+       ══════════════════════════════════════════
+       - Orice instrument are impedanță de intrare finită și modifică circuitul măsurat
+       - Voltmetru cu rezistență R_in pe o sursă cu rezistență R_s: valoarea citită e
+         V_citit = V_real·R_in/(R_in+R_s), deci eroare relativă ≈ −R_s/(R_s+R_in)
+       - Regula practică: R_in ≫ R_s pentru voltmetru; pentru ampermetru invers, rezistența
+         lui internă trebuie să fie ≪ rezistența circuitului
+       - La frecvențe mari, contează și C_in: împreună cu R_s formează un filtru trece-jos
+         care atenuează semnalul
+
+       ══════════════════════════════════════════
+       MULTIMETRUL DIGITAL (DMM) ȘI CONVERTOARELE A/D
+       ══════════════════════════════════════════
+       - Rezoluție: numărul de "digiți" (ex. 6½ digiți) și numărul de biți ai ADC;
+         cuantizarea introduce o eroare de ±½ LSB
+       - SNR ideal al unui ADC de N biți pentru o sinusoidă la scară plină:
+         ≈ 6,02·N + 1,76 dB
+       - ADC cu dublă pantă: integrează semnalul pe un interval egal cu un multiplu al
+         perioadei rețelei (20 ms la 50 Hz) → respinge zgomotul de rețea (rejecție de mod
+         normal); precis, dar lent
+       - ADC cu aproximații succesive (SAR): rapid, rezoluție medie — des folosit în
+         achiziție de date
+       - Valoare eficace: multimetrul "true RMS" calculează valoarea eficace reală; cel cu
+         răspuns la valoarea medie e calibrat pentru sinusoidă și dă erori la forme de
+         undă nesinusoidale; factorul de creastă (vârf/RMS) limitează precizia la semnale
+         impulsive
+       - Măsurarea rezistențelor mici: metoda în 4 fire (Kelvin) elimină rezistența
+         conductoarelor și a contactelor din rezultat
+
+       ══════════════════════════════════════════
+       OSCILOSCOPUL
+       ══════════════════════════════════════════
+       - Banda: BW e frecvența la −3 dB; pentru răspuns de ordinul 1, t_r ≈ 0,35/BW
+       - Timpul de creștere măsurat combină contribuțiile: t_măsurat ≈ √(t_semnal² + t_osc²
+         + t_sondă²) — un osciloscop prea lent "rotunjește" fronturile
+       - Regulă practică: banda osciloscopului ≥ 3–5× frecvența maximă relevantă din semnal,
+         pentru amplitudine corectă
+       - Eșantionare: rata de eșantionare reală trebuie să depășească net 2·BW semnal
+         (Nyquist); cu prea puține eșantioane apare aliere (aliasing) → formă de undă falsă
+       - Sonda pasivă 10:1: atenuează de 10×, crește impedanța de intrare (≈ 10 MΩ în
+         paralel cu câțiva pF) — necesită COMPENSARE (se reglează cu semnalul dreptunghiular
+         de calibrare: nici rotunjire, nici supraoscilație)
+       - Cuplare AC/DC; declanșare (trigger) stabilă pe nivel/front; legătura de masă a
+         sondei scurtă — un fir lung de masă introduce inductanță și oscilații false
+       - Rezoluție verticală: 8 biți la majoritatea osciloscoapelor → 256 nivele; folosește
+         scala astfel încât semnalul să ocupe cât mai mult din ecran
+
+       ══════════════════════════════════════════
+       NUMĂRĂTORUL DE FRECVENȚĂ ȘI GENERATOARELE
+       ══════════════════════════════════════════
+       - Numărare directă: se numără perioadele semnalului într-un timp de poartă T_g;
+         eroare de ±1 impuls → eroare relativă ≈ 1/(f·T_g); la frecvențe joase e slab
+       - Măsurare de perioadă (numărare reciprocă): mai bună la frecvențe joase — se
+         numără impulsurile unui ceas intern într-o perioadă a semnalului
+       - Precizia depinde și de stabilitatea bazei de timp (oscilator cu cuarț)
+       - Generator de semnal: parametri — formă de undă, frecvență, amplitudine, offset
+         DC, impedanță de ieșire (adesea 50 Ω; la sarcină de 50 Ω amplitudinea e jumătate
+         din cea setată pentru sarcină în gol, dacă instrumentul nu corectează)
+
+       ══════════════════════════════════════════
+       ANALIZORUL DE SPECTRU
+       ══════════════════════════════════════════
+       - Afișează conținutul spectral în frecvență (amplitudine în dBm) — complementar
+         osciloscopului, care arată forma în timp
+       - RBW (rezoluția de bandă): cât de apropiate pot fi două componente ca să fie
+         separate; RBW mai mică → rezoluție mai bună și zgomot de fond mai mic, dar
+         baleiaj mai lent
+       - Pragul de zgomot (DANL) scade cu 10·log₁₀ când RBW se micșorează de 10 ori
+         (−10 dB), deci RBW mică permite vederea semnalelor mai slabe
+       - Interpretare: armonici, distorsiuni, interferențe, zgomot
+
+       ZGOMOT, MASĂ ȘI ECRANARE ÎN MĂSURĂRI
+       - Bucle de masă (ground loops): mai multe puncte de masă creează curenți parazitari
+         și brumă de rețea (50 Hz) în semnalul măsurat
+       - Ecranare și conductoare torsadate reduc cuplajele capacitiv și inductiv
+       - Măsurare diferențială: respinge perturbațiile de mod comun (legătură cu CMRR de la
+         Circuite Integrate Analogice)
+
+       CAPCANE FRECVENTE:
+       - Ignorarea efectului de încărcare când sursa are rezistență mare comparabilă cu
+         R_in a instrumentului
+       - Folosirea unui multimetru cu răspuns la valoarea medie pe semnale nesinusoidale
+         (citire eronată) în loc de unul true RMS
+       - Osciloscop cu bandă insuficientă pentru semnal (amplitudine micșorată, fronturi
+         rotunjite) sau eșantionare prea lentă (aliere)
+       - Sondă neocompensată sau fir lung de masă — forme de undă deformate care nu aparțin
+         circuitului
+       - Confuzia dBm (nivel absolut, raportat la 1 mW) cu dB (raport adimensional)
+       - Citirea unei frecvențe joase cu numărare directă în loc de măsurare de perioadă
+         (eroare relativă mare din cauza ±1 impuls)
+    """,
+
 }
 
 
@@ -2413,6 +3026,51 @@ SUBJECT_KEYWORDS = {
         "zgomot alb", "raport semnal-zgomot", "snr", "teorema wiener-hincin",
         "funcție de transfer discretă", "cerc unitate",
     ],
+    "teoria transmisiunii informației": [
+        "entropie", "cantitate de informație", "cantitate de informatie",
+        "cod huffman", "capacitate de canal", "teorema shannon", "shannon-hartley",
+        "codarea sursei", "codarea canalului", "distanța hamming", "distanta hamming",
+        "bit de paritate", "informație mutuală", "informatie mutuala",
+        "cod prefix-free", "redundanță a sursei", "redundanta a sursei",
+    ],
+    "decizie și estimare în prelucrarea informațiilor": [
+        "testarea ipotezelor", "eroare de tip i", "eroare de tip ii", "fals pozitiv",
+        "fals negativ", "raport de verosimilitate", "criteriul bayes", "criteriul map",
+        "maximum a posteriori", "maximum likelihood", "verosimilitate maximă",
+        "verosimilitate maxima", "neyman-pearson", "curba roc", "estimator nedeplasat",
+        "limita cramér-rao", "limita cramer-rao", "probabilitate de detecție",
+        "probabilitate de detectie", "probabilitate de falsă alarmă",
+    ],
+    "prelucrarea digitală a semnalelor": [
+        "transformata fourier discretă", "transformata fourier discreta", "dft", "fft",
+        "filtru fir", "filtru iir", "scurgere spectrală", "scurgere spectrala",
+        "fereastră hamming", "fereastra hamming", "fază liniară", "faza liniara",
+        "transformata biliniară", "transformata biliniara", "ecuație cu diferențe",
+        "ecuatie cu diferente", "prototip analogic", "butterworth", "chebyshev",
+    ],
+    "microunde": [
+        "linie de transmisie", "impedanță caracteristică", "impedanta caracteristica",
+        "coeficient de reflexie", "vswr", "undă staționară", "unda stationara",
+        "diagrama smith", "adaptare de impedanță", "adaptare de impedanta",
+        "ghid de undă", "ghid de unda", "frecvență de tăiere", "parametri s",
+        "parametrii s", "stub", "transformator de sfert de undă", "analizor de rețea",
+    ],
+    "circuite integrate analogice": [
+        "oglindă de curent", "oglinda de curent", "etaj diferențial", "etaj diferential",
+        "amplificator diferențial", "amplificator diferential", "cmrr",
+        "rejecția modului comun", "rejectia modului comun", "compensare miller",
+        "margine de fază", "margine de faza", "slew rate", "sarcină activă",
+        "sarcina activa", "bandgap", "referință de tensiune", "referinta de tensiune",
+        "tensiune de offset", "etaj de ieșire clasa ab", "trigger schmitt",
+    ],
+    "instrumentație electronică de măsură": [
+        "efect de încărcare", "efect de incarcare", "multimetru digital", "true rms",
+        "factor de creastă", "factor de creasta", "adc cu dublă pantă", "adc cu dubla panta",
+        "sondă 10:1", "sonda 10:1", "compensarea sondei", "banda osciloscopului",
+        "timp de creștere", "timp de crestere", "numărător de frecvență",
+        "numarator de frecventa", "analizor de spectru", "rbw", "dbm", "măsurare în 4 fire",
+        "masurare in 4 fire", "buclă de masă", "bucla de masa", "ground loop",
+    ],
 }
 
 
@@ -2423,6 +3081,30 @@ _STRONG_INDICATORS = {
     "semnale și sisteme 3": ["transformata z", "regiunea de convergență", "regiunea de convergenta",
                      "teorema wiener-hincin", "proces ergodic", "densitate spectrală de putere",
                      "densitate spectrala de putere", "zgomot alb"],
+    "teoria transmisiunii informației": ["teorema shannon", "shannon-hartley", "cod huffman",
+                     "distanța hamming", "distanta hamming", "capacitate de canal",
+                     "codarea sursei", "codarea canalului", "informație mutuală",
+                     "informatie mutuala"],
+    "decizie și estimare în prelucrarea informațiilor": ["criteriul neyman-pearson",
+                     "limita cramér-rao", "limita cramer-rao", "raport de verosimilitate",
+                     "curba roc", "maximum a posteriori", "estimator nedeplasat",
+                     "criteriul map", "testul raportului de verosimilitate"],
+    "prelucrarea digitală a semnalelor": ["transformata biliniară", "transformata biliniara",
+                     "scurgere spectrală", "scurgere spectrala", "filtru fir", "filtru iir",
+                     "fază liniară", "faza liniara", "fereastră hamming", "fereastra hamming"],
+    "microunde": ["diagrama smith", "vswr", "coeficient de reflexie", "linie de transmisie",
+                     "parametri s", "parametrii s", "ghid de undă", "ghid de unda",
+                     "transformator de sfert de undă", "impedanță caracteristică",
+                     "impedanta caracteristica"],
+    "circuite integrate analogice": ["oglindă de curent", "oglinda de curent",
+                     "etaj diferențial", "etaj diferential", "cmrr", "compensare miller",
+                     "margine de fază", "margine de faza", "bandgap", "sarcină activă",
+                     "sarcina activa", "tensiune de offset"],
+    "instrumentație electronică de măsură": ["analizor de spectru", "true rms",
+                     "efect de încărcare", "efect de incarcare", "compensarea sondei",
+                     "numărător de frecvență", "numarator de frecventa", "rbw",
+                     "adc cu dublă pantă", "adc cu dubla panta", "măsurare în 4 fire",
+                     "masurare in 4 fire"],
 }
 
 def detect_subject_from_text(text: str) -> str | None:
@@ -4603,6 +5285,90 @@ INTREBARI_POOL = {
         "Cum se propagă densitatea spectrală de putere printr-un filtru?",
         "Ce înseamnă că un semnal aleator e staționar în sens larg?",
         "Cum folosesc proprietățile autocorelației pentru verificare?",
+    ],
+    "teoria transmisiunii informației": [
+        "Cum calculez entropia unei surse de informație?",
+        "Cum funcționează algoritmul de codare Huffman?",
+        "Ce spune teorema Shannon-Hartley despre capacitatea de canal?",
+        "Care e diferența dintre informație și entropie?",
+        "Cum calculez câte erori poate corecta un cod, din distanța Hamming?",
+        "De ce simbolurile frecvente primesc coduri mai scurte la Huffman?",
+        "Cum convertesc SNR din dB în valoare liniară pentru formula Shannon?",
+        "Ce este informația mutuală dintre două variabile?",
+        "Care e limita teoretică de compresie fără pierderi a unei surse?",
+        "Cum funcționează bitul de paritate pentru detecția erorilor?",
+        "De ce transmisia fiabilă e posibilă chiar printr-un canal cu zgomot?",
+        "Ce este un cod prefix-free și de ce contează?",
+    ],
+    "decizie și estimare în prelucrarea informațiilor": [
+        "Care e diferența dintre eroarea de tip I și tip II?",
+        "Cum funcționează testul raportului de verosimilitate?",
+        "Care e diferența dintre criteriul MAP și criteriul ML?",
+        "Ce este criteriul Neyman-Pearson și când îl folosesc?",
+        "Cum interpretez o curbă ROC?",
+        "Ce este limita Cramér-Rao și la ce folosește?",
+        "Care e diferența dintre estimator nedeplasat și eficient?",
+        "Cum calculez estimatorul de verosimilitate maximă (ML)?",
+        "Ce este probabilitatea de falsă alarmă (P_FA)?",
+        "Cum aleg pragul de decizie într-un test de ipoteze?",
+        "Care e diferența dintre parametrul real θ și estimatorul θ̂?",
+        "Cum se reduce estimatorul MAP la ML când nu am informație a priori?",
+    ],
+    "prelucrarea digitală a semnalelor": [
+        "Care e diferența dintre DFT și FFT?",
+        "Cum funcționează scurgerea spectrală și cum o reduc?",
+        "Care e diferența dintre filtrele FIR și IIR?",
+        "De ce un filtru FIR e întotdeauna stabil?",
+        "Cum proiectez un filtru FIR prin metoda ferestrei?",
+        "Ce înseamnă fază liniară la un filtru și de ce contează?",
+        "Cum funcționează transformata biliniară pentru proiectarea IIR?",
+        "Când aleg un filtru IIR în loc de FIR?",
+        "Ce este rezoluția în frecvență la o DFT și cum o calculez?",
+        "Cum verific stabilitatea unui filtru IIR?",
+        "Care e legătura dintre DFT și transformata Z?",
+        "De ce coeficienții simetrici dau fază liniară la un filtru FIR?",
+    ],
+    "microunde": [
+        "De ce la microunde nu mai merge teoria clasică de circuite?",
+        "Cum calculez coeficientul de reflexie al unei sarcini?",
+        "Ce înseamnă VSWR și cum îl calculez?",
+        "Cum folosesc diagrama Smith pentru adaptarea de impedanță?",
+        "Cum funcționează transformatorul de sfert de undă?",
+        "Care e diferența dintre impedanța caracteristică și impedanța de sarcină?",
+        "Ce sunt parametrii S și de ce se folosesc la microunde?",
+        "Ce este frecvența de tăiere a unui ghid de undă?",
+        "Cum folosesc un stub pentru adaptare?",
+        "Ce se întâmplă cu unda când linia e în scurtcircuit sau în gol?",
+        "Cum interpretez S11 și S21 la un cuadripol?",
+        "De ce ghidurile de undă au pierderi mai mici decât cablul coaxial?",
+    ],
+    "circuite integrate analogice": [
+        "Cum funcționează o oglindă de curent și când copiază corect?",
+        "Cum calculez câștigul diferențial al unui etaj diferențial?",
+        "Ce este CMRR și de ce contează?",
+        "De ce se folosește o sarcină activă în loc de rezistoare?",
+        "Cum funcționează compensarea Miller la un AO?",
+        "Ce este marginea de fază și ce valoare e de dorit?",
+        "Care e diferența dintre GBW și slew rate?",
+        "Cum elimină clasa AB distorsiunea de trecere prin zero?",
+        "Cum funcționează o referință de tensiune bandgap?",
+        "Ce înseamnă tensiunea de offset a unui amplificator operațional?",
+        "Care e structura internă a unui AO în doi etaje?",
+        "De ce un comparator folosește histerezis (trigger Schmitt)?",
+    ],
+    "instrumentație electronică de măsură": [
+        "Cum calculez eroarea de încărcare a unui voltmetru?",
+        "Care e diferența dintre un multimetru true RMS și unul cu răspuns la medie?",
+        "Cum aleg banda osciloscopului pentru un semnal dat?",
+        "Cum compensez o sondă de osciloscop 10:1?",
+        "Ce este alierea la osciloscop și cum o evit?",
+        "Cum funcționează un ADC cu dublă pantă și de ce respinge zgomotul de rețea?",
+        "Cum calculez SNR-ul ideal al unui ADC de N biți?",
+        "Când folosesc măsurarea de perioadă în loc de numărarea directă?",
+        "Ce este RBW la un analizor de spectru și cum influențează zgomotul de fond?",
+        "De ce se măsoară rezistențele mici în 4 fire?",
+        "Care e diferența dintre dBm și dB?",
+        "Cum apar și cum elimin buclele de masă?",
     ],
 }
 
