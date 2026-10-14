@@ -338,16 +338,32 @@ def format_time_ago(timestamp) -> str:
 
 
 # === SUPABASE CLIENT + FALLBACK ===
-@st.cache_resource  # FIX: eliminat ttl=3600 — anon key nu expiră, reconnect-urile inutile creau overhead
+@st.cache_resource
+def _create_supabase_client(url: str, key: str):
+    """Creează clientul (conexiunea e lazy, fără query de test).
+
+    Separat de get_supabase_client() ca eșecul să NU fie memorat: @st.cache_resource nu
+    memorează excepțiile, deci o problemă temporară nu mai blochează aplicația până la reboot.
+    """
+    return create_client(url, key)
+
+
 def get_supabase_client() -> Client | None:
-    """Returnează clientul Supabase (conexiunea e lazy, fără query de test)."""
+    """Returnează clientul Supabase sau None. Motivul eșecului ajunge în log și în
+    st.session_state["_sb_init_error"], ca să poată fi afișat (înainte eșecul era mut)."""
     try:
         url = st.secrets.get("SUPABASE_URL", "")
         key = st.secrets.get("SUPABASE_KEY", "")
         if not url or not key:
+            st.session_state["_sb_init_error"] = "SUPABASE_URL sau SUPABASE_KEY lipsesc din secrets"
             return None
-        return create_client(url, key)
-    except Exception:
+        client = _create_supabase_client(url, key)
+        st.session_state.pop("_sb_init_error", None)
+        return client
+    except Exception as e:
+        # NU includem cheia în mesaj — doar tipul și textul excepției
+        st.session_state["_sb_init_error"] = f"{type(e).__name__}: {str(e)[:160]}"
+        _log("Supabase: clientul nu a putut fi creat", "silent", e)
         return None
 
 
@@ -896,10 +912,15 @@ def _show_ai_error(e: Exception, context: str = "") -> str:
 
 def init_db():
     """Verifică conexiunea la Supabase. Dacă e offline, activează modul local."""
+    # Verificăm din start că avem un client: fără el nimic nu se salvează, iar înainte nu se vedea nicăieri.
+    if get_supabase_client() is None and st.session_state.get("_sb_online", True):
+        _mark_supabase_offline()
     online = st.session_state.get("_sb_online", True)  # starea reală, nu fereastra de reîncercare
     if not online:
+        _reason = st.session_state.get("_sb_init_error")
         st.warning("📴 **Modul offline activ** — conversația se păstrează în memorie. "
-                   "Istoricul va fi sincronizat automat când conexiunea revine.", icon="⚠️")
+                   "Istoricul va fi sincronizat automat când conexiunea revine."
+                   + (f"\n\nMotiv tehnic (pentru administrator): `{_reason}`" if _reason else ""), icon="⚠️")
 
 
 def cleanup_old_sessions(days_old: int = CLEANUP_DAYS_OLD):
