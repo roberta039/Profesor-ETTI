@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+<script>
+// Pod bidirecțional minimal Streamlit <-> localStorage pentru cheia API a elevului.
+// - La prima randare trimite spre Python valoarea din localStorage ("" dacă nu există).
+// - Execută comenzile primite din Python: {op: "save", key, n} / {op: "clear", n}.
+(function () {
+  var STORAGE_KEY = "profesor_api_key";
+  var lastNonce = null;
+  var sentInitial = false;
+  // Componenta e servită de Streamlit de pe același origin ca aplicația.
+  var TARGET = window.location.origin;
+
+  function post(type, extra) {
+    var msg = { isStreamlitMessage: true, type: type };
+    for (var k in extra) { msg[k] = extra[k]; }
+    window.parent.postMessage(msg, TARGET);
+  }
+
+  function handle(args) {
+    var cmd = args && args.cmd;
+    if (cmd && cmd.n !== lastNonce) {
+      lastNonce = cmd.n;
+      try {
+        if (cmd.op === "save" && cmd.key) { localStorage.setItem(STORAGE_KEY, cmd.key); }
+        else if (cmd.op === "clear") { localStorage.removeItem(STORAGE_KEY); }
+      } catch (e) { /* storage blocat (ex. mod privat) — ignorăm */ }
+    }
+    if (!sentInitial) {
+      sentInitial = true;
+      var v = "";
+      try { v = localStorage.getItem(STORAGE_KEY) || ""; } catch (e) { v = ""; }
+      post("streamlit:setComponentValue", { value: v, dataType: "json" });
+    }
+  }
+
+  window.addEventListener("message", function (e) {
+    if (e.data && e.data.type === "streamlit:render") { handle(e.data.args || {}); }
+  });
+
+  post("streamlit:componentReady", { apiVersion: 1 });
+  post("streamlit:setFrameHeight", { height: 0 });
+})();
+</script>
+</body>
+</html>
