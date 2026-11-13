@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+<script>
+// Pod Streamlit <-> localStorage pentru ID-ul conversației (persistența istoricului).
+// Citește SID-ul salvat, lista de conversații și tokenul de login ale acestui browser și le TRIMITE spre Python
+// prin protocolul Streamlit (postMessage). NU navighează pagina: iframe-urile componentelor sunt
+// izolate (sandbox), iar Chrome/Edge blochează orice redirect al paginii-părinte făcut din ele.
+(function () {
+  var SID_KEY = "profesor_session_id";
+  var KNOWN_KEY = "profesor_known_sessions";
+  var TOKEN_KEY = "profesor_auth_token";
+  var sent = false;
+  var TARGET = window.location.origin;  // componenta e servită de pe același origin ca aplicația
+
+  function post(type, extra) {
+    var msg = { isStreamlitMessage: true, type: type };
+    for (var k in extra) { msg[k] = extra[k]; }
+    window.parent.postMessage(msg, TARGET);
+  }
+
+  function readStorage() {
+    var out = { sid: "", known: [], token: "", storage: true };
+    try {
+      out.sid = localStorage.getItem(SID_KEY) || "";
+      out.token = localStorage.getItem(TOKEN_KEY) || "";  // „ține-mă minte” (cont ETTI)
+      var known = JSON.parse(localStorage.getItem(KNOWN_KEY) || "[]");
+      out.known = Array.isArray(known) ? known.slice(-50) : [];
+    } catch (e) {
+      out.storage = false;  // stocare blocată (mod privat / setări stricte) -> sesiune nouă
+    }
+    return out;
+  }
+
+  window.addEventListener("message", function (e) {
+    if (!e.data || e.data.type !== "streamlit:render" || sent) { return; }
+    sent = true;
+    post("streamlit:setComponentValue", { value: readStorage(), dataType: "json" });
+  });
+
+  post("streamlit:componentReady", { apiVersion: 1 });
+  post("streamlit:setFrameHeight", { height: 0 });
+})();
+</script>
+</body>
+</html>
